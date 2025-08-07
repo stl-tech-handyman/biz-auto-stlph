@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Testing Architecture Overview</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: auto;
+      background: #f9f9f9;
+    }
+    h1, h2, h3 {
+      color: #2c3e50;
+    }
+    code, pre {
+      background: #eee;
+      padding: 0.5rem;
+      display: block;
+      white-space: pre-wrap;
+      border-left: 3px solid #3498db;
+      margin-bottom: 1rem;
+    }
+    .highlight {
+      background: #e0f7fa;
+      padding: 0.5rem;
+      border-radius: 4px;
+    }
+    ul {
+      margin-left: 2rem;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background: #e3f2fd;
+    }
+  </style>
+</head>
+<body>
+
+<h1>✅ Testing Architecture: Google Apps Script (Backend API)</h1>
+
+<p>This architecture defines a clean separation of logic for testing APIs built in Google Apps Script.</p>
+
+<hr>
+
+<h2>📚 Structure Overview</h2>
+
+<pre>
+.
+├── core/
+│   └── estimate.gs
+├── handlers/
+│   └── estimateHandler.gs
+├── router/
+│   └── httpActionsGet.gs
+├── tests/
+│   ├── core.estimate.test.gs
+│   ├── handlers.estimate.test.gs
+│   ├── httpActionsGet.test.gs
+│   └── httpActionsGet.integration.test.gs
+</pre>
+
+<hr>
+
+<h2>🧭 Router Layer</h2>
+
+<p><strong>File:</strong> <code>router/httpActionsGet.gs</code></p>
+<p><strong>Responsibility:</strong> Routes <code>action</code> values to handler functions.</p>
+
+<pre><code>function handleGetV1(action, e, initiator) {
+  switch (action) {
+    case PublicGetActions.CALCULATE_ESTIMATE:
+      return handleEstimateRequest(e);
+    default:
+      throw new Error("Unknown GET action");
+  }
+}</code></pre>
+
+<p><strong>⛔ No business logic here.</strong> Only routing.</p>
+
+<hr>
+
+<h2>🧰 Handler Layer</h2>
+
+<p><strong>File:</strong> <code>handlers/estimateHandler.gs</code></p>
+
+<pre><code>function handleEstimateRequest(e) {
+  const helpers = parseInt(e.parameter.helpers);
+  const hours = parseFloat(e.parameter.hours);
+  return json(calculateTotalCost_v1(helpers, hours));
+}</code></pre>
+
+<hr>
+
+<h2>🧮 Core Logic Layer</h2>
+
+<p><strong>File:</strong> <code>core/estimate.gs</code></p>
+<p><strong>Responsibility:</strong> Pure functions only. Testable. No dependencies.</p>
+
+<pre><code>function calculateTotalCost_v1(helpers, hours) {
+  const RATE = 30;
+  return helpers * hours * RATE;
+}</code></pre>
+
+<hr>
+
+<h2>🧪 Testing Layers</h2>
+
+<h3>✅ 1. Unit Test (Core)</h3>
+
+<pre><code>function test_calculateTotalCost() {
+  const result = calculateTotalCost_v1(2, 3);
+  const expected = 180;
+  logTestResult("Core logic", 1, "should calculate correctly", result === expected);
+}</code></pre>
+
+<h3>🔁 2. Handler Test</h3>
+
+<pre><code>function test_handleEstimateRequest() {
+  const mockEvent = {
+    parameter: { helpers: "2", hours: "3" }
+  };
+  const result = handleEstimateRequest(mockEvent).getContent();
+  const expected = "180";
+  logTestResult("Handler logic", 1, "should compute via handler", result === expected);
+}</code></pre>
+
+<h3>🚦 3. Router Test</h3>
+
+<pre><code>function test_handleGetV1_estimate() {
+  const e = { parameter: { helpers: "2", hours: "3" } };
+  const res = handleGetV1(PublicGetActions.CALCULATE_ESTIMATE, e, "tester");
+  logTestResult("Router logic", 1, "should route to estimate", res.getContent() === "180");
+}</code></pre>
+
+<h3>🌐 4. Integration Test</h3>
+
+<pre><code>function test_doGet_healthcheck() {
+  const e = { parameter: { action: TestGetActions.TEST_HEALTHCHECK } };
+  const response = doGet(e);
+  const actual = response?.getContent();
+  const expected = "TESTING ROUTE ALIVE";
+  logTestResult("Integration", 1, "should respond correctly via doGet", actual === expected);
+}</code></pre>
+
+<hr>
+
+<h2>📘 End-to-End (E2E) vs Integration</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Scope Covered</th>
+      <th>Simulates</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Unit</strong></td>
+      <td>1 pure function</td>
+      <td>🧠 Logic</td>
+    </tr>
+    <tr>
+      <td><strong>Handler</strong></td>
+      <td>Apps Script params → handler logic</td>
+      <td>🧰 Glue</td>
+    </tr>
+    <tr>
+      <td><strong>Router</strong></td>
+      <td>Action dispatching</td>
+      <td>🚦 Routing</td>
+    </tr>
+    <tr>
+      <td><strong>Integration</strong></td>
+      <td>Simulated `doGet(e)` request</td>
+      <td>🌐 Full stack (no external)</td>
+    </tr>
+    <tr>
+      <td><strong>E2E</strong></td>
+      <td>External trigger (e.g. Zapier, Webhook)</td>
+      <td>🔁 Full environment</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>✅ Pattern Summary</h2>
+
+<ul>
+  <li>📌 Core logic → goes in <code>/core</code></li>
+  <li>📌 Handler logic → goes in <code>/handlers</code></li>
+  <li>📌 Routes → go in <code>httpActionsGet.gs</code></li>
+  <li>📌 Write 4 tests for full coverage:
+    <ul>
+      <li>✅ <strong>Unit Test</strong> (core logic)</li>
+      <li>🔁 <strong>Handler Test</strong></li>
+      <li>🚦 <strong>Router Test</strong></li>
+      <li>🌐 <strong>Integration Test</strong></li>
+    </ul>
+  </li>
+</ul>
+
+</body>
+</html>
