@@ -1,25 +1,30 @@
 {
   "timeZone": "America/Chicago",
   "dependencies": {
-    "enabledAdvancedServices": [{
-      "userSymbol": "Gmail",
-      "serviceId": "gmail",
-      "version": "v1"
-    }, {
-      "userSymbol": "Drive",
-      "serviceId": "drive",
-      "version": "v3"
-    }],
-    "libraries": [{
-      "userSymbol": "calendareventcreator",
-      "libraryId": "13QFnxZZu6p8f6mBVPnKJB03t7PXq3kSFwJTtraDqNTPRfM6N_vJL5WLm",
-      "version": "0",
-      "developmentMode": true
-    }]
+    "enabledAdvancedServices": [
+      {
+        "userSymbol": "Gmail",
+        "serviceId": "gmail",
+        "version": "v1"
+      },
+      {
+        "userSymbol": "Drive",
+        "serviceId": "drive",
+        "version": "v3"
+      }
+    ],
+    "libraries": [
+      {
+        "userSymbol": "calendareventcreator",
+        "libraryId": "13QFnxZZu6p8f6mBVPnKJB03t7PXq3kSFwJTtraDqNTPRfM6N_vJL5WLm",
+        "version": "0",
+        "developmentMode": true
+      }
+    ]
   },
   "webapp": {
-    "access": "ANYONE_ANONYMOUS",
-    "executeAs": "USER_DEPLOYING"
+    "executeAs": "USER_DEPLOYING",
+    "access": "ANYONE_ANONYMOUS"
   },
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8"

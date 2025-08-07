@@ -190,3 +190,5 @@ You may optionally version:
 - Add stackdriver-compatible logging
 - Add webhook signature verification (Stripe)
 - Add Gmail / Maps mocking for isolated testing
+
+https://chatgpt.com/c/6892ff62-004c-832d-b1fa-b653fdc4e91d
