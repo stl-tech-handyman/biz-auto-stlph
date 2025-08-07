@@ -1,5 +1,5 @@
 function getExpectedZapierToken() {
-  return PropertiesService.getScriptProperties().getProperty("ZAPIER_TOKEN");
+  return PropertiesService.getScriptProperties().getProperty(ZAPIER_TOKEN_NAME);
 }
 
 function extractTokenFromRequest(e) {

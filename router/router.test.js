@@ -30,13 +30,14 @@ function test_doGet_invalidToken() {
   const e = {
     parameter: {
       action: "TEST_HEALTHCHECK",
-      v: "1",
       "req-initiator": "zapier",
-      api_token: "invalid_token"
+      api_token: "WRONG_TOKEN"
     }
   };
+
   const result = doGet(e).getContent();
-  logTestResult("doGet", 3, "should reject invalid token", result === "Unauthorized", result, "Unauthorized");
+  const expected = "Unauthorized";
+  logTestResult("doGet", 2, "should reject bad token", result === expected, result, expected);
 }
 
 function test_doGet_missingToken() {
@@ -44,10 +45,13 @@ function test_doGet_missingToken() {
     parameter: {
       action: "TEST_HEALTHCHECK",
       "req-initiator": "zapier"
+      // No token
     }
   };
+
   const result = doGet(e).getContent();
-  logTestResult("doGet", 4, "should reject missing token", result === "Unauthorized", result, "Unauthorized");
+  const expected = "Unauthorized";
+  logTestResult("doGet", 4, "should reject missing token", result === expected, result, expected);
 }
 
 function test_doGet_missingAction() {
@@ -113,4 +117,21 @@ function test_doGet_missingVersion_defaultsToV1() {
   const result = doGet(e).getContent();
   const expected = "TESTING ROUTE ALIVE";
   logTestResult("doGet", 9, "should default to v1 when version is missing", result === expected, result, expected);
+}
+
+
+function test_doGet_errorInHandler() {
+  const e = {
+    parameter: {
+      action: "UNKNOWN_ACTION",
+      "req-initiator": "zapier",
+      api_token: VALID_TEST_TOKEN
+    }
+  };
+
+  const response = doGet(e);
+  const content = JSON.parse(response.getContent());
+  const hasError = content?.error?.includes("Unknown GET action");
+
+  logTestResult("doGet", 5, "should catch thrown errors", hasError, content.error, "should contain 'Unknown GET action'");
 }

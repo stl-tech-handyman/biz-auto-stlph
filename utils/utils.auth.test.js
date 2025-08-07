@@ -19,7 +19,7 @@ function test_authUtils_all() {
  */
 function test_getExpectedZapierToken() {
   const expected = "secret123"; // 👈 Set this manually for test
-  PropertiesService.getScriptProperties().setProperty("ZAPIER_TOKEN", expected);
+  PropertiesService.getScriptProperties().setProperty(ZAPIER_TOKEN_NAME, expected);
 
   const actual = getExpectedZapierToken();
   logTestResult("getExpectedZapierToken", 1, "should retrieve stored token", actual === expected, actual, expected);
@@ -51,7 +51,7 @@ function test_extractTokenFromRequest_missing() {
  * Test: isValidZapierToken should return true for matching token
  */
 function test_isValidZapierToken_valid() {
-  PropertiesService.getScriptProperties().setProperty("ZAPIER_TOKEN", "secret123");
+  PropertiesService.getScriptProperties().setProperty(ZAPIER_TOKEN_NAME, "secret123");
   const actual = isValidZapierToken("secret123");
 
   logTestResult("isValidZapierToken", 1, "should return true for correct token", actual === true, actual, true);
@@ -61,7 +61,7 @@ function test_isValidZapierToken_valid() {
  * Test: isValidZapierToken should return false for incorrect token
  */
 function test_isValidZapierToken_invalid() {
-  PropertiesService.getScriptProperties().setProperty("ZAPIER_TOKEN", "secret123");
+  PropertiesService.getScriptProperties().setProperty(ZAPIER_TOKEN_NAME, "secret123");
   const actual = isValidZapierToken("wrong-token");
 
   logTestResult("isValidZapierToken", 2, "should return false for wrong token", actual === false, actual, false);
@@ -71,7 +71,7 @@ function test_isValidZapierToken_invalid() {
  * Test: isValidZapierToken should return false if token is empty
  */
 function test_isValidZapierToken_empty() {
-  PropertiesService.getScriptProperties().setProperty("ZAPIER_TOKEN", "secret123");
+  PropertiesService.getScriptProperties().setProperty(ZAPIER_TOKEN_NAME, "secret123");
   const actual = isValidZapierToken("");
   const expected = false;
 

@@ -1,6 +1,7 @@
 // Domain used for email sender construction
 const DOMAIN_NAME = "stlpartyhelpers.com";
 
+const ZAPIER_TOKEN_NAME = "ZAPIER_TOKEN";
 /**
  * Allowed sender identities and associated metadata.
  */
