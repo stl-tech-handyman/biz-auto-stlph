@@ -7,7 +7,7 @@ function getPostActionsRegistry_() {
 
   // Примеры регистраций:
   this.__POST_ACTIONS_REGISTRY[A.HEALTHCHECK_V1] = handleHealthCheckBasicV1;
-  // this.__POST_ACTIONS_REGISTRY[A.GET_LAT_LNG_V1] = handleGetLatLngV1;
+  this.__POST_ACTIONS_REGISTRY[A.GET_LAT_LNG_V1] = handleGetLatLngV1;
   // this.__POST_ACTIONS_REGISTRY[A.STRIPE_GET_BOOKING_DEPOSIT_AMOUNT_V1] = handleStripeDepositGetV1;
   // this.__POST_ACTIONS_REGISTRY[A.CALCULATE_ESTIMATE_V1] = handleCalculateEstimateV1;
 

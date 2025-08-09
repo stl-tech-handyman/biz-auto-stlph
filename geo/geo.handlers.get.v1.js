@@ -1,6 +1,8 @@
-function handleGetLatLngV1(e) {
-    const address = e.parameter?.address;
-    if (!address) return json({ error: "Missing 'address' parameter" });
-    const loc = GeoService.getLatLng(address);
-    return json({ ...loc, v: 1 });
+function handleGetLatLngV1(bodyOrEvent, context) {
+    // For POST requests, address comes from body; for GET requests, from e.parameter
+    const address = (bodyOrEvent.address || bodyOrEvent.parameter?.address || "").trim();
+    if (!address) return jsonError("Missing 'address' parameter", 400);
+
+    const loc = getLatLng(address);
+    return jsonOk({ ...loc});
 }  
