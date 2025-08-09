@@ -1,7 +1,6 @@
-/**
- * Returns a simple health check string for availability monitoring.
- * @returns {ContentService.Output}
- */
-function handleHealthCheckBasicV1() {
-  return text(TEST_HEALTHCHECK_RESPONSE);
+function handleHealthCheckBasicV1(e, ctx) {
+  return jsonOk(
+    { status: "ok" },
+    { actionId: ctx?.actionId || "HEALTHCHECK_V1", requestId: ctx?.requestId, initiator: ctx?.initiator }
+  );
 }

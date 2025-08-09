@@ -24,15 +24,35 @@ function extractTokenFromRequest(e) {
   return { token: null, source: "none" };
 }
 
-/**
- * Validate token and return a safe object for logging + checks.
- */
 function isValidApiToken(token) {
-  const expected = getExpectedApiToken_();
-  const valid = Boolean(token && expected && token === expected);
-  return {
-    valid,
-    preview: token ? String(token).slice(0, 4) : null,
-    source: null // filled by caller from extractTokenFromRequest
+  var props = PropertiesService.getScriptProperties();
+
+  // normalize the incoming token
+  var tokenNorm = String(token == null ? "" : token).trim();
+
+  // load & normalize known tokens
+  var knownTokens = {
+    ZAPIER_TOKEN:   props.getProperty("ZAPIER_TOKEN"),
+    POSTMAN_TOKEN:  props.getProperty("POSTMAN_TOKEN"),
+    FRONTEND_TOKEN: props.getProperty("FRONTEND_TOKEN")
   };
+
+  // optional: one-time debug preview (safe)
+  try {
+    logDebug("Auth props preview", {
+      ZAPIER_TOKEN:   (knownTokens.ZAPIER_TOKEN   || "").slice(0,4),
+      POSTMAN_TOKEN:  (knownTokens.POSTMAN_TOKEN  || "").slice(0,4),
+      FRONTEND_TOKEN: (knownTokens.FRONTEND_TOKEN || "").slice(0,4),
+      incomingPreview: tokenNorm.slice(0,4)
+    });
+  } catch (_) {}
+
+  for (var key in knownTokens) {
+    var valueNorm = String(knownTokens[key] == null ? "" : knownTokens[key]).trim();
+    if (tokenNorm && valueNorm && tokenNorm === valueNorm) {
+      return { valid: true, source: key, preview: valueNorm.slice(0, 4) };
+    }
+  }
+
+  return { valid: false, source: null, preview: tokenNorm.slice(0, 4) || "N/A" };
 }
