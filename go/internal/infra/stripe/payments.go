@@ -72,8 +72,8 @@ func (s *StripePayments) CreateInvoice(ctx context.Context, req *ports.CreateInv
 		return nil, fmt.Errorf("failed to add invoice item: %w", err)
 	}
 
-	// Create invoice
-	invoice, err := s.createInvoice(ctx, apiKey, customerID, req.Metadata)
+	// Create invoice (CreateInvoice doesn't support custom fields yet)
+	invoice, err := s.createInvoice(ctx, apiKey, customerID, req.Metadata, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create invoice: %w", err)
 	}
@@ -197,7 +197,7 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 	metadata["remaining_balance_cents"] = strconv.FormatInt(remainingCents, 10)
 
 	// Create invoice (with auto_advance=true, it will automatically finalize and include pending items)
-	invoice, err := s.createInvoice(ctx, apiKey, customerID, metadata)
+	invoice, err := s.createInvoice(ctx, apiKey, customerID, metadata, req.CustomFields)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create invoice: %w", err)
 	}
@@ -456,7 +456,7 @@ func (s *StripePayments) addInvoiceItem(ctx context.Context, apiKey, customerID 
 }
 
 // createInvoice creates a draft invoice
-func (s *StripePayments) createInvoice(ctx context.Context, apiKey, customerID string, metadata map[string]string) (*Invoice, error) {
+func (s *StripePayments) createInvoice(ctx context.Context, apiKey, customerID string, metadata map[string]string, customFields []ports.CustomField) (*Invoice, error) {
 	form := url.Values{}
 	form.Set("customer", customerID)
 	form.Set("collection_method", "send_invoice")
@@ -466,6 +466,14 @@ func (s *StripePayments) createInvoice(ctx context.Context, apiKey, customerID s
 
 	for k, v := range metadata {
 		form.Set("metadata["+k+"]", v)
+	}
+
+	// Add custom fields (only non-empty ones)
+	for i, cf := range customFields {
+		if strings.TrimSpace(cf.Name) != "" && strings.TrimSpace(cf.Value) != "" {
+			form.Set(fmt.Sprintf("custom_fields[%d][name]", i), strings.TrimSpace(cf.Name))
+			form.Set(fmt.Sprintf("custom_fields[%d][value]", i), strings.TrimSpace(cf.Value))
+		}
 	}
 
 	req, _ := http.NewRequestWithContext(ctx, "POST", "https://api.stripe.com/v1/invoices", strings.NewReader(form.Encode()))

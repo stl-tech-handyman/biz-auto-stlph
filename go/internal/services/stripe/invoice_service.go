@@ -122,6 +122,7 @@ func (s *InvoiceService) CreateFinalInvoice(ctx context.Context, req *CreateFina
 		Currency:         req.Currency,
 		Description:      req.Description,
 		Metadata:         metadata,
+		CustomFields:     req.CustomFields,
 	}
 
 	if finalInvoiceReq.Currency == "" {
@@ -157,5 +158,6 @@ type CreateFinalInvoiceRequest struct {
 	Currency         string
 	Description      string
 	Metadata         map[string]string
+	CustomFields     []ports.CustomField
 }
 

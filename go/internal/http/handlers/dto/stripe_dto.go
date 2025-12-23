@@ -39,6 +39,12 @@ type DepositWithEmailRequest struct {
 	SaveAsDraft        bool     `json:"saveAsDraft"`
 }
 
+// CustomField represents a custom field for Stripe invoices
+type CustomField struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 // FinalInvoiceRequest represents a request to create a final invoice
 type FinalInvoiceRequest struct {
 	Email            string            `json:"email"`
@@ -50,6 +56,7 @@ type FinalInvoiceRequest struct {
 	Currency         string            `json:"currency"`
 	Description      string            `json:"description"`
 	Metadata         map[string]string `json:"metadata"`
+	CustomFields     []CustomField     `json:"customFields"`
 	UseTest          bool              `json:"useTest"`
 	SendEmail        bool              `json:"sendEmail"`
 }

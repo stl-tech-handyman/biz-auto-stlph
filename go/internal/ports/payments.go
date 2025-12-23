@@ -24,6 +24,12 @@ type CreateInvoiceRequest struct {
 	Metadata      map[string]string
 }
 
+// CustomField represents a custom field for Stripe invoices
+type CustomField struct {
+	Name  string
+	Value string
+}
+
 // CreateFinalInvoiceRequest contains data needed to create a final invoice (remaining balance)
 type CreateFinalInvoiceRequest struct {
 	CustomerEmail   string
@@ -33,6 +39,7 @@ type CreateFinalInvoiceRequest struct {
 	Currency        string
 	Description     string
 	Metadata        map[string]string
+	CustomFields    []CustomField
 }
 
 // InvoiceResult contains the result of invoice creation

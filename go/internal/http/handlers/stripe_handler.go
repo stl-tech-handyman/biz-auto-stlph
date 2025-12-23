@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/bizops360/go-api/internal/http/handlers/dto"
 	"github.com/bizops360/go-api/internal/ports"
@@ -377,6 +378,22 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 	}
 
 	// Create final invoice using service
+	// Convert DTO CustomFields to ports CustomFields (only non-empty fields)
+	customFields := make([]ports.CustomField, 0, len(req.CustomFields))
+	for _, cf := range req.CustomFields {
+		// Only include non-empty fields (both name and value must be non-empty)
+		if strings.TrimSpace(cf.Name) != "" && strings.TrimSpace(cf.Value) != "" {
+			customFields = append(customFields, ports.CustomField{
+				Name:  strings.TrimSpace(cf.Name),
+				Value: strings.TrimSpace(cf.Value),
+			})
+		}
+	}
+
+	// Convert ports CustomFields to service layer CustomFields
+	serviceCustomFields := make([]ports.CustomField, len(customFields))
+	copy(serviceCustomFields, customFields)
+
 	invoiceReq := &stripeService.CreateFinalInvoiceRequest{
 		CustomerEmail:    req.Email,
 		CustomerName:     req.Name,
@@ -387,6 +404,7 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 		Currency:         req.Currency,
 		Description:      req.Description,
 		Metadata:         req.Metadata,
+		CustomFields:     serviceCustomFields,
 	}
 
 	return h.invoiceService.CreateFinalInvoice(ctx, invoiceReq)
