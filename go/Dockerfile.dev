@@ -1,0 +1,40 @@
+# Development Dockerfile for Go API
+# Builds with debug symbols and includes development tools
+
+# Stage 1: build
+FROM golang:1.24 AS builder
+
+WORKDIR /app
+
+# Copy go module files
+COPY go/go.mod go/go.sum ./
+RUN go mod download
+
+# Copy source
+COPY go/ ./
+
+# Build with debug symbols
+RUN CGO_ENABLED=0 GOOS=linux go build -gcflags="all=-N -l" -o server ./cmd/api
+
+# Stage 2: runtime (dev uses full image for debugging)
+FROM golang:1.22
+
+WORKDIR /app
+
+COPY --from=builder /app/server /app/server
+COPY config/ /app/config/
+COPY templates/ /app/templates/
+
+# Install debugging tools
+RUN apt-get update && apt-get install -y \
+    curl \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Cloud Run requires PORT env, default to 8080
+ENV PORT=8080
+ENV ENV=dev
+ENV LOG_LEVEL=debug
+
+ENTRYPOINT ["/app/server"]
+

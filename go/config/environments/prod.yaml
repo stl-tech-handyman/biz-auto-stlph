@@ -1,0 +1,37 @@
+# Production Environment Configuration
+environment: prod
+project_id: bizops360-prod
+region: us-central1
+
+# Service configuration
+service_name: bizops360-api-go-prod
+port: 8080
+
+# Secrets (references to Secret Manager)
+secrets:
+  api_key: svc-api-key-prod
+  stripe_test: stripe-secret-key-test
+  stripe_prod: stripe-secret-key-prod
+
+# Environment variables
+env_vars:
+  ENV: prod
+  LOG_LEVEL: info
+  CONFIG_DIR: /app/config
+  TEMPLATES_DIR: /app/templates
+
+# Cloud Run settings
+cloud_run:
+  memory: 1Gi
+  cpu: 2
+  min_instances: 1
+  max_instances: 20
+  concurrency: 100
+  timeout: 300
+
+# Feature flags
+features:
+  enable_detailed_logging: false
+  enable_debug_endpoints: false
+  use_test_stripe_by_default: false
+

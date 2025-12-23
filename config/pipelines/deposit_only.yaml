@@ -1,0 +1,8 @@
+key: deposit_only
+description: "Send deposit invoice only"
+
+actions:
+  - name: normalize_input
+    critical: true
+    config: {}
+

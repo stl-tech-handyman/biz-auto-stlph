@@ -1,0 +1,14 @@
+key: quote_and_deposit
+description: "Process form submission: calculate quote and send deposit invoice"
+
+actions:
+  - name: normalize_input
+    critical: true
+    config: {}
+
+  - name: send_slack_notification
+    critical: false
+    config:
+      channel: "#leads"
+      message: "New lead received"
+

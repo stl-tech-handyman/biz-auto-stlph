@@ -1,0 +1,20 @@
+const BOOKING_DEPOSITS_PRICE_IDS = [
+    { value: 5000, id: "price_1RXLiuIzH4MDwV7sXM4GCCl1" },
+    { value: 4500, id: "price_1RXLiUIzH4MDwV7sJLT2V4n2" },
+    { value: 4000, id: "price_1RXLi3IzH4MDwV7sp60jdyp6" },
+    { value: 3000, id: "price_1RXLg6IzH4MDwV7sXCz5vBeU" },
+    { value: 2500, id: "price_1RXLf1IzH4MDwV7sJayxv7ho" },
+    { value: 2000, id: "price_1RXLeiIzH4MDwV7scjIAiDnD" },
+    { value: 1250, id: "price_1RXLePIzH4MDwV7sQrDa6Y4S" },
+    { value: 1000, id: "price_1RXLgrIzH4MDwV7szxFYM3yU" },
+    { value: 750,  id: "price_1RXLe0IzH4MDwV7sze3Ym7tg" },
+    { value: 500,  id: "price_1RXLYOIzH4MDwV7sWTRoBMDZ" },
+    { value: 400,  id: "price_1RXLaOIzH4MDwV7sPMmgHwO5" },
+    { value: 350,  id: "price_1RXLa3IzH4MDwV7sJaLxBkqH" },
+    { value: 300,  id: "price_1RXLZgIzH4MDwV7sgLr1hvGG" },
+    { value: 250,  id: "price_1RXLYzIzH4MDwV7sB3cKw5ug" },
+    { value: 200,  id: "price_1RbpRfIzH4MDwV7swxFBma8P" },
+    { value: 150,  id: "price_1RXLU5IzH4MDwV7sdR9It89Z" },
+    { value: 100,  id: "N/A" }, // Placeholder if you add it later
+    { value: 50,   id: "price_1RXLtPIzH4MDwV7s6JKkKRT7" },
+  ];

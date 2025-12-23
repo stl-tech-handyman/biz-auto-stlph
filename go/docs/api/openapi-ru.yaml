@@ -1,0 +1,1296 @@
+openapi: 3.0.3
+info:
+  title: BizOps360 Go API
+  description: |
+    Полная спецификация API для платформы BizOps360 Go Backend.
+    
+    **Всего эндпоинтов:** 15
+    
+    **Базовая информация:**
+    - Версия API: 1.0.0
+    - Базовый URL (DEV): https://bizops360-api-go-dev-gqqr4r256q-uc.a.run.app
+    - Формат данных: JSON
+    - Кодировка: UTF-8
+    
+    **Аутентификация:**
+    - Некоторые эндпоинты требуют API ключ в заголовке `X-Api-Key`
+    - Эндпоинты здоровья, календаря, Zapier и V1 не требуют аутентификации
+    
+    **Ограничения:**
+    - Rate limiting: 100 запросов в минуту на IP
+    - Максимальный размер запроса: 1MB
+  version: 1.0.0
+  contact:
+    name: BizOps360 Support
+    url: https://github.com/bizops360/bizops360
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://bizops360-api-go-dev-gqqr4r256q-uc.a.run.app
+    description: Сервер разработки (Development)
+  - url: https://bizops360-api-go-prod-XXXXX-uc.a.run.app
+    description: Сервер продакшена (Production)
+
+tags:
+  - name: Здоровье и информация
+    description: Эндпоинты для проверки состояния сервиса
+  - name: Stripe
+    description: Интеграция с платежной системой Stripe
+  - name: Расчет стоимости
+    description: Расчет стоимости мероприятий
+  - name: Email
+    description: Отправка электронной почты
+  - name: Календарь
+    description: Создание событий в Google Calendar
+  - name: Обработка лидов
+    description: Обработка лидов от Zapier и других источников
+  - name: V1 Pipeline
+    description: Обработка событий форм и триггеров
+
+paths:
+  /:
+    get:
+      tags:
+        - Здоровье и информация
+      summary: Корневой эндпоинт
+      description: Возвращает информацию о сервисе и доступных эндпоинтах
+      operationId: getRoot
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RootResponse'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+
+  /api/health:
+    get:
+      tags:
+        - Здоровье и информация
+      summary: Проверка здоровья сервиса
+      description: Комплексная проверка состояния сервиса
+      operationId: getHealth
+      responses:
+        '200':
+          description: Сервис работает
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/health/ready:
+    get:
+      tags:
+        - Здоровье и информация
+      summary: Проверка готовности
+      description: Проверка готовности для load balancers
+      operationId: getReady
+      responses:
+        '200':
+          description: Сервис готов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/health/live:
+    get:
+      tags:
+        - Здоровье и информация
+      summary: Проверка жизнеспособности
+      description: Проверка жизнеспособности для container orchestration
+      operationId: getLive
+      responses:
+        '200':
+          description: Сервис жив
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/stripe/deposit:
+    post:
+      tags:
+        - Stripe
+      summary: Создание депозита
+      description: Генерация инвойса для депозита бронирования
+      operationId: createDeposit
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositRequest'
+      responses:
+        '200':
+          description: Успешное создание депозита
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+
+  /api/stripe/deposit/calculate:
+    get:
+      tags:
+        - Stripe
+      summary: Расчет депозита
+      description: Расчет рекомендуемого депозита на основе оценки стоимости
+      operationId: calculateDeposit
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: estimate
+          in: query
+          required: true
+          description: Оценка стоимости в долларах
+          schema:
+            type: number
+            format: float
+        - name: deposit
+          in: query
+          required: false
+          description: Уже известный депозит (опционально)
+          schema:
+            type: number
+            format: float
+      responses:
+        '200':
+          description: Успешный расчет
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositCalculationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/stripe/deposit/with-email:
+    post:
+      tags:
+        - Stripe
+      summary: Создание депозита с отправкой email
+      description: Генерация инвойса и отправка email (end-to-end процесс)
+      operationId: createDepositWithEmail
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositWithEmailRequest'
+      responses:
+        '200':
+          description: Успешное создание и отправка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositWithEmailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/stripe/test:
+    post:
+      tags:
+        - Stripe
+      summary: Тест интеграции Stripe
+      description: Тестирование интеграции со Stripe
+      operationId: testStripe
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Тест выполнен
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/estimate:
+    post:
+      tags:
+        - Расчет стоимости
+      summary: Расчет стоимости мероприятия
+      description: Расчет стоимости мероприятия на основе даты, длительности и количества помощников
+      operationId: calculateEstimate
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstimateRequest'
+      responses:
+        '200':
+          description: Успешный расчет
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstimateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/estimate/special-dates:
+    get:
+      tags:
+        - Расчет стоимости
+      summary: Получить специальные даты
+      description: Получить все специальные даты (праздники + даты повышенного спроса) на следующие N лет
+      operationId: getSpecialDates
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: years
+          in: query
+          required: false
+          description: Количество лет вперед (1-20, по умолчанию 5)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 5
+        - name: startYear
+          in: query
+          required: false
+          description: Начальный год (2020-2100, по умолчанию текущий год)
+          schema:
+            type: integer
+            minimum: 2020
+            maximum: 2100
+      responses:
+        '200':
+          description: Список специальных дат
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecialDatesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/email/test:
+    post:
+      tags:
+        - Email
+      summary: Отправка тестового email
+      description: Отправка тестового email для проверки работы сервиса
+      operationId: sendTestEmail
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestEmailRequest'
+      responses:
+        '200':
+          description: Email отправлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/email/booking-deposit:
+    post:
+      tags:
+        - Email
+      summary: Отправка email о депозите бронирования
+      description: Отправка email с информацией о депозите бронирования
+      operationId: sendBookingDepositEmail
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingDepositEmailRequest'
+      responses:
+        '200':
+          description: Email отправлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/calendar/create:
+    post:
+      tags:
+        - Календарь
+      summary: Создание события в календаре
+      description: Создание события в Google Calendar (повторяет функциональность Apps Script createEvent)
+      operationId: createCalendarEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalendarEventRequest'
+      responses:
+        '200':
+          description: Событие создано успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEventResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/business/{businessId}/process-lead:
+    post:
+      tags:
+        - Обработка лидов
+      summary: Обработка лида для бизнеса
+      description: |
+        Обработка лида для конкретного бизнеса. Выполняет полный цикл:
+        1. Трансформация данных из Zapier
+        2. Расчет стоимости
+        3. Создание события в календаре
+        4. Отправка email с квотацией
+        5. Геокодирование адреса
+      operationId: processBusinessLead
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          description: Идентификатор бизнеса (например, stlpartyhelpers)
+          schema:
+            type: string
+            example: stlpartyhelpers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZapierPayload'
+      responses:
+        '200':
+          description: Лид успешно обработан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeadProcessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Бизнес не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/zapier/process-lead:
+    post:
+      tags:
+        - Обработка лидов
+      summary: Обработка лида от Zapier (legacy)
+      description: |
+        Обработка лида от Zapier (legacy эндпоинт, повторяет Apps Script flow).
+        Выполняет: расчет стоимости, отправку email с квотацией, создание события в календаре, геокодирование адреса.
+      operationId: processZapierLead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZapierPayload'
+      responses:
+        '200':
+          description: Лид успешно обработан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeadProcessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/form-events:
+    post:
+      tags:
+        - V1 Pipeline
+      summary: Обработка события формы
+      description: Обработка отправки формы (например, из WPForms)
+      operationId: processFormEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FormEventRequest'
+      responses:
+        '200':
+          description: Событие обработано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormEventResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/triggers:
+    post:
+      tags:
+        - V1 Pipeline
+      summary: Обработка триггера
+      description: Обработка триггерных событий (например, из Monday.com)
+      operationId: processTrigger
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerRequest'
+      responses:
+        '200':
+          description: Триггер обработан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: API ключ для аутентификации
+
+  schemas:
+    RootResponse:
+      type: object
+      properties:
+        service:
+          type: string
+          example: bizops360-api-go
+        version:
+          type: string
+          example: "1.0.0"
+        status:
+          type: string
+          example: running
+        environment:
+          type: string
+          example: dev
+        endpoints:
+          type: object
+          description: Список доступных эндпоинтов
+        documentation:
+          type: string
+          format: uri
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        uptime:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    DepositRequest:
+      type: object
+      required:
+        - email
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email клиента
+          example: "test@example.com"
+        name:
+          type: string
+          description: Имя клиента
+          example: "John Doe"
+        estimatedTotal:
+          type: number
+          format: float
+          description: Оценка общей стоимости
+          example: 1000.0
+        depositValue:
+          type: number
+          format: float
+          nullable: true
+          description: Значение депозита
+          example: null
+        deposit:
+          type: number
+          format: float
+          nullable: true
+          description: Депозит (альтернативное поле)
+          example: null
+        helpersCount:
+          type: integer
+          description: Количество помощников
+          example: 2
+        hours:
+          type: number
+          format: float
+          description: Количество часов
+          example: 4.0
+        useTest:
+          type: boolean
+          default: false
+          description: Использовать тестовый режим Stripe
+          example: false
+        dryRun:
+          type: boolean
+          default: false
+          description: Тестовый запуск без реальных операций
+          example: true
+        mockStripe:
+          type: boolean
+          default: false
+          description: Использовать мок Stripe
+          example: false
+      example:
+        email: "test@example.com"
+        name: "John Doe"
+        estimatedTotal: 1000.0
+        depositValue: null
+        deposit: null
+        helpersCount: 2
+        hours: 4.0
+        useTest: false
+        dryRun: true
+        mockStripe: false
+
+    DepositResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        message:
+          type: string
+        deposit:
+          type: object
+          properties:
+            value:
+              type: integer
+              description: Значение в центах
+            valueDollars:
+              type: number
+              format: float
+              description: Значение в долларах
+            percentage:
+              type: number
+              format: float
+              description: Процент от общей стоимости
+
+    DepositCalculationResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        deposit:
+          type: object
+          properties:
+            amountCents:
+              type: integer
+            amountDollars:
+              type: number
+              format: float
+            percentage:
+              type: number
+              format: float
+
+    DepositWithEmailRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "test@example.com"
+        eventType:
+          type: string
+          example: "Birthday Party"
+        eventDateTimeLocal:
+          type: string
+          example: "2025-06-15 17:00"
+        eventDate:
+          type: string
+          format: date
+          example: "2025-06-15"
+        helpersCount:
+          type: integer
+          example: 2
+        hours:
+          type: number
+          format: float
+          example: 4.0
+        duration:
+          type: number
+          format: float
+          example: 4.0
+        estimate:
+          type: number
+          format: float
+          example: 1000.0
+        estimatedTotal:
+          type: number
+          format: float
+          example: 1000.0
+        depositValue:
+          type: number
+          format: float
+          nullable: true
+          example: null
+        useTest:
+          type: boolean
+          default: false
+          example: false
+        dryRun:
+          type: boolean
+          default: false
+          example: true
+        saveAsDraft:
+          type: boolean
+          default: false
+          example: false
+      example:
+        name: "John Doe"
+        email: "test@example.com"
+        eventType: "Birthday Party"
+        eventDateTimeLocal: "2025-06-15 17:00"
+        eventDate: "2025-06-15"
+        helpersCount: 2
+        hours: 4.0
+        duration: 4.0
+        estimate: 1000.0
+        estimatedTotal: 1000.0
+        depositValue: null
+        useTest: false
+        dryRun: true
+        saveAsDraft: false
+
+    DepositWithEmailResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        message:
+          type: string
+        invoiceId:
+          type: string
+        emailSent:
+          type: boolean
+
+    EstimateRequest:
+      type: object
+      required:
+        - eventDate
+        - durationHours
+        - numHelpers
+      properties:
+        eventDate:
+          type: string
+          format: date
+          description: Дата мероприятия (YYYY-MM-DD)
+          example: "2025-06-15"
+        durationHours:
+          type: number
+          format: float
+          description: Длительность в часах
+          minimum: 0.1
+          example: 4.0
+        numHelpers:
+          type: integer
+          description: Количество помощников
+          minimum: 1
+          example: 2
+      example:
+        eventDate: "2025-06-15"
+        durationHours: 4.0
+        numHelpers: 2
+
+    EstimateResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        data:
+          type: object
+          properties:
+            year:
+              type: integer
+              description: Год мероприятия
+            eventDate:
+              type: string
+              description: Дата мероприятия
+            dateKey:
+              type: string
+              description: Ключ даты (YYYY-MM-DD)
+            numHelpers:
+              type: integer
+              description: Количество помощников
+            durationHours:
+              type: number
+              format: float
+              description: Длительность в часах
+            basePerHelper:
+              type: number
+              format: float
+              description: Базовая ставка за помощника
+            extraPerHourPerHelper:
+              type: number
+              format: float
+              description: Дополнительная ставка за час за помощника
+            baseSubtotal:
+              type: number
+              format: float
+              description: Базовая подытог
+            extraSubtotal:
+              type: number
+              format: float
+              description: Дополнительная подытог
+            subtotalBeforeAdjustments:
+              type: number
+              format: float
+              description: Подытог до корректировок
+            isSpecialDate:
+              type: boolean
+              description: Является ли дата специальной (праздник/повышенный спрос)
+            specialLabel:
+              type: string
+              nullable: true
+              description: Метка специальной даты
+            rateType:
+              type: string
+              nullable: true
+              description: Тип ставки
+            specialDateMultiplier:
+              type: number
+              format: float
+              nullable: true
+              description: Множитель для специальной даты
+            specialDateFlatIncrease:
+              type: number
+              format: float
+              nullable: true
+              description: Фиксированное увеличение для специальной даты
+            totalCost:
+              type: number
+              format: float
+              description: Общая стоимость
+            currency:
+              type: string
+              description: Валюта
+            breakdown:
+              type: object
+              description: Детальная разбивка стоимости
+            calculationSummary:
+              type: string
+              description: Краткое описание расчета
+            deposit:
+              type: object
+              description: Информация о депозите
+
+    SpecialDatesResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        yearsAhead:
+          type: integer
+          description: Количество лет вперед
+        startYear:
+          type: integer
+          description: Начальный год
+        data:
+          type: object
+          description: Объект с датами в формате YYYY-MM-DD
+
+    TestEmailRequest:
+      type: object
+      required:
+        - to
+        - subject
+      properties:
+        to:
+          type: string
+          format: email
+          description: Email получателя
+          example: "test@example.com"
+        subject:
+          type: string
+          description: Тема письма
+          example: "Test Email"
+        body:
+          type: string
+          description: Тело письма
+          example: "<p>This is a test email</p>"
+      example:
+        to: "test@example.com"
+        subject: "Test Email"
+        body: "<p>This is a test email</p>"
+
+    BookingDepositEmailRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          description: Имя клиента
+        email:
+          type: string
+          format: email
+          description: Email клиента
+        eventDate:
+          type: string
+          description: Дата мероприятия
+        estimatedTotal:
+          type: number
+          format: float
+          description: Оценка общей стоимости
+        depositAmount:
+          type: number
+          format: float
+          description: Сумма депозита
+
+    EmailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Успешность отправки
+        messageId:
+          type: string
+          nullable: true
+          description: ID сообщения
+        error:
+          type: string
+          nullable: true
+          description: Ошибка при отправке
+
+    CalendarEventRequest:
+      type: object
+      required:
+        - eventDate
+        - eventTime
+        - duration
+      properties:
+        calendarId:
+          type: string
+          description: ID календаря (опционально, используется значение по умолчанию)
+          example: ""
+        clientName:
+          type: string
+          description: Имя клиента
+          example: "John Doe"
+        occasion:
+          type: string
+          description: Повод мероприятия
+          example: "Birthday Party"
+        guestCount:
+          type: integer
+          description: Количество гостей
+          example: 50
+        eventDate:
+          type: string
+          description: Дата мероприятия (YYYY-MM-DD или форматированная дата)
+          example: "2025-06-15"
+        eventTime:
+          type: string
+          description: Время мероприятия (например, "4:00 PM" или "15:04")
+          example: "4:00 PM"
+        phone:
+          type: string
+          description: Телефон клиента
+          example: "314-555-5555"
+        location:
+          type: string
+          description: Место проведения мероприятия
+          example: "2300 Hitzert Ct, Fenton, MO 63026"
+        numHelpers:
+          type: integer
+          description: Количество помощников
+          example: 2
+        duration:
+          type: number
+          format: float
+          description: Длительность в часах (минимум 1)
+          minimum: 1
+          example: 4.0
+        totalCost:
+          type: number
+          format: float
+          description: Общая стоимость
+          example: 400.0
+        emailId:
+          type: string
+          description: Email клиента
+          example: "john@example.com"
+        threadId:
+          type: string
+          description: ID потока Gmail (опционально, для ссылки на email)
+          example: ""
+        dataSource:
+          type: string
+          description: Источник данных (например, "zapier", "email_label_extracting")
+          example: "zapier"
+        status:
+          type: string
+          description: Статус события (по умолчанию "Pending")
+          default: Pending
+          example: "Pending"
+      example:
+        calendarId: ""
+        clientName: "John Doe"
+        occasion: "Birthday Party"
+        guestCount: 50
+        eventDate: "2025-06-15"
+        eventTime: "4:00 PM"
+        phone: "314-555-5555"
+        location: "2300 Hitzert Ct, Fenton, MO 63026"
+        numHelpers: 2
+        duration: 4.0
+        totalCost: 400.0
+        emailId: "john@example.com"
+        threadId: ""
+        dataSource: "zapier"
+        status: "Pending"
+
+    CalendarEventResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Успешность создания
+        eventId:
+          type: string
+          nullable: true
+          description: ID созданного события в Google Calendar
+        error:
+          type: string
+          nullable: true
+          description: Ошибка при создании
+
+    ZapierPayload:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - email_address
+        - event_date
+        - event_time
+        - event_location
+        - helpers_requested
+        - for_how_many_hours
+      properties:
+        first_name:
+          type: string
+          description: Имя клиента
+        last_name:
+          type: string
+          description: Фамилия клиента
+        email_address:
+          type: string
+          format: email
+          description: Email адрес клиента
+        phone_number:
+          type: string
+          description: Номер телефона клиента
+        event_date:
+          type: string
+          description: Дата мероприятия (YYYY-MM-DD или форматированная дата)
+        event_time:
+          type: string
+          description: Время мероприятия (например, "4:00 PM")
+        event_location:
+          type: string
+          description: Адрес места проведения мероприятия
+        helpers_requested:
+          type: string
+          description: Количество помощников (например, "I Need 2 Helpers")
+        for_how_many_hours:
+          type: string
+          description: Длительность (например, "for 5 Hours")
+        occasion:
+          type: string
+          description: Повод мероприятия
+        occasion_as_you_see_it:
+          type: string
+          description: Повод как вы его видите (если выбрано "Other")
+        guests_expected:
+          type: string
+          description: Ожидаемое количество гостей (например, "50" или "300 - 400 Guests")
+        event_role:
+          type: string
+          description: Роль в мероприятии
+        event_role_as_you_see_it:
+          type: string
+          description: Роль как вы ее видите (если выбрано "Other")
+        schedule_call:
+          type: string
+          description: Нужен ли звонок (например, "Yes, I need a call")
+        dryRun:
+          type: boolean
+          default: false
+          description: Тестовый запуск (email будет помечен как dry run)
+          example: false
+      example:
+        first_name: "John"
+        last_name: "Doe"
+        email_address: "john@example.com"
+        phone_number: "3145555555"
+        event_date: "2025-07-10"
+        event_time: "4:00 PM"
+        event_location: "2300 Hitzert Ct, Fenton, MO 63026"
+        helpers_requested: "I Need 2 Helpers"
+        for_how_many_hours: "for 5 Hours"
+        occasion: "Birthday Party"
+        guests_expected: "50"
+        dryRun: false
+
+    LeadProcessResponse:
+      type: object
+      properties:
+        referenceNumber:
+          type: string
+          description: Сгенерированный номер квотации
+        success:
+          type: boolean
+          description: Общий успех обработки
+        emailSent:
+          type: boolean
+          description: Был ли отправлен email
+        emailError:
+          type: string
+          nullable: true
+          description: Ошибка при отправке email
+        estimate:
+          type: number
+          format: float
+          description: Рассчитанная стоимость
+        calendarCreated:
+          type: boolean
+          description: Было ли создано событие в календаре
+        calendarError:
+          type: string
+          nullable: true
+          description: Ошибка при создании события в календаре
+        eventId:
+          type: string
+          nullable: true
+          description: ID созданного события в календаре
+        lat:
+          type: number
+          format: float
+          nullable: true
+          description: Широта из геокодирования
+        long:
+          type: number
+          format: float
+          nullable: true
+          description: Долгота из геокодирования
+        fullAddress:
+          type: string
+          nullable: true
+          description: Полный адрес из геокодирования
+        geoError:
+          type: string
+          nullable: true
+          description: Ошибка при геокодировании
+
+    FormEventRequest:
+      type: object
+      required:
+        - businessId
+        - pipelineKey
+      properties:
+        businessId:
+          type: string
+          description: Идентификатор бизнеса
+          example: "stlpartyhelpers"
+        pipelineKey:
+          type: string
+          description: Ключ пайплайна
+          example: "quote_and_deposit"
+        dryRun:
+          type: boolean
+          default: false
+          description: Тестовый запуск
+          example: false
+        options:
+          type: object
+          description: Опции обработки
+          properties:
+            sendQuoteEmail:
+              type: boolean
+              description: Отправить email с квотацией
+              example: true
+        fields:
+          type: object
+          description: Поля формы
+          additionalProperties: true
+      example:
+        businessId: "stlpartyhelpers"
+        pipelineKey: "quote_and_deposit"
+        dryRun: false
+        options:
+          sendQuoteEmail: true
+        fields:
+          name: "John Doe"
+          email: "john@example.com"
+          event_date: "2025-06-15"
+          duration_hours: 4
+          num_helpers: 2
+
+    FormEventResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        jobId:
+          type: string
+          description: ID созданной задачи
+        message:
+          type: string
+
+    TriggerRequest:
+      type: object
+      required:
+        - source
+        - businessId
+        - triggerKey
+        - pipelineKey
+      properties:
+        source:
+          type: string
+          description: Источник триггера
+          example: "monday"
+        businessId:
+          type: string
+          description: Идентификатор бизнеса
+          example: "stlpartyhelpers"
+        triggerKey:
+          type: string
+          description: Ключ триггера
+          example: "send_renewal_offer"
+        pipelineKey:
+          type: string
+          description: Ключ пайплайна
+          example: "renewal_followup"
+        resource:
+          type: object
+          description: Ресурс триггера
+          properties:
+            type:
+              type: string
+              example: "monday_item"
+            boardId:
+              type: integer
+              example: 123456789
+            itemId:
+              type: integer
+              example: 987654321
+        payload:
+          type: object
+          description: Данные триггера
+          additionalProperties: true
+      example:
+        source: "monday"
+        businessId: "stlpartyhelpers"
+        triggerKey: "send_renewal_offer"
+        pipelineKey: "renewal_followup"
+        resource:
+          type: "monday_item"
+          boardId: 123456789
+          itemId: 987654321
+        payload:
+          event_date: "2025-05-10"
+          client_email: "client@example.com"
+
+    TriggerResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        jobId:
+          type: string
+          description: ID созданной задачи
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Сообщение об ошибке
+
+  responses:
+    BadRequest:
+      description: Неверный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "invalid JSON: unexpected end of JSON input"
+
+    Unauthorized:
+      description: Требуется аутентификация
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "unauthorized: API key required"
+
+    MethodNotAllowed:
+      description: Метод не разрешен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "method not allowed"
+
+
+

@@ -1,0 +1,14 @@
+key: renewal_followup
+description: "Send renewal offer to past clients"
+
+actions:
+  - name: normalize_input
+    critical: true
+    config: {}
+
+  - name: send_slack_notification
+    critical: false
+    config:
+      channel: "#followups"
+      message: "Renewal followup sent"
+

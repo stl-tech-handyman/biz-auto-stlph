@@ -1,0 +1,36 @@
+id: stlpartyhelpers
+displayName: "STL Party Helpers"
+timezone: "America/Chicago"
+currency: "usd"
+
+monday:
+  apiTokenEnv: "MONDAY_API_TOKEN_STL"
+  boards:
+    leads: 123456789
+    deals: 234567890
+    tasks: 345678901
+
+stripe:
+  apiKeyEnv: "STRIPE_API_KEY_STL"
+  defaultCurrency: "usd"
+
+gmail:
+  sender: "team@stlpartyhelpers.com"
+  senderName: "STL Party Helpers"
+
+slack:
+  enabled: true
+  webhookEnv: "SLACK_WEBHOOK_STL"
+
+templates:
+  email:
+    quote: "stlpartyhelpers/quote_email.html"
+    deposit: "stlpartyhelpers/deposit_email.html"
+    renewal: "stlpartyhelpers/renewal_email.html"
+
+pipelines:
+  defaultForm: "quote_and_deposit"
+  triggers:
+    send_renewal_offer: "renewal_followup"
+    resend_deposit_link: "deposit_only"
+

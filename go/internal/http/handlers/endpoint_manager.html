@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizOps360 API - Endpoint Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-running {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-dev {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .status-prod {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .endpoints-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f9fafb;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            background: #f9fafb;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .method-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .method-get {
+            background: #10b981;
+            color: white;
+        }
+
+        .method-post {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .method-put {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .method-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .auth-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .auth-required {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .auth-none {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .tag-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            background: #e0e7ff;
+            color: #4338ca;
+            margin-right: 5px;
+        }
+
+        .summary {
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            padding: 10px 20px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .no-results-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            opacity: 0.9;
+        }
+
+        /* Architecture Diagram Styles */
+        .architecture-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .architecture-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .diagram-container {
+            position: relative;
+            width: 100%;
+            min-height: 500px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 40px;
+            overflow: hidden;
+        }
+
+        .diagram-section {
+            position: relative;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .clients-section, .gateway-section, .services-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .client-item, .service-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-width: 120px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .client-item:hover, .service-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .client-icon, .service-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .client-label, .service-label {
+            font-size: 0.85em;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .gateway-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            min-width: 250px;
+            text-align: center;
+        }
+
+        .gateway-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .gateway-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.85em;
+            text-align: left;
+        }
+
+        .gateway-features li {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .gateway-features li:last-child {
+            border-bottom: none;
+        }
+
+        .connection-line {
+            position: absolute;
+            stroke: #667eea;
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.6;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .protocol-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #fee2e2;
+            color: #991b1b;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .cloud-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0.1;
+            background-image: 
+                radial-gradient(circle at 20% 30%, white 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, white 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, white 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            table {
+                font-size: 0.85em;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                BizOps360 API
+                <span class="status-badge status-{{.Environment}}">{{.Environment}}</span>
+                <span class="status-badge status-running">Running</span>
+            </h1>
+            <div class="subtitle">
+                Endpoint Manager & API Documentation
+                <span style="color: #999;">•</span>
+                Version {{.Version}}
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">{{.TotalEndpoints}}</div>
+                    <div>Всего эндпоинтов</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{.PublicEndpoints}}</div>
+                    <div>Публичных</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{.ProtectedEndpoints}}</div>
+                    <div>Требуют API Key</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="architecture-section">
+            <div class="architecture-title">🏗️ Архитектура API Gateway</div>
+            <div class="diagram-container">
+                <div class="cloud-bg"></div>
+                <div class="diagram-section">
+                    <!-- Clients Section -->
+                    <div class="clients-section">
+                        <h3 style="color: #667eea; margin-bottom: 20px;">🌐 Клиенты</h3>
+                        <div class="client-item">
+                            <div class="client-icon">📱</div>
+                            <div class="client-label">Мобильные приложения</div>
+                        </div>
+                        <div class="client-item">
+                            <div class="client-icon">💻</div>
+                            <div class="client-label">Веб-браузеры</div>
+                        </div>
+                        <div class="client-item">
+                            <div class="client-icon">🖥️</div>
+                            <div class="client-label">Серверные приложения</div>
+                        </div>
+                        <div class="client-item">
+                            <div class="client-icon">⚡</div>
+                            <div class="client-label">Zapier / Интеграции</div>
+                        </div>
+                    </div>
+
+                    <!-- Gateway Section -->
+                    <div class="gateway-section">
+                        <div class="gateway-box">
+                            <div class="gateway-title">🚪 BizOps360 API Gateway</div>
+                            <ul class="gateway-features">
+                                <li>🔐 Authentication / Authorization</li>
+                                <li>🔄 Protocol Mediation</li>
+                                <li>⚙️ Custom Middleware</li>
+                                <li>📊 Analytics & Logging</li>
+                                <li>🛡️ Rate Limiting</li>
+                                <li>📝 Request/Response Transform</li>
+                                <li>🔍 Endpoint Protection</li>
+                                <li>📈 Versioning & Lifecycle</li>
+                            </ul>
+                        </div>
+                        <div style="margin-top: 20px; text-align: center;">
+                            <div class="protocol-badge">HTTP</div>
+                            <div class="protocol-badge">REST</div>
+                            <div class="protocol-badge">JSON</div>
+                        </div>
+                    </div>
+
+                    <!-- Services Section -->
+                    <div class="services-section">
+                        <h3 style="color: #667eea; margin-bottom: 20px;">☁️ Backend Сервисы</h3>
+                        <div class="service-item">
+                            <div class="service-icon">💳</div>
+                            <div class="service-label">Stripe API</div>
+                        </div>
+                        <div class="service-item">
+                            <div class="service-icon">📧</div>
+                            <div class="service-label">Gmail API</div>
+                        </div>
+                        <div class="service-item">
+                            <div class="service-icon">📅</div>
+                            <div class="service-label">Google Calendar</div>
+                        </div>
+                        <div class="service-item">
+                            <div class="service-icon">🗺️</div>
+                            <div class="service-label">Google Maps</div>
+                        </div>
+                        <div class="service-item">
+                            <div class="service-icon">☁️</div>
+                            <div class="service-label">Google Cloud Run</div>
+                        </div>
+                        <div class="service-item">
+                            <div class="service-icon">💾</div>
+                            <div class="service-label">Business Configs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; text-align: center; color: #666; font-size: 0.9em;">
+                <p>Все запросы проходят через единую точку входа с централизованной аутентификацией, rate limiting и логированием</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Поиск по пути, методу, описанию...">
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="all">Все</button>
+                <button class="filter-btn" data-filter="public">Публичные</button>
+                <button class="filter-btn" data-filter="protected">С API Key</button>
+                <button class="filter-btn" data-filter="get">GET</button>
+                <button class="filter-btn" data-filter="post">POST</button>
+            </div>
+        </div>
+
+        <div class="endpoints-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Метод</th>
+                        <th>Путь</th>
+                        <th>Описание</th>
+                        <th>Аутентификация</th>
+                        <th>Теги</th>
+                    </tr>
+                </thead>
+                <tbody id="endpointsTableBody">
+                    {{range .Endpoints}}
+                    <tr data-method="{{.Method}}" data-auth="{{if .AuthRequired}}required{{else}}none{{end}}" data-path="{{.Path}}" data-summary="{{.Summary}}">
+                        <td>
+                            <span class="method-badge method-{{.Method}}">{{.Method}}</span>
+                        </td>
+                        <td>
+                            <span class="endpoint-path">{{.Path}}</span>
+                        </td>
+                        <td>
+                            <div class="summary">{{.Summary}}</div>
+                        </td>
+                        <td>
+                            {{if .AuthRequired}}
+                            <span class="auth-badge auth-required">API Key</span>
+                            {{else}}
+                            <span class="auth-badge auth-none">Нет</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{range .Tags}}
+                            <span class="tag-badge">{{.}}</span>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            <div id="noResults" class="no-results" style="display: none;">
+                <div class="no-results-icon">🔍</div>
+                <div>Ничего не найдено</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>BizOps360 API Gateway • OpenAPI 3.0.3 • <a href="/docs/api/openapi-ru.yaml" style="color: white;">OpenAPI Spec</a></p>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const tableBody = document.getElementById('endpointsTableBody');
+        const noResults = document.getElementById('noResults');
+        const rows = Array.from(tableBody.querySelectorAll('tr'));
+
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        function filterRows() {
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const method = row.dataset.method.toLowerCase();
+                const auth = row.dataset.auth;
+                const path = row.dataset.path.toLowerCase();
+                const summary = row.dataset.summary.toLowerCase();
+                const searchText = currentSearch.toLowerCase();
+
+                const matchesFilter = 
+                    (currentFilter === 'all') ||
+                    (currentFilter === 'public' && auth === 'false') ||
+                    (currentFilter === 'protected' && auth === 'true') ||
+                    (currentFilter === method);
+
+                const matchesSearch = 
+                    !currentSearch ||
+                    path.includes(searchText) ||
+                    summary.includes(searchText) ||
+                    method.includes(searchText);
+
+                if (matchesFilter && matchesSearch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+                tableBody.style.display = 'none';
+            } else {
+                noResults.style.display = 'none';
+                tableBody.style.display = '';
+            }
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            currentSearch = e.target.value;
+            filterRows();
+        });
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                filterRows();
+            });
+        });
+
+        // Initial filter
+        filterRows();
+    </script>
+</body>
+</html>
+

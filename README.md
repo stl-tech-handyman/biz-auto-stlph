@@ -1,194 +1,83 @@
-## STL Party Helpers – Google Apps Script Backend
+# STL Party Helpers - Go Backend API
 
-Modular backend for internal operations automation using Google Apps Script.  
-Integrates with Zapier, Gmail, Monday CRM, Google Sheets, and Google Maps.
+This is the Go-based backend implementation for the STL Party Helpers business operations system.
 
----
-
-## 📁 Project Structure (by Business System)
-
-Each business function lives in its own folder:
+## Project Structure
 
 ```
-src/
-├── auth/                 # Token validation, secured access
-├── email/                # Email sending, templates, forwarding
-├── estimates/            # Quote estimation logic
-├── geo/                  # Address → lat/lng conversion via Google Maps
-├── stripe/               # Stripe integration (deposit handling)
-├── health/               # Pingable healthchecks & diagnostics
-├── router/               # Versioned GET/POST routing (doGet / doPost)
-├── shared/               # Constants, enums, and shared utilities
-├── utils/                # Generic utilities (e.g., request parsing, logging)
-└── tests/                # All unit and integration tests
+stlph/
+├── go/                    # Go backend codebase (main)
+│   ├── cmd/              # Application entry points
+│   ├── internal/         # Internal packages
+│   │   ├── domain/       # Business logic and entities
+│   │   ├── ports/        # Interface definitions
+│   │   ├── infra/        # Infrastructure implementations
+│   │   ├── app/          # Application services
+│   │   ├── http/         # HTTP handlers and middleware
+│   │   ├── config/       # Configuration loading
+│   │   └── util/         # Utilities
+│   ├── config/           # Environment configs
+│   ├── scripts/          # Deployment and setup scripts
+│   └── docs/             # Documentation
+├── config/                # Business configurations
+│   ├── businesses/       # Business YAML configs
+│   └── pipelines/        # Pipeline definitions
+├── templates/            # HTML email templates
+├── archive/              # Archived JavaScript/Apps Script code
+└── oldcode/              # Original codebase reference
 ```
 
----
+## Quick Start
 
-## 🌐 HTTP Routing
+See `go/README.md` for detailed setup instructions.
 
-The entry point is `doGet(e)` inside `router/httpActions.router.v1.gs`.
+### Local Development
 
-It performs:
-
-- API token validation
-- Action parameter routing
-- Version control (e.g. `v=1`, `v=2`)
-
-Example:
-
-```js
-function doGet(e) {
-  const action = getAction(e);                  // utils.http
-  const token = extractTokenFromRequest(e);     // utils.auth
-  const version = getApiVersion(e);             // utils.http
-
-  if (!isValidZapierToken(token)) return text("Unauthorized");
-
-  switch (version) {
-    case 2: return handleGetV2(action, e);
-    case 1:
-    default: return handleGetV1(action, e);
-  }
-}
-```
-
----
-
-## 🔐 Security: API Token
-
-All public requests must include a valid `api_token`.
-
-### Script Property (required):
-- `ZAPIER_TOKEN` – used to authenticate Zapier or any external system
-
-### Validation Logic:
-```js
-function isValidZapierToken(token) {
-  const expected = PropertiesService.getScriptProperties().getProperty("ZAPIER_TOKEN");
-  return token && token === expected;
-}
-```
-
----
-
-## 🌍 External API Keys
-
-Script expects additional keys in the **Script Properties**:
-
-| Key                  | Purpose                                |
-|----------------------|----------------------------------------|
-| `ZAPIER_TOKEN`       | Validates incoming Zapier requests     |
-| `GOOGLE_MAPS_API_KEY`| Used in address-to-geo API calls       |
-
-To set: `Apps Script → Project Settings → Script Properties`
-
----
-
-## 🧪 Testing Philosophy
-
-We use a 3-level testing strategy:
-
-1. **Unit Tests**: Test core business logic in isolation
-2. **Integration Tests**: Simulate routed `doGet()` calls
-3. **Router Tests**: Validate handlers are correctly triggered per action
-
-All test runners live in:
-
-- `tests/`
-- Or domain-specific folders (e.g. `email/tests.email.gs`)
-
-To run all tests:
-
-```js
-test_all();
-```
-
----
-
-## 📦 Business Domain Code Layout
-
-Each functional domain (like email) is structured as:
-
-```
-email/
-├── core.email.gs           # Core logic: sendEmail()
-├── handler.email.v1.gs     # API-facing logic
-├── utils.email.gs          # Optional helpers (template builders)
-├── tests.email.gs          # All tests for this module
-```
-
-Same pattern applies for `geo`, `stripe`, etc.
-
----
-
-## ⚙️ CLASP: Apps Script Local Development
-
-### Setup:
 ```bash
-npm install -g @google/clasp
+cd go
+go run ./cmd/api
 ```
 
-### Login:
-```bash
-clasp login
-```
+The server will start on port 8080 (or PORT environment variable).
 
-### Clone Existing Project:
-```bash
-clasp clone <SCRIPT_ID>
-```
+## Architecture
 
-### Edit `.clasp.json`:
-```json
-{
-  "scriptId": "SCRIPT_ID",
-  "rootDir": "src"
-}
-```
+The Go backend follows clean architecture principles:
 
-### Push Changes:
-```bash
-clasp push
-```
+- **Domain**: Core business logic and entities (Business, Pipeline, Job)
+- **Ports**: Interfaces for external dependencies (PaymentsProvider, Mailer, CRM, etc.)
+- **Infrastructure**: Concrete implementations (Stripe, Gmail, Monday.com, etc.)
+- **App**: Application services (FormEventsService, TriggersService)
+- **HTTP**: HTTP handlers, middleware, and routing
 
----
+## API Endpoints
 
-## ✅ Naming Conventions
+### POST /v1/form-events
+Processes form submissions (e.g., from WPForms).
 
-| Thing            | Convention Example               |
-|------------------|----------------------------------|
-| Files            | `core.email.gs`, `handler.geo.v1.gs` |
-| GET Actions      | `PublicGetActions.TEST_HEALTHCHECK` |
-| Params           | `?action=SEND_QUOTE&v=2&api_token=abc123` |
-| Versioned routing| `handleGetV1()`, `handleGetV2()` |
+### POST /v1/triggers
+Processes trigger-based events (e.g., from Monday.com, Cloud Scheduler).
 
----
+See `go/docs/api/` for complete API documentation.
 
-## 🧠 Versioning Strategy
+## Configuration
 
-API version is controlled via URL query:
+Business configurations and pipeline definitions are stored in YAML files:
+- `config/businesses/` - Business configurations
+- `config/pipelines/` - Pipeline definitions
+- `templates/` - HTML email templates
 
-- `?v=1` (default) → `handleGetV1`
-- `?v=2` → `handleGetV2`
+## Deployment
 
-Use helpers:
-```js
-const version = getApiVersion(e); // from utils.http
-```
+See `go/docs/deployment/` for deployment instructions to Google Cloud Run.
 
-You may optionally version:
-- Handler files: `handler.email.v1.gs`
-- Tests: `tests.email.v1.gs`
-- Router: `httpActions.router.v1.gs`
+## Archived Code
 
----
+All previous JavaScript/Google Apps Script code has been moved to the `archive/` directory for reference.
 
-## 🚀 Future Enhancements
+## Documentation
 
-- Add `doPost()` versioned router
-- Add stackdriver-compatible logging
-- Add webhook signature verification (Stripe)
-- Add Gmail / Maps mocking for isolated testing
-
-https://chatgpt.com/c/6892ff62-004c-832d-b1fa-b653fdc4e91d
+- Main Go API docs: `go/README.md`
+- API Reference: `go/docs/api/`
+- Deployment Guide: `go/docs/deployment/`
+- Development Guide: `go/docs/development/`

@@ -1,0 +1,544 @@
+{
+	"info": {
+		"_postman_id": "bizops360-go-api-collection",
+		"name": "BizOps360 Go API",
+		"description": "Complete API collection for BizOps360 Go Backend\n\n**Total Endpoints: 20**\n- Health & Info: 4 endpoints (no auth)\n- Stripe: 7 endpoints (6 require API key, 1 webhook - no auth)\n- Estimate: 2 endpoints (API key required)\n- Email: 3 endpoints (API key required)\n- Calendar: 1 endpoint (no auth)\n- Zapier: 1 endpoint (no auth)\n- V1 Pipeline: 2 endpoints (no auth)\n\n**New Endpoints Added:**\n- POST /api/stripe/deposit/amount - Get deposit amount by estimate\n- POST /api/stripe/final-invoice - Create final invoice (remaining balance)\n- POST /api/stripe/webhook - Stripe webhook for payment events\n- POST /api/email/final-invoice - Send final invoice email\n\n**Environment Variables Required:**\n- `base_url_dev`: https://bizops360-api-go-dev-gqqr4r256q-uc.a.run.app\n- `base_url_prod`: https://bizops360-api-go-prod-XXXXX-uc.a.run.app\n- `api_key`: Your API key from Secret Manager\n\n**Getting API Key:**\n```bash\ngcloud secrets versions access latest --secret=\"svc-api-key-dev\" --project=\"bizops360-dev\"\n```",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health & Info",
+			"item": [
+				{
+					"name": "GET / - Root",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_dev}}/",
+							"host": ["{{base_url_dev}}"],
+							"path": [""]
+						},
+						"description": "Root endpoint - Returns service information and available endpoints\n\n**curl:**\n```bash\ncurl \"{{base_url_dev}}/\"\n```"
+					}
+				},
+				{
+					"name": "GET /api/health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_dev}}/api/health",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "health"]
+						},
+						"description": "Health check endpoint - Returns service health status\n\n**curl:**\n```bash\ncurl \"{{base_url_dev}}/api/health\"\n```"
+					}
+				},
+				{
+					"name": "GET /api/health/ready",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_dev}}/api/health/ready",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "health", "ready"]
+						},
+						"description": "Readiness check endpoint - Returns service readiness status\n\n**curl:**\n```bash\ncurl \"{{base_url_dev}}/api/health/ready\"\n```"
+					}
+				},
+				{
+					"name": "GET /api/health/live",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_dev}}/api/health/live",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "health", "live"]
+						},
+						"description": "Liveness check endpoint - Returns service liveness status\n\n**curl:**\n```bash\ncurl \"{{base_url_dev}}/api/health/live\"\n```"
+					}
+				}
+			]
+		},
+		{
+			"name": "Stripe",
+			"item": [
+				{
+					"name": "POST /api/stripe/deposit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"name\": \"Test User\",\n  \"estimatedTotal\": 1000.0,\n  \"depositValue\": null,\n  \"deposit\": null,\n  \"helpersCount\": 2,\n  \"hours\": 4.0,\n  \"useTest\": false,\n  \"dryRun\": false,\n  \"mockStripe\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/stripe/deposit",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "stripe", "deposit"]
+						},
+						"description": "Create a deposit payment\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/stripe/deposit\" \\\n  -H \"X-Api-Key: {{api_key}}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"test@example.com\",\n    \"name\": \"Test User\",\n    \"estimatedTotal\": 1000.0\n  }'\n```"
+					}
+				},
+				{
+					"name": "GET /api/stripe/deposit/calculate",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url_dev}}/api/stripe/deposit/calculate?estimate=1000",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "stripe", "deposit", "calculate"],
+							"query": [
+								{
+									"key": "estimate",
+									"value": "1000",
+									"description": "Estimate amount in dollars"
+								}
+							]
+						},
+						"description": "Calculate deposit amount from estimate\n\n**Query Parameters:**\n- `estimate`: Estimate amount in dollars\n- `deposit`: Manual deposit amount in dollars (optional)\n\n**curl:**\n```bash\ncurl -X GET \"{{base_url_dev}}/api/stripe/deposit/calculate?estimate=1000\" \\\n  -H \"X-Api-Key: {{api_key}}\"\n```"
+					}
+				},
+				{
+					"name": "POST /api/stripe/deposit/with-email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"eventType\": \"party\",\n  \"eventDateTimeLocal\": \"2025-06-15 17:00\",\n  \"eventDate\": \"2025-06-15\",\n  \"helpersCount\": 2,\n  \"hours\": 4.0,\n  \"duration\": 4.0,\n  \"estimate\": 1000.0,\n  \"estimatedTotal\": 1000.0,\n  \"depositValue\": null,\n  \"useTest\": false,\n  \"dryRun\": false,\n  \"saveAsDraft\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/stripe/deposit/with-email",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "stripe", "deposit", "with-email"]
+						},
+						"description": "Create deposit and send email\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/stripe/deposit/with-email\" \\\n  -H \"X-Api-Key: {{api_key}}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"test@example.com\",\n    \"name\": \"Test User\",\n    \"estimatedTotal\": 1000.0\n  }'\n```"
+					}
+				},
+				{
+					"name": "POST /api/stripe/deposit/amount",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"estimatedTotal\": 1000.0\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/stripe/deposit/amount",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "stripe", "deposit", "amount"]
+						},
+						"description": "Get booking deposit amount by estimate (equivalent to STRIPE_GET_BOOKING_DEPOSIT_AMOUNT)\n\n**Request Body:**\n- `estimatedTotal`: Estimated total in dollars\n- `estimate`: Alternative field for estimated total\n- `depositValue`: Optional manual override\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/stripe/deposit/amount\" \\\n  -H \"X-Api-Key: {{api_key}}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"estimatedTotal\": 1000.0\n  }'\n```"
+					}
+				},
+				{
+					"name": "POST /api/stripe/final-invoice",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"test@example.com\",\n  \"name\": \"Test User\",\n  \"totalAmount\": 1000.0,\n  \"depositPaid\": 400.0,\n  \"currency\": \"usd\",\n  \"description\": \"Final payment for event\",\n  \"sendEmail\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/stripe/final-invoice",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "stripe", "final-invoice"]
+						},
+						"description": "Create final invoice for remaining balance after deposit (equivalent to SEND_FINAL_INVOICE)\n\n**Request Body:**\n- `email`: Customer email (required)\n- `name`: Customer name (required)\n- `totalAmount`: Total event cost in dollars (or `totalAmountCents`)\n- `depositPaid`: Deposit already paid in dollars (or `depositPaidCents`)\n- `currency`: Currency code (default: usd)\n- `description`: Invoice description\n- `sendEmail`: Whether to send invoice via Stripe email\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/stripe/final-invoice\" \\\n  -H \"X-Api-Key: {{api_key}}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"test@example.com\",\n    \"name\": \"Test User\",\n    \"totalAmount\": 1000.0,\n    \"depositPaid\": 400.0\n  }'\n```"
+					}
+				},
+				{
+					"name": "POST /api/stripe/webhook",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"evt_test_webhook\",\n  \"type\": \"invoice.paid\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"in_test_invoice\",\n      \"status\": \"paid\",\n      \"amount_due\": 0,\n      \"amount_paid\": 60000,\n      \"customer\": \"cus_test\",\n      \"customer_email\": \"test@example.com\",\n      \"customer_name\": \"Test User\",\n      \"hosted_invoice_url\": \"https://invoice.stripe.com/i/test\",\n      \"invoice_pdf\": \"https://pay.stripe.com/invoice/test/pdf\",\n      \"metadata\": {\n        \"invoice_type\": \"final\"\n      }\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/stripe/webhook",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "stripe", "webhook"]
+						},
+						"description": "Stripe webhook endpoint for invoice payment events (handles CLIENT_PAID_BOOKING_DEPOSIT and CLIENT_PAID_FINAL_INVOICE)\n\n**Note:** This endpoint does not require API key authentication. Stripe signs webhook requests.\n\n**Event Types Handled:**\n- `invoice.paid` - When an invoice is paid\n- `invoice.payment_succeeded` - When payment succeeds\n\n**Metadata:**\n- `invoice_type: \"deposit\"` or `\"booking_deposit\"` - Triggers booking deposit paid handler\n- `invoice_type: \"final\"` - Triggers final invoice paid handler\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/stripe/webhook\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"id\": \"evt_test\",\n    \"type\": \"invoice.paid\",\n    \"data\": {\n      \"object\": {\n        \"id\": \"in_test\",\n        \"status\": \"paid\",\n        \"customer_email\": \"test@example.com\"\n      }\n    }\n  }'\n```"
+					}
+				},
+				{
+					"name": "POST /api/stripe/test",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/stripe/test",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "stripe", "test"]
+						},
+						"description": "Test Stripe integration\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/stripe/test\" \\\n  -H \"X-Api-Key: {{api_key}}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{}'\n```"
+					}
+				}
+			]
+		},
+		{
+			"name": "Estimate",
+			"item": [
+				{
+					"name": "POST /api/estimate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"eventDate\": \"2025-12-25\",\n  \"durationHours\": 4,\n  \"numHelpers\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/estimate",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "estimate"]
+						},
+						"description": "Calculate event estimate\n\n**Request Body:**\n- `eventDate`: Date in YYYY-MM-DD format\n- `durationHours`: Number of hours (float)\n- `numHelpers`: Number of helpers (integer)\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/estimate\" \\\n  -H \"X-Api-Key: {{api_key}}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"eventDate\": \"2025-12-25\",\n    \"durationHours\": 4,\n    \"numHelpers\": 2\n  }'\n```"
+					}
+				},
+				{
+					"name": "GET /api/estimate/special-dates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url_dev}}/api/estimate/special-dates?years=5",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "estimate", "special-dates"],
+							"query": [
+								{
+									"key": "years",
+									"value": "5",
+									"description": "Number of years ahead (default: 5, max: 20)"
+								},
+								{
+									"key": "startYear",
+									"value": "",
+									"description": "Starting year (optional, default: current year)"
+								}
+							]
+						},
+						"description": "Get special dates (holidays, etc.)\n\n**Query Parameters:**\n- `years`: Number of years ahead (default: 5, max: 5)\n\n**curl:**\n```bash\ncurl -X GET \"{{base_url_dev}}/api/estimate/special-dates?years=5\" \\\n  -H \"X-Api-Key: {{api_key}}\"\n```"
+					}
+				}
+			]
+		},
+		{
+			"name": "Email",
+			"item": [
+				{
+					"name": "POST /api/email/test",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"to\": \"test@example.com\",\n  \"subject\": \"Test Email\",\n  \"html\": \"<p>This is a test email</p>\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/email/test",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "email", "test"]
+						},
+						"description": "Send test email\n\n**Request Body:**\n- `to`: Recipient email (required)\n- `subject`: Email subject (required if html provided)\n- `html`: HTML email body (required)\n- `text`: Plain text email body (optional)\n- `from`: Sender email (optional)\n- `fromName`: Sender name (optional)\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/email/test\" \\\n  -H \"X-Api-Key: {{api_key}}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"to\": \"test@example.com\",\n    \"subject\": \"Test Email\",\n    \"html\": \"<p>This is a test email</p>\"\n  }'\n```"
+					}
+				},
+				{
+					"name": "POST /api/email/booking-deposit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/email/booking-deposit",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "email", "booking-deposit"]
+						},
+						"description": "Send booking deposit email\n\n**Request Body:**\n- `name`: Customer name (required)\n- `email`: Customer email (required)\n- Additional fields as needed for email template\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/email/booking-deposit\" \\\n  -H \"X-Api-Key: {{api_key}}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\"\n  }'\n```"
+					}
+				},
+				{
+					"name": "POST /api/email/final-invoice",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Api-Key",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"totalAmount\": 1000.0,\n  \"depositPaid\": 400.0,\n  \"remainingBalance\": 600.0,\n  \"invoiceUrl\": \"https://invoice.stripe.com/i/test\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/email/final-invoice",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "email", "final-invoice"]
+						},
+						"description": "Send final invoice email (equivalent to SEND_PAID_BOOKING_INV_SEND_EMAIL for final invoices)\n\n**Request Body:**\n- `name`: Customer name (required)\n- `email`: Customer email (required)\n- `totalAmount`: Total event cost in dollars (required)\n- `depositPaid`: Deposit amount already paid in dollars (required)\n- `remainingBalance`: Remaining balance in dollars (required)\n- `invoiceUrl`: Stripe invoice URL (required)\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/email/final-invoice\" \\\n  -H \"X-Api-Key: {{api_key}}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"totalAmount\": 1000.0,\n    \"depositPaid\": 400.0,\n    \"remainingBalance\": 600.0,\n    \"invoiceUrl\": \"https://invoice.stripe.com/i/test\"\n  }'\n```"
+					}
+				}
+			]
+		},
+		{
+			"name": "Calendar",
+			"item": [
+				{
+					"name": "POST /api/calendar/create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"calendarId\": \"c_f8c0098141f20b9bcb25d5e3c05d54c450301eb4f21bff9c75a04b1612138b54@group.calendar.google.com\",\n  \"clientName\": \"John Doe\",\n  \"occasion\": \"Birthday Party\",\n  \"guestCount\": 50,\n  \"eventDate\": \"2025-07-10\",\n  \"eventTime\": \"4:00 PM\",\n  \"phone\": \"314-555-5555\",\n  \"location\": \"2300 Hitzert Ct, Fenton, MO 63026\",\n  \"numHelpers\": 2,\n  \"duration\": 5.0,\n  \"totalCost\": 400.0,\n  \"emailId\": \"john@example.com\",\n  \"threadId\": \"\",\n  \"dataSource\": \"zapier\",\n  \"status\": \"Pending\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/calendar/create",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "calendar", "create"]
+						},
+						"description": "Create a calendar event - Replicates Apps Script createEvent function\n\n**Request Body:**\n- `calendarId`: (Optional) Calendar ID, defaults to ESTIMATE_SENT_CALENDAR_ID env var\n- `clientName`: Client name (required)\n- `occasion`: Event occasion (required)\n- `guestCount`: Number of guests (required)\n- `eventDate`: Event date in YYYY-MM-DD or formatted format (required)\n- `eventTime`: Event time in \"3:04 PM\" or \"15:04\" format (required)\n- `phone`: Client phone number\n- `location`: Event location address\n- `numHelpers`: Number of helpers (required)\n- `duration`: Duration in hours, must be >= 1 (required)\n- `totalCost`: Total cost estimate\n- `emailId`: Client email address\n- `threadId`: Gmail thread ID (optional, for email link)\n- `dataSource`: Source of the event (e.g., \"zapier\", \"email_label_extracting\")\n- `status`: Event status (defaults to \"Pending\")\n\n**Response:**\n```json\n{\n  \"success\": true,\n  \"eventId\": \"google-calendar-event-id\"\n}\n```\n\n**Error Response:**\n```json\n{\n  \"success\": false,\n  \"error\": \"Error message\"\n}\n```\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/calendar/create\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"clientName\": \"John Doe\",\n    \"occasion\": \"Birthday Party\",\n    \"guestCount\": 50,\n    \"eventDate\": \"2025-07-10\",\n    \"eventTime\": \"4:00 PM\",\n    \"numHelpers\": 2,\n    \"duration\": 5.0\n  }'\n```\n\n**Note:** Requires `GMAIL_CREDENTIALS_JSON` environment variable to be set with Google service account credentials."
+					}
+				}
+			]
+		},
+		{
+			"name": "Zapier",
+			"item": [
+				{
+					"name": "POST /api/zapier/process-lead",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email_address\": \"john@example.com\",\n  \"phone_number\": \"3145555555\",\n  \"event_date\": \"2025-07-10\",\n  \"event_time\": \"4:00 PM\",\n  \"event_location\": \"2300 Hitzert Ct, Fenton, MO 63026\",\n  \"helpers_requested\": \"I Need 2 Helpers\",\n  \"for_how_many_hours\": \"for 5 Hours\",\n  \"occasion\": \"Birthday Party\",\n  \"guests_expected\": \"50\",\n  \"dryRun\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/api/zapier/process-lead",
+							"host": ["{{base_url_dev}}"],
+							"path": ["api", "zapier", "process-lead"]
+						},
+						"description": "Process lead from Zapier - Replicates Apps Script sendEstimateAndAddToCalendarFromZapier flow\n\n**Request Body:**\n- `first_name`: Client first name (required)\n- `last_name`: Client last name (required)\n- `email_address`: Client email (required)\n- `phone_number`: Client phone number\n- `event_date`: Event date (YYYY-MM-DD or formatted date)\n- `event_time`: Event time (e.g., \"4:00 PM\")\n- `event_location`: Event address (required)\n- `helpers_requested`: Number of helpers (e.g., \"I Need 2 Helpers\")\n- `for_how_many_hours`: Duration (e.g., \"for 5 Hours\")\n- `occasion`: Event occasion\n- `guests_expected`: Expected guest count (e.g., \"50\" or \"300 - 400 Guests\")\n- `dryRun`: If true, email will be marked as dry run\n\n**Response:**\n- `referenceNumber`: Generated quote ID\n- `success`: Boolean indicating success\n- `emailSent`: Boolean indicating if email was sent\n- `estimate`: Calculated estimate amount\n- `calendarCreated`: Boolean indicating if calendar event was created\n- `calendarError`: Error message if calendar creation failed\n- `eventId`: Calendar event ID if created\n- `lat`: Latitude from geocoding\n- `long`: Longitude from geocoding\n- `fullAddress`: Formatted address from geocoding\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/api/zapier/process-lead\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"email_address\": \"john@example.com\",\n    \"event_date\": \"2025-07-10\",\n    \"event_time\": \"4:00 PM\",\n    \"event_location\": \"2300 Hitzert Ct, Fenton, MO 63026\",\n    \"helpers_requested\": \"I Need 2 Helpers\",\n    \"for_how_many_hours\": \"for 5 Hours\",\n    \"occasion\": \"Birthday Party\",\n    \"guests_expected\": \"50\"\n  }'\n```"
+					}
+				}
+			]
+		},
+		{
+			"name": "V1 API (Pipeline)",
+			"item": [
+				{
+					"name": "POST /v1/form-events",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"businessId\": \"stlpartyhelpers\",\n  \"pipelineKey\": \"quote_and_deposit\",\n  \"dryRun\": false,\n  \"options\": {\n    \"sendQuoteEmail\": true\n  },\n  \"fields\": {\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"event_date\": \"2025-06-15\",\n    \"duration_hours\": 4,\n    \"num_helpers\": 2\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/v1/form-events",
+							"host": ["{{base_url_dev}}"],
+							"path": ["v1", "form-events"]
+						},
+						"description": "Submit form event\n\n**Request Body:**\n- `source`: Event source (e.g., \"webhook\")\n- `businessId`: Business identifier\n- `formKey`: Form identifier\n- `payload`: Form data\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/v1/form-events\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"source\": \"webhook\",\n    \"businessId\": \"business-123\",\n    \"formKey\": \"contact-form\",\n    \"payload\": {\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\"\n    }\n  }'\n```"
+					}
+				},
+				{
+					"name": "POST /v1/triggers",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"source\": \"monday\",\n  \"businessId\": \"stlpartyhelpers\",\n  \"triggerKey\": \"send_renewal_offer\",\n  \"pipelineKey\": \"renewal_followup\",\n  \"resource\": {\n    \"type\": \"monday_item\",\n    \"boardId\": 123456789,\n    \"itemId\": 987654321\n  },\n  \"payload\": {\n    \"event_date\": \"2025-05-10\",\n    \"client_email\": \"client@example.com\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url_dev}}/v1/triggers",
+							"host": ["{{base_url_dev}}"],
+							"path": ["v1", "triggers"]
+						},
+						"description": "Trigger pipeline execution\n\n**Request Body:**\n- `source`: Trigger source\n- `businessId`: Business identifier\n- `triggerKey`: Trigger identifier\n- `pipelineKey`: Pipeline identifier\n- `payload`: Trigger data\n\n**curl:**\n```bash\ncurl -X POST \"{{base_url_dev}}/v1/triggers\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"source\": \"trigger\",\n    \"businessId\": \"business-123\",\n    \"triggerKey\": \"on-booking\",\n    \"pipelineKey\": \"booking-pipeline\",\n    \"payload\": {}\n  }'\n```"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url_local",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "base_url_dev",
+			"value": "https://bizops360-api-go-dev-gqqr4r256q-uc.a.run.app",
+			"type": "string"
+		},
+		{
+			"key": "base_url_prod",
+			"value": "https://bizops360-api-go-prod-XXXXX-uc.a.run.app",
+			"type": "string"
+		},
+		{
+			"key": "api_key",
+			"value": "test-api-key-12345",
+			"type": "string"
+		}
+	]
+}
+

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Final Invoice Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* Light mode (default) */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; 
+            background: #ffffff; 
+            color: #1a1a1a;
+            padding: 20px;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        .container { 
+            background: #ffffff; 
+            padding: 30px; 
+            border-radius: 12px; 
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        h1 { 
+            color: #0047ab; 
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 14px;
+        }
+        input { 
+            width: 100%;
+            max-width: 400px;
+            padding: 12px; 
+            margin: 5px 0 15px 0; 
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            color: #1a1a1a;
+        }
+        input:focus {
+            outline: none;
+            border-color: #0047ab;
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 5px; 
+            font-size: 14px;
+            background: #0047ab; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        button:hover { 
+            background: #003380; 
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button:disabled { 
+            background: #666; 
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .result { 
+            margin-top: 25px; 
+            padding: 20px; 
+            background: #f8f9fa; 
+            border-radius: 8px; 
+            white-space: pre-wrap; 
+            font-family: 'Courier New', monospace; 
+            font-size: 13px;
+            line-height: 1.6;
+            border: 1px solid #e0e0e0;
+            color: #1a1a1a;
+        }
+        .success { 
+            color: #28a745; 
+            border-left: 4px solid #28a745; 
+            background: #f0f9f4;
+        }
+        .error { 
+            color: #dc3545; 
+            border-left: 4px solid #dc3545; 
+            background: #fff5f5;
+        }
+        .info { 
+            color: #0047ab; 
+            border-left: 4px solid #0047ab; 
+            background: #f0f4ff;
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body { 
+                background: #1a1a1a; 
+                color: #e0e0e0;
+            }
+            .container { 
+                background: #2d2d2d; 
+                border: 1px solid #404040;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            }
+            h1 { 
+                color: #5a9fff; 
+            }
+            label { 
+                color: #e0e0e0;
+            }
+            input { 
+                background: #3a3a3a;
+                border: 2px solid #555;
+                color: #e0e0e0;
+            }
+            input:focus {
+                border-color: #5a9fff;
+            }
+            input::placeholder {
+                color: #999;
+            }
+            .result { 
+                background: #2d2d2d; 
+                border: 1px solid #404040;
+                color: #e0e0e0;
+            }
+            .success { 
+                color: #4ade80; 
+                border-left: 4px solid #4ade80; 
+                background: #1a3a2a;
+            }
+            .error { 
+                color: #f87171; 
+                border-left: 4px solid #f87171; 
+                background: #3a1a1a;
+            }
+            .info { 
+                color: #5a9fff; 
+                border-left: 4px solid #5a9fff; 
+                background: #1a2a3a;
+            }
+            button:disabled { 
+                background: #555; 
+            }
+        }
+        
+        /* Force light mode if needed */
+        .light-mode {
+            background: #ffffff !important;
+            color: #1a1a1a !important;
+        }
+        .light-mode .container {
+            background: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+        }
+        .light-mode input {
+            background: #fff !important;
+            color: #1a1a1a !important;
+            border: 2px solid #ddd !important;
+        }
+        .light-mode .result {
+            background: #f8f9fa !important;
+            color: #1a1a1a !important;
+            border: 1px solid #e0e0e0 !important;
+        }
+        
+        .button-group {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: #0047ab;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        .theme-toggle:hover {
+            background: #003380;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+    <div class="container">
+        <h1>Final Invoice Test</h1>
+        
+        <div>
+            <label>Your Email:</label>
+            <input type="email" id="email" value="your-email@example.com" placeholder="Enter your email">
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <button onclick="testCreateInvoice()">[1] Create Final Invoice</button>
+            <button onclick="testSendEmail()" id="sendEmailBtn" disabled>[2] Send Email</button>
+            <button onclick="testFullFlow()">[Full] Test Full Flow (Both)</button>
+        </div>
+        
+        <div id="result" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const API_KEY = 'test-api-key-12345';
+        const BASE_URL = 'http://localhost:8080';
+        let invoiceData = null;
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result ' + type;
+            resultDiv.textContent = message;
+        }
+
+        async function testCreateInvoice() {
+            const email = document.getElementById('email').value;
+            if (!email || email === 'your-email@example.com') {
+                showResult('Please enter your email address', 'error');
+                return;
+            }
+
+            showResult('Creating invoice...', 'info');
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/stripe/final-invoice`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Api-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        name: 'Test Customer',
+                        totalAmount: 1000.0,
+                        depositPaid: 400.0,
+                        currency: 'usd',
+                        description: 'Final payment for test event'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    invoiceData = data;
+                    document.getElementById('sendEmailBtn').disabled = false;
+                    showResult('✅ Invoice Created!\n\n' + JSON.stringify(data, null, 2), 'success');
+                } else {
+                    showResult('❌ Error: ' + JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('❌ Error: ' + error.message + '\n\nMake sure the server is running on ' + BASE_URL, 'error');
+            }
+        }
+
+        async function testSendEmail() {
+            if (!invoiceData) {
+                showResult('Please create an invoice first!', 'error');
+                return;
+            }
+
+            const email = document.getElementById('email').value;
+            showResult('Sending email...', 'info');
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/email/final-invoice`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Api-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'Test Customer',
+                        email: email,
+                        totalAmount: 1000.0,
+                        depositPaid: 400.0,
+                        remainingBalance: invoiceData.details.remainingBalance,
+                        invoiceUrl: invoiceData.invoice.url
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('✅ Email Sent!\n\n' + JSON.stringify(data, null, 2) + '\n\nCheck your email: ' + email, 'success');
+                } else {
+                    showResult('❌ Error: ' + JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testFullFlow() {
+            await testCreateInvoice();
+            if (invoiceData) {
+                setTimeout(() => testSendEmail(), 1000);
+            }
+        }
+        
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            localStorage.setItem('preferred-theme', isLight ? 'light' : 'dark');
+        }
+        
+        // Apply saved theme preference
+        window.onload = function() {
+            const savedTheme = localStorage.getItem('preferred-theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+            }
+        };
+    </script>
+</body>
+</html>
+

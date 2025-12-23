@@ -1,0 +1,37 @@
+# Development Environment Configuration
+environment: dev
+project_id: bizops360-dev
+region: us-central1
+
+# Service configuration
+service_name: bizops360-api-go-dev
+port: 8080
+
+# Secrets (references to Secret Manager)
+secrets:
+  api_key: svc-api-key-dev
+  stripe_test: stripe-secret-key-test
+  stripe_prod: stripe-secret-key-prod  # May not exist in dev
+
+# Environment variables
+env_vars:
+  ENV: dev
+  LOG_LEVEL: debug
+  CONFIG_DIR: /app/config
+  TEMPLATES_DIR: /app/templates
+
+# Cloud Run settings
+cloud_run:
+  memory: 512Mi
+  cpu: 1
+  min_instances: 0
+  max_instances: 5
+  concurrency: 80
+  timeout: 300
+
+# Feature flags
+features:
+  enable_detailed_logging: true
+  enable_debug_endpoints: true
+  use_test_stripe_by_default: true
+
