@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -54,6 +56,27 @@ func main() {
 	router := httphandler.NewRouter(formEventsService, triggersService, businessLoader, logger, cfg.Environment)
 
 	// Create HTTP server
+	// #region agent log
+	if logFile, err := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		serverAddr := ":" + cfg.Port
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "C",
+			"location":     "main.go:57",
+			"message":      "Server address construction",
+			"data": map[string]interface{}{
+				"port":        cfg.Port,
+				"serverAddr":  serverAddr,
+				"portLength":  len(cfg.Port),
+				"addrLength":  len(serverAddr),
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,
 		Handler:      router.Handler(),
@@ -65,7 +88,43 @@ func main() {
 	// Start server in goroutine
 	go func() {
 		logger.Info("server listening", "addr", srv.Addr)
+		// #region agent log
+		if logFile, err := os.OpenFile("../../.cursor/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			logEntry := map[string]interface{}{
+				"sessionId":    "debug-session",
+				"runId":        "run1",
+				"hypothesisId": "E",
+				"location":     "main.go:ListenAndServe",
+				"message":      "Attempting to start server",
+				"data": map[string]interface{}{
+					"addr": srv.Addr,
+				},
+				"timestamp": time.Now().UnixMilli(),
+			}
+			json.NewEncoder(logFile).Encode(logEntry)
+			logFile.Close()
+		}
+		// #endregion
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			// #region agent log
+			if logFile, err := os.OpenFile("../../.cursor/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+				logEntry := map[string]interface{}{
+					"sessionId":    "debug-session",
+					"runId":        "run1",
+					"hypothesisId": "E",
+					"location":     "main.go:ListenAndServe",
+					"message":      "Server startup error",
+					"data": map[string]interface{}{
+						"error":     err.Error(),
+						"addr":      srv.Addr,
+						"errorType": fmt.Sprintf("%T", err),
+					},
+					"timestamp": time.Now().UnixMilli(),
+				}
+				json.NewEncoder(logFile).Encode(logEntry)
+				logFile.Close()
+			}
+			// #endregion
 			logger.Error("server error", "error", err)
 			os.Exit(1)
 		}

@@ -149,7 +149,11 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 	}
 	metadata["invoice_type"] = "final"
 	metadata["total_amount_cents"] = strconv.FormatInt(req.TotalAmountCents, 10)
-	metadata["deposit_paid_cents"] = strconv.FormatInt(req.DepositPaidCents, 10)
+	// Only add deposit_paid_cents to metadata if it was actually provided (> 0)
+	// The handler may have already added it, but we ensure it's here if > 0
+	if req.DepositPaidCents > 0 {
+		metadata["deposit_paid_cents"] = strconv.FormatInt(req.DepositPaidCents, 10)
+	}
 	metadata["remaining_balance_cents"] = strconv.FormatInt(remainingCents, 10)
 
 	// Create invoice

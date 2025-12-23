@@ -1,87 +1,81 @@
 package handlers
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
+	"github.com/bizops360/go-api/internal/http/handlers/dto"
 	"github.com/bizops360/go-api/internal/ports"
+	"github.com/bizops360/go-api/internal/services/email"
 	"github.com/bizops360/go-api/internal/services/pricing"
+	stripeService "github.com/bizops360/go-api/internal/services/stripe"
 	"github.com/bizops360/go-api/internal/util"
 )
 
 // StripeHandler handles Stripe-related endpoints
 type StripeHandler struct {
-	paymentsProvider ports.PaymentsProvider
+	invoiceService  *stripeService.InvoiceService
+	emailHandler    *EmailHandler
+	templateService *email.TemplateService
 }
 
 // NewStripeHandler creates a new Stripe handler
 func NewStripeHandler(paymentsProvider ports.PaymentsProvider) *StripeHandler {
 	return &StripeHandler{
-		paymentsProvider: paymentsProvider,
+		invoiceService:  stripeService.NewInvoiceService(paymentsProvider),
+		templateService: email.NewTemplateService(),
 	}
+}
+
+// SetEmailHandler sets the email handler for orchestrated endpoints
+func (h *StripeHandler) SetEmailHandler(emailHandler *EmailHandler) {
+	h.emailHandler = emailHandler
 }
 
 // HandleDeposit handles POST /api/stripe/deposit
 func (h *StripeHandler) HandleDeposit(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+	if !ValidateMethod(r, http.MethodPost, w) {
 		return
 	}
 
-	var body struct {
-		Email          string  `json:"email"`
-		Name           string  `json:"name"`
-		EstimatedTotal *float64 `json:"estimatedTotal"`
-		DepositValue   *float64 `json:"depositValue"`
-		Deposit        *float64 `json:"deposit"`
-		HelpersCount   *int    `json:"helpersCount"`
-		Hours          *float64 `json:"hours"`
-		UseTest        bool    `json:"useTest"`
-		DryRun         bool    `json:"dryRun"`
-		MockStripe     bool    `json:"mockStripe"`
-	}
-
-	if err := util.ReadJSON(r, &body); err != nil {
+	var req dto.DepositRequest
+	if err := util.ReadJSON(r, &req); err != nil {
 		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
 		return
 	}
 
-	// Convert dollars to cents if needed
-	var depositCents *int64
-	if body.DepositValue != nil {
-		cents := int64(*body.DepositValue * 100)
-		depositCents = &cents
-	} else if body.Deposit != nil {
-		cents := int64(*body.Deposit * 100)
-		depositCents = &cents
-	}
-
-	var estimateCents *int64
-	if body.EstimatedTotal != nil {
-		cents := int64(*body.EstimatedTotal * 100)
-		estimateCents = &cents
-	}
-
-	// For now, return a simple response (full implementation would call Stripe)
 	response := map[string]interface{}{
-		"ok": true,
+		"ok":      true,
 		"message": "Deposit calculation (stub - full Stripe integration pending)",
 	}
 
-	if depositCents != nil {
+	// Handle manual deposit value
+	if req.DepositValue != nil {
+		depositCents := util.DollarsToCents(*req.DepositValue)
 		response["deposit"] = map[string]interface{}{
-			"value": *depositCents,
-			"valueDollars": float64(*depositCents) / 100,
+			"value":        depositCents,
+			"valueDollars": util.CentsToDollars(depositCents),
+		}
+	} else if req.Deposit != nil {
+		depositCents := util.DollarsToCents(*req.Deposit)
+		response["deposit"] = map[string]interface{}{
+			"value":        depositCents,
+			"valueDollars": util.CentsToDollars(depositCents),
 		}
 	}
 
-	if estimateCents != nil {
-		deposit, _ := h.paymentsProvider.CalculateDeposit(r.Context(), *estimateCents)
-		response["deposit"] = map[string]interface{}{
-			"value": deposit.AmountCents,
-			"valueDollars": deposit.AmountDollars,
-			"percentage": deposit.Percentage,
+	// Handle calculated deposit from estimate
+	if req.EstimatedTotal != nil {
+		estimateCents := util.DollarsToCents(*req.EstimatedTotal)
+		deposit, err := h.invoiceService.CalculateDepositFromEstimate(r.Context(), estimateCents)
+		if err == nil {
+			response["deposit"] = map[string]interface{}{
+				"value":        deposit.AmountCents,
+				"valueDollars": deposit.AmountDollars,
+				"percentage":   deposit.Percentage,
+			}
 		}
 	}
 
@@ -90,14 +84,12 @@ func (h *StripeHandler) HandleDeposit(w http.ResponseWriter, r *http.Request) {
 
 // HandleDepositCalculate handles GET /api/stripe/deposit/calculate
 func (h *StripeHandler) HandleDepositCalculate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+	if !ValidateMethod(r, http.MethodGet, w) {
 		return
 	}
 
 	estimateStr := r.URL.Query().Get("estimate")
 	depositStr := r.URL.Query().Get("deposit")
-	_ = r.URL.Query().Get("show_table") == "true" // Reserved for future use
 
 	var estimateCents *int64
 	var depositCents *int64
@@ -105,7 +97,7 @@ func (h *StripeHandler) HandleDepositCalculate(w http.ResponseWriter, r *http.Re
 	if depositStr != "" {
 		depositDollars, err := strconv.ParseFloat(depositStr, 64)
 		if err == nil {
-			cents := int64(depositDollars * 100)
+			cents := util.DollarsToCents(depositDollars)
 			depositCents = &cents
 		}
 	}
@@ -113,16 +105,16 @@ func (h *StripeHandler) HandleDepositCalculate(w http.ResponseWriter, r *http.Re
 	if estimateStr != "" {
 		estimateDollars, err := strconv.ParseFloat(estimateStr, 64)
 		if err == nil {
-			cents := int64(estimateDollars * 100)
+			cents := util.DollarsToCents(estimateDollars)
 			estimateCents = &cents
 		}
 	}
 
 	if depositCents == nil && estimateCents == nil {
 		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
-			"ok": true,
+			"ok":      true,
 			"message": "No estimate or deposit provided.",
-			"usage": "Add ?estimate=100 to calculate deposit, or ?deposit=50 to set manually (both in dollars)",
+			"usage":   "Add ?estimate=100 to calculate deposit, or ?deposit=50 to set manually (both in dollars)",
 		})
 		return
 	}
@@ -132,26 +124,28 @@ func (h *StripeHandler) HandleDepositCalculate(w http.ResponseWriter, r *http.Re
 	}
 
 	if depositCents != nil {
-		response["deposit"] = float64(*depositCents) / 100
+		response["deposit"] = util.CentsToDollars(*depositCents)
 		response["depositCents"] = *depositCents
 		response["pickedBy"] = "manual"
 		response["isManualOverride"] = true
 	}
 
 	if estimateCents != nil {
-		calc, _ := h.paymentsProvider.CalculateDeposit(r.Context(), *estimateCents)
-		if depositCents == nil {
-			response["deposit"] = calc.AmountDollars
-			response["depositCents"] = calc.AmountCents
-			response["pickedBy"] = "calculated"
-			response["isManualOverride"] = false
-		}
-		response["requested_estimate"] = float64(*estimateCents) / 100
-		response["calculation"] = map[string]interface{}{
-			"deposit": calc.AmountDollars,
-			"percentage": calc.Percentage,
-			"min_range": float64(calc.AmountCents - 1000) / 100, // Simplified
-			"max_range": float64(calc.AmountCents + 1000) / 100, // Simplified
+		calc, err := h.invoiceService.CalculateDepositFromEstimate(r.Context(), *estimateCents)
+		if err == nil {
+			if depositCents == nil {
+				response["deposit"] = calc.AmountDollars
+				response["depositCents"] = calc.AmountCents
+				response["pickedBy"] = "calculated"
+				response["isManualOverride"] = false
+			}
+			response["requested_estimate"] = util.CentsToDollars(*estimateCents)
+			response["calculation"] = map[string]interface{}{
+				"deposit":    calc.AmountDollars,
+				"percentage": calc.Percentage,
+				"min_range":  util.CentsToDollars(calc.AmountCents - 1000),
+				"max_range":  util.CentsToDollars(calc.AmountCents + 1000),
+			}
 		}
 	}
 
@@ -160,88 +154,78 @@ func (h *StripeHandler) HandleDepositCalculate(w http.ResponseWriter, r *http.Re
 
 // HandleDepositWithEmail handles POST /api/stripe/deposit/with-email
 func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+	if !ValidateMethod(r, http.MethodPost, w) {
 		return
 	}
 
-	var body struct {
-		Name              string   `json:"name"`
-		Email             string   `json:"email"`
-		EventType         string   `json:"eventType"`
-		EventDateTimeLocal string  `json:"eventDateTimeLocal"`
-		EventDate         string   `json:"eventDate"`
-		HelpersCount      *int     `json:"helpersCount"`
-		Hours             *float64 `json:"hours"`
-		Duration          *float64 `json:"duration"`
-		Estimate          *float64 `json:"estimate"`
-		EstimatedTotal    *float64 `json:"estimatedTotal"`
-		DepositValue      *float64 `json:"depositValue"`
-		UseTest           bool     `json:"useTest"`
-		DryRun            bool     `json:"dryRun"`
-		SaveAsDraft       bool     `json:"saveAsDraft"`
-	}
-
-	if err := util.ReadJSON(r, &body); err != nil {
+	var req dto.DepositWithEmailRequest
+	if err := util.ReadJSON(r, &req); err != nil {
 		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
 		return
 	}
 
-	if body.Name == "" {
-		util.WriteError(w, http.StatusBadRequest, "Missing required field: name")
+	if !ValidateRequiredString(req.Name, "name", w) {
 		return
 	}
 
 	// Calculate estimate if event details provided
 	var estimateResult *pricing.EstimateResult
-	if body.EventDateTimeLocal != "" || body.EventDate != "" {
-		eventDateStr := body.EventDateTimeLocal
+	var depositCents int64
+
+	if req.EventDateTimeLocal != "" || req.EventDate != "" {
+		eventDateStr := req.EventDateTimeLocal
 		if eventDateStr == "" {
-			eventDateStr = body.EventDate
+			eventDateStr = req.EventDate
 		}
-		
-		eventDate, err := time.Parse("2006-01-02", eventDateStr[:10])
+
+		durationHours := 4.0
+		if req.Hours != nil {
+			durationHours = *req.Hours
+		} else if req.Duration != nil {
+			durationHours = *req.Duration
+		}
+
+		numHelpers := 2
+		if req.HelpersCount != nil {
+			numHelpers = *req.HelpersCount
+		}
+
+		deposit, result, err := h.invoiceService.CalculateDepositFromEventDetails(
+			r.Context(), eventDateStr, durationHours, numHelpers)
 		if err == nil {
-			durationHours := 4.0
-			if body.Hours != nil {
-				durationHours = *body.Hours
-			} else if body.Duration != nil {
-				durationHours = *body.Duration
-			}
-			
-			numHelpers := 2
-			if body.HelpersCount != nil {
-				numHelpers = *body.HelpersCount
-			}
-			
-			estimateResult, _ = pricing.CalculateEstimate(eventDate, durationHours, numHelpers)
+			depositCents = deposit.AmountCents
+			estimateResult = result
 		}
 	}
 
-	// Determine deposit
-	var depositCents int64
-	if body.DepositValue != nil {
-		depositCents = int64(*body.DepositValue * 100)
+	// Determine deposit from various sources
+	if req.DepositValue != nil {
+		depositCents = util.DollarsToCents(*req.DepositValue)
 	} else if estimateResult != nil {
-		deposit, _ := h.paymentsProvider.CalculateDeposit(r.Context(), int64(estimateResult.TotalCost * 100))
-		depositCents = deposit.AmountCents
-	} else if body.Estimate != nil {
-		deposit, _ := h.paymentsProvider.CalculateDeposit(r.Context(), int64(*body.Estimate * 100))
-		depositCents = deposit.AmountCents
-	} else if body.EstimatedTotal != nil {
-		deposit, _ := h.paymentsProvider.CalculateDeposit(r.Context(), int64(*body.EstimatedTotal * 100))
-		depositCents = deposit.AmountCents
+		// Already calculated above
+	} else if req.Estimate != nil {
+		deposit, err := h.invoiceService.CalculateDepositFromEstimate(
+			r.Context(), util.DollarsToCents(*req.Estimate))
+		if err == nil {
+			depositCents = deposit.AmountCents
+		}
+	} else if req.EstimatedTotal != nil {
+		deposit, err := h.invoiceService.CalculateDepositFromEstimate(
+			r.Context(), util.DollarsToCents(*req.EstimatedTotal))
+		if err == nil {
+			depositCents = deposit.AmountCents
+		}
 	}
 
 	response := map[string]interface{}{
-		"ok": true,
-		"message": "Invoice generated (stub - full Stripe integration pending)",
-		"dryRun": body.DryRun,
-		"saveAsDraft": body.SaveAsDraft,
+		"ok":          true,
+		"message":     "Invoice generated (stub - full Stripe integration pending)",
+		"dryRun":      req.DryRun,
+		"saveAsDraft": req.SaveAsDraft,
 		"generatedInvoice": map[string]interface{}{
-			"id": "stub_invoice_id",
-			"url": "https://stripe.com/invoice/stub",
-			"amount": float64(depositCents) / 100,
+			"id":     "stub_invoice_id",
+			"url":    "https://stripe.com/invoice/stub",
+			"amount": util.CentsToDollars(depositCents),
 		},
 	}
 
@@ -254,30 +238,17 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 
 // HandleTest handles POST /api/stripe/test
 func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+	if !ValidateMethod(r, http.MethodPost, w) {
 		return
 	}
 
-	// Get query parameters (can override with body)
+	// Get query parameters
 	useTest := r.URL.Query().Get("useTest") == "true" || r.URL.Query().Get("use_test") == "true"
 	sendEmail := r.URL.Query().Get("sendEmail") == "true" || r.URL.Query().Get("send_email") == "true"
 
 	var body map[string]interface{}
 	if err := util.ReadJSON(r, &body); err != nil {
-		// Body is optional, continue with defaults
 		body = make(map[string]interface{})
-	}
-
-	// Helper to get param from query or body
-	getParam := func(queryKey, bodyKey string, defaultValue interface{}) interface{} {
-		if val := r.URL.Query().Get(queryKey); val != "" {
-			return val
-		}
-		if val, ok := body[bodyKey]; ok {
-			return val
-		}
-		return defaultValue
 	}
 
 	// Parse useTest and sendEmail from body if present
@@ -288,70 +259,74 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 		sendEmail = val
 	}
 
-	// Default demo data - convert to cents
-	estimatedTotal := 10.0 // $10.00 default
-	if val := getParam("estimate", "estimatedTotal", nil); val != nil {
-		if f, ok := val.(float64); ok {
-			estimatedTotal = f
-		} else if s, ok := val.(string); ok {
-			if f, err := strconv.ParseFloat(s, 64); err == nil {
-				estimatedTotal = f
-			}
+	// Parse estimated total
+	estimatedTotal := 10.0
+	if val, err := ParseFloatFromMap(body, "estimatedTotal"); err == nil && val != nil {
+		estimatedTotal = *val
+	} else if val, err := ParseFloatFromQuery(r, "estimate"); err == nil && val != nil {
+		estimatedTotal = *val
+	}
+
+	// Convert to cents if needed
+	estimatedTotalCents := util.DollarsToCents(estimatedTotal)
+	if estimatedTotal < 10000 {
+		estimatedTotalCents = util.DollarsToCents(estimatedTotal)
+	}
+
+	// Parse deposit value
+	var depositValueCents *int64
+	if val, err := ParseFloatFromMap(body, "depositValue"); err == nil && val != nil {
+		cents := util.DollarsToCents(*val)
+		if *val < 10000 {
+			cents = util.DollarsToCents(*val)
+		}
+		depositValueCents = &cents
+	} else if val, err := ParseFloatFromQuery(r, "depositValue"); err == nil && val != nil {
+		cents := util.DollarsToCents(*val)
+		if *val < 10000 {
+			cents = util.DollarsToCents(*val)
+		}
+		depositValueCents = &cents
+	}
+
+	// Get customer info
+	customerEmail := GetStringFromMap(body, "email")
+	if customerEmail == "" {
+		customerEmail = r.URL.Query().Get("email")
+		if customerEmail == "" {
+			customerEmail = "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
 		}
 	}
 
-	// Convert dollars to cents if < 10000
-	if estimatedTotal < 10000 {
-		estimatedTotal = estimatedTotal * 100
-	}
-
-	depositValue := getParam("depositValue", "depositValue", nil)
-	var depositValueFloat *float64
-	if depositValue != nil {
-		if f, ok := depositValue.(float64); ok {
-			depositValueFloat = &f
-			if *depositValueFloat < 10000 {
-				*depositValueFloat = *depositValueFloat * 100
-			}
-		} else if s, ok := depositValue.(string); ok {
-			if f, err := strconv.ParseFloat(s, 64); err == nil {
-				depositValueFloat = &f
-				if *depositValueFloat < 10000 {
-					*depositValueFloat = *depositValueFloat * 100
-				}
-			}
+	customerName := GetStringFromMap(body, "name")
+	if customerName == "" {
+		customerName = r.URL.Query().Get("name")
+		if customerName == "" {
+			customerName = "Test Customer"
 		}
 	}
 
 	// Create invoice request
-	invoiceReq := &ports.CreateInvoiceRequest{
-		CustomerEmail: func() string {
-			if email := getParam("email", "email", "alexey@shevelyov.com"); email != nil {
-				if s, ok := email.(string); ok {
-					return s
-				}
-			}
-			return "alexey@shevelyov.com"
-		}(),
-		CustomerName: func() string {
-			if name := getParam("name", "name", "Test Customer"); name != nil {
-				if s, ok := name.(string); ok {
-					return s
-				}
-			}
-			return "Test Customer"
-		}(),
-		AmountCents: int64(estimatedTotal),
-		Currency:    "usd",
-		Description: "Test Booking Deposit Invoice",
+	amountCents := estimatedTotalCents
+	if depositValueCents != nil {
+		amountCents = *depositValueCents
 	}
 
-	if depositValueFloat != nil {
-		invoiceReq.AmountCents = int64(*depositValueFloat)
+	invoiceReq := &ports.CreateInvoiceRequest{
+		CustomerEmail: customerEmail,
+		CustomerName:  customerName,
+		AmountCents:   amountCents,
+		Currency:      "usd",
+		Description:   "Test Booking Deposit Invoice",
 	}
 
 	// Generate invoice
-	invoiceResult, err := h.paymentsProvider.CreateInvoice(r.Context(), invoiceReq)
+	invoiceResult, err := h.invoiceService.CreateDepositInvoice(r.Context(), &stripeService.CreateDepositInvoiceRequest{
+		CustomerEmail:     invoiceReq.CustomerEmail,
+		CustomerName:      invoiceReq.CustomerName,
+		DepositValueCents: &amountCents,
+		Description:       invoiceReq.Description,
+	})
 	if err != nil {
 		util.WriteError(w, http.StatusBadRequest, "Invoice generation failed: "+err.Error())
 		return
@@ -367,15 +342,15 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 		"generatedInvoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,
 			"url":    invoiceResult.HostedInvoiceURL,
-			"amount": float64(invoiceResult.AmountDue) / 100,
+			"amount": util.CentsToDollars(invoiceResult.AmountDue),
 		},
 		"demoData": map[string]interface{}{
-			"email":          invoiceReq.CustomerEmail,
-			"name":           invoiceReq.CustomerName,
-			"estimatedTotal": float64(invoiceReq.AmountCents) / 100,
+			"email":          customerEmail,
+			"name":           customerName,
+			"estimatedTotal": util.CentsToDollars(estimatedTotalCents),
 			"depositValue": func() interface{} {
-				if depositValueFloat != nil {
-					return *depositValueFloat / 100
+				if depositValueCents != nil {
+					return util.CentsToDollars(*depositValueCents)
 				}
 				return nil
 			}(),
@@ -383,7 +358,6 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	// Optionally send email (stub for now)
 	if sendEmail {
 		response["email"] = map[string]interface{}{
 			"sent":    false,
@@ -395,105 +369,87 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusOK, response)
 }
 
+// createFinalInvoiceCommon contains common logic for creating final invoices
+func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.FinalInvoiceRequest) (*ports.InvoiceResult, error) {
+	// Validate required fields
+	if req.Email == "" || req.Name == "" {
+		return nil, fmt.Errorf("email and name are required")
+	}
+
+	// Create final invoice using service
+	invoiceReq := &stripeService.CreateFinalInvoiceRequest{
+		CustomerEmail:    req.Email,
+		CustomerName:     req.Name,
+		TotalAmountCents: req.TotalAmountCents,
+		TotalAmount:      req.TotalAmount,
+		DepositPaidCents: req.DepositPaidCents,
+		DepositPaid:      req.DepositPaid,
+		Currency:         req.Currency,
+		Description:      req.Description,
+		Metadata:         req.Metadata,
+	}
+
+	return h.invoiceService.CreateFinalInvoice(ctx, invoiceReq)
+}
+
 // HandleFinalInvoice handles POST /api/stripe/final-invoice
 func (h *StripeHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+	if !ValidateMethod(r, http.MethodPost, w) {
 		return
 	}
 
-	var body struct {
-		Email            string            `json:"email"`
-		Name             string            `json:"name"`
-		TotalAmountCents *int64            `json:"totalAmountCents"`
-		TotalAmount      *float64          `json:"totalAmount"` // in dollars
-		DepositPaidCents *int64            `json:"depositPaidCents"`
-		DepositPaid      *float64          `json:"depositPaid"` // in dollars
-		Currency         string            `json:"currency"`
-		Description      string            `json:"description"`
-		Metadata         map[string]string `json:"metadata"`
-		UseTest          bool              `json:"useTest"`
-		SendEmail        bool              `json:"sendEmail"`
-	}
-
-	if err := util.ReadJSON(r, &body); err != nil {
+	var req dto.FinalInvoiceRequest
+	if err := util.ReadJSON(r, &req); err != nil {
 		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
 		return
 	}
 
-	if body.Email == "" {
-		util.WriteError(w, http.StatusBadRequest, "email is required")
+	if !ValidateRequiredString(req.Email, "email", w) || !ValidateRequiredString(req.Name, "name", w) {
 		return
-	}
-
-	if body.Name == "" {
-		util.WriteError(w, http.StatusBadRequest, "name is required")
-		return
-	}
-
-	// Convert dollars to cents if provided
-	var totalCents int64
-	if body.TotalAmountCents != nil {
-		totalCents = *body.TotalAmountCents
-	} else if body.TotalAmount != nil {
-		totalCents = int64(*body.TotalAmount * 100)
-	} else {
-		util.WriteError(w, http.StatusBadRequest, "totalAmount or totalAmountCents is required")
-		return
-	}
-
-	var depositPaidCents int64
-	if body.DepositPaidCents != nil {
-		depositPaidCents = *body.DepositPaidCents
-	} else if body.DepositPaid != nil {
-		depositPaidCents = int64(*body.DepositPaid * 100)
-	} else {
-		util.WriteError(w, http.StatusBadRequest, "depositPaid or depositPaidCents is required")
-		return
-	}
-
-	if body.Currency == "" {
-		body.Currency = "usd"
-	}
-
-	// Create final invoice request
-	req := &ports.CreateFinalInvoiceRequest{
-		CustomerEmail:     body.Email,
-		CustomerName:      body.Name,
-		TotalAmountCents:  totalCents,
-		DepositPaidCents:  depositPaidCents,
-		Currency:          body.Currency,
-		Description:       body.Description,
-		Metadata:          body.Metadata,
 	}
 
 	// Create final invoice
-	invoiceResult, err := h.paymentsProvider.CreateFinalInvoice(r.Context(), req)
+	invoiceResult, err := h.createFinalInvoiceCommon(r.Context(), req)
 	if err != nil {
 		util.WriteError(w, http.StatusBadRequest, "Failed to create final invoice: "+err.Error())
 		return
 	}
 
+	// Calculate amounts for response
+	totalCents := int64(0)
+	if req.TotalAmountCents != nil {
+		totalCents = *req.TotalAmountCents
+	} else if req.TotalAmount != nil {
+		totalCents = util.DollarsToCents(*req.TotalAmount)
+	}
+
+	depositPaidCents := int64(0)
+	if req.DepositPaidCents != nil {
+		depositPaidCents = *req.DepositPaidCents
+	} else if req.DepositPaid != nil {
+		depositPaidCents = util.DollarsToCents(*req.DepositPaid)
+	}
+
 	response := map[string]interface{}{
-		"ok": true,
+		"ok":      true,
 		"message": "Final invoice created successfully",
 		"invoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,
 			"url":    invoiceResult.HostedInvoiceURL,
-			"amount": float64(invoiceResult.AmountDue) / 100,
+			"amount": util.CentsToDollars(invoiceResult.AmountDue),
 			"status": invoiceResult.Status,
 			"pdf":    invoiceResult.InvoicePDF,
 		},
 		"details": map[string]interface{}{
-			"totalAmount":    float64(totalCents) / 100,
-			"depositPaid":    float64(depositPaidCents) / 100,
-			"remainingBalance": float64(invoiceResult.AmountDue) / 100,
+			"totalAmount":      util.CentsToDollars(totalCents),
+			"depositPaid":      util.CentsToDollars(depositPaidCents),
+			"remainingBalance": util.CentsToDollars(invoiceResult.AmountDue),
 		},
 	}
 
 	// Optionally send invoice via Stripe
-	if body.SendEmail {
-		if err := h.paymentsProvider.SendInvoice(r.Context(), invoiceResult.InvoiceID, body.UseTest); err != nil {
+	if req.SendEmail {
+		if err := h.invoiceService.SendInvoice(r.Context(), invoiceResult.InvoiceID, req.UseTest); err != nil {
 			response["emailWarning"] = "Invoice created but email sending failed: " + err.Error()
 		} else {
 			response["emailSent"] = true
@@ -503,31 +459,107 @@ func (h *StripeHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Reques
 	util.WriteJSON(w, http.StatusOK, response)
 }
 
-// HandleGetDepositAmount handles POST /api/stripe/deposit/amount
-// This is equivalent to STRIPE_GET_BOOKING_DEPOSIT_AMOUNT
-func (h *StripeHandler) HandleGetDepositAmount(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+// HandleFinalInvoiceWithEmail handles POST /api/stripe/final-invoice/with-email
+func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *http.Request) {
+	if !ValidateMethod(r, http.MethodPost, w) {
 		return
 	}
 
-	var body struct {
-		EstimatedTotal *float64 `json:"estimatedTotal"`
-		Estimate       *float64 `json:"estimate"`
-		DepositValue   *float64 `json:"depositValue"`
+	var req dto.FinalInvoiceRequest
+	if err := util.ReadJSON(r, &req); err != nil {
+		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
+		return
 	}
 
-	if err := util.ReadJSON(r, &body); err != nil {
+	if !ValidateRequiredString(req.Email, "email", w) || !ValidateRequiredString(req.Name, "name", w) {
+		return
+	}
+
+	// Create final invoice
+	invoiceResult, err := h.createFinalInvoiceCommon(r.Context(), req)
+	if err != nil {
+		util.WriteError(w, http.StatusBadRequest, "Failed to create final invoice: "+err.Error())
+		return
+	}
+
+	// Calculate amounts for email
+	totalCents := int64(0)
+	if req.TotalAmountCents != nil {
+		totalCents = *req.TotalAmountCents
+	} else if req.TotalAmount != nil {
+		totalCents = util.DollarsToCents(*req.TotalAmount)
+	}
+
+	depositPaidCents := int64(0)
+	if req.DepositPaidCents != nil {
+		depositPaidCents = *req.DepositPaidCents
+	} else if req.DepositPaid != nil {
+		depositPaidCents = util.DollarsToCents(*req.DepositPaid)
+	}
+
+	remainingBalance := util.CentsToDollars(invoiceResult.AmountDue)
+	totalAmount := util.CentsToDollars(totalCents)
+	depositPaid := util.CentsToDollars(depositPaidCents)
+
+	// Send custom email
+	var emailSent bool
+	var emailError string
+	if h.emailHandler != nil {
+		emailSent, emailError = h.emailHandler.SendFinalInvoiceEmail(
+			r.Context(),
+			req.Name,
+			req.Email,
+			totalAmount,
+			depositPaid,
+			remainingBalance,
+			invoiceResult.HostedInvoiceURL,
+		)
+	} else {
+		emailError = "email handler is not configured"
+	}
+
+	response := map[string]interface{}{
+		"ok":      true,
+		"message": "Final invoice created and email sent",
+		"invoice": map[string]interface{}{
+			"id":     invoiceResult.InvoiceID,
+			"url":    invoiceResult.HostedInvoiceURL,
+			"amount": remainingBalance,
+			"status": invoiceResult.Status,
+			"pdf":    invoiceResult.InvoicePDF,
+		},
+		"details": map[string]interface{}{
+			"totalAmount":      totalAmount,
+			"depositPaid":      depositPaid,
+			"remainingBalance": remainingBalance,
+		},
+		"email": map[string]interface{}{
+			"sent":  emailSent,
+			"error": emailError,
+		},
+	}
+
+	util.WriteJSON(w, http.StatusOK, response)
+}
+
+// HandleGetDepositAmount handles POST /api/stripe/deposit/amount
+func (h *StripeHandler) HandleGetDepositAmount(w http.ResponseWriter, r *http.Request) {
+	if !ValidateMethod(r, http.MethodPost, w) {
+		return
+	}
+
+	var req dto.DepositAmountRequest
+	if err := util.ReadJSON(r, &req); err != nil {
 		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
 		return
 	}
 
 	var estimateCents *int64
-	if body.EstimatedTotal != nil {
-		cents := int64(*body.EstimatedTotal * 100)
+	if req.EstimatedTotal != nil {
+		cents := util.DollarsToCents(*req.EstimatedTotal)
 		estimateCents = &cents
-	} else if body.Estimate != nil {
-		cents := int64(*body.Estimate * 100)
+	} else if req.Estimate != nil {
+		cents := util.DollarsToCents(*req.Estimate)
 		estimateCents = &cents
 	}
 
@@ -537,7 +569,7 @@ func (h *StripeHandler) HandleGetDepositAmount(w http.ResponseWriter, r *http.Re
 	}
 
 	// Calculate deposit
-	deposit, err := h.paymentsProvider.CalculateDeposit(r.Context(), *estimateCents)
+	deposit, err := h.invoiceService.CalculateDepositFromEstimate(r.Context(), *estimateCents)
 	if err != nil {
 		util.WriteError(w, http.StatusInternalServerError, "Failed to calculate deposit: "+err.Error())
 		return
@@ -548,19 +580,18 @@ func (h *StripeHandler) HandleGetDepositAmount(w http.ResponseWriter, r *http.Re
 		"deposit": map[string]interface{}{
 			"amountCents":   deposit.AmountCents,
 			"amountDollars": deposit.AmountDollars,
-			"percentage":   deposit.Percentage,
+			"percentage":    deposit.Percentage,
 		},
 		"estimate": map[string]interface{}{
 			"totalCents":   deposit.EstimateTotalCents,
-			"totalDollars": float64(deposit.EstimateTotalCents) / 100,
+			"totalDollars": util.CentsToDollars(deposit.EstimateTotalCents),
 		},
 	}
 
-	if body.DepositValue != nil {
+	if req.DepositValue != nil {
 		response["manualOverride"] = true
-		response["requestedDeposit"] = *body.DepositValue
+		response["requestedDeposit"] = *req.DepositValue
 	}
 
 	util.WriteJSON(w, http.StatusOK, response)
 }
-

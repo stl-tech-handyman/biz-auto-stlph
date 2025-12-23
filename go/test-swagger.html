@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Swagger</title>
+</head>
+<body>
+    <h1>Swagger Test</h1>
+    <p>If you can see this, the server is working.</p>
+    <p><a href="/swagger">Go to Swagger UI</a></p>
+    <p><a href="/api/openapi.json">View OpenAPI Spec</a></p>
+    <script>
+        // Test if OpenAPI spec is accessible
+        fetch('/api/openapi.json')
+            .then(r => r.json())
+            .then(data => {
+                console.log('OpenAPI spec loaded:', data.info.title);
+                document.body.innerHTML += '<p style="color:green">✅ OpenAPI spec is accessible</p>';
+            })
+            .catch(err => {
+                console.error('Failed to load OpenAPI spec:', err);
+                document.body.innerHTML += '<p style="color:red">❌ Failed to load OpenAPI spec: ' + err.message + '</p>';
+            });
+    </script>
+</body>
+</html>
+

@@ -6,11 +6,11 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/bizops360/go-api/internal/util"
 )
-
 
 //go:embed endpoint_manager.html
 var endpointManagerHTML embed.FS
@@ -26,12 +26,12 @@ type EndpointInfo struct {
 
 // EndpointManagerData is the data structure for the endpoint manager template
 type EndpointManagerData struct {
-	Environment       string
-	Version           string
-	TotalEndpoints    int
-	PublicEndpoints   int
+	Environment        string
+	Version            string
+	TotalEndpoints     int
+	PublicEndpoints    int
 	ProtectedEndpoints int
-	Endpoints         []EndpointInfo
+	Endpoints          []EndpointInfo
 }
 
 // RootHandler handles the root endpoint
@@ -58,7 +58,9 @@ func getEndpoints() []EndpointInfo {
 		// Stripe endpoints
 		{Method: "POST", Path: "/api/stripe/deposit", Summary: "Создание депозита - генерация инвойса", AuthRequired: true, Tags: []string{"Stripe"}},
 		{Method: "GET", Path: "/api/stripe/deposit/calculate", Summary: "Расчет рекомендуемого депозита", AuthRequired: true, Tags: []string{"Stripe"}},
-		{Method: "POST", Path: "/api/stripe/deposit/with-email", Summary: "Создание депозита с отправкой email", AuthRequired: true, Tags: []string{"Stripe"}},
+		{Method: "POST", Path: "/api/stripe/deposit/with-email", Summary: "Создание депозита с отправкой email (ORCHESTRATED)", AuthRequired: true, Tags: []string{"Stripe"}},
+		{Method: "POST", Path: "/api/stripe/final-invoice", Summary: "Создание финального инвойса", AuthRequired: true, Tags: []string{"Stripe"}},
+		{Method: "POST", Path: "/api/stripe/final-invoice/with-email", Summary: "Создание финального инвойса с отправкой email (ORCHESTRATED)", AuthRequired: true, Tags: []string{"Stripe"}},
 		{Method: "POST", Path: "/api/stripe/test", Summary: "Тест интеграции со Stripe", AuthRequired: true, Tags: []string{"Stripe"}},
 
 		// Estimate endpoints
@@ -86,24 +88,38 @@ func getEndpoints() []EndpointInfo {
 func (h *RootHandler) HandleRoot(w http.ResponseWriter, r *http.Request) {
 	// #region agent log
 	if logFile, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
-		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "root_handler.go:84", "message": "HandleRoot called", "data": map[string]interface{}{"path": r.URL.Path, "method": r.Method, "timestamp": time.Now().UnixMilli()}})
+		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "root_handler.go:88", "message": "HandleRoot called (ROOT HANDLER MATCHING?)", "data": map[string]interface{}{"path": r.URL.Path, "method": r.Method, "timestamp": time.Now().UnixMilli()}})
 		logFile.Close()
 	}
 	// #endregion
-	
+
 	// Don't handle Swagger routes - they should be handled by SwaggerHandler
-	if r.URL.Path == "/swagger" || r.URL.Path == "/swagger-ui" || r.URL.Path == "/swagger.html" || 
-	   r.URL.Path == "/swagger-simple" || r.URL.Path == "/api/openapi.json" || r.URL.Path == "/api/openapi.yaml" {
+	if r.URL.Path == "/swagger" || r.URL.Path == "/swagger-ui" || r.URL.Path == "/swagger.html" ||
+		r.URL.Path == "/swagger-simple" || r.URL.Path == "/api/openapi.json" || r.URL.Path == "/api/openapi.yaml" {
 		// #region agent log
-		if logFile, err := os.OpenFile("../../.cursor/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
-			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "root_handler.go:90", "message": "Root handler rejecting Swagger path", "data": map[string]interface{}{"path": r.URL.Path, "timestamp": time.Now().UnixMilli()}})
+		if logFile, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "root_handler.go:96", "message": "Root handler rejecting Swagger path", "data": map[string]interface{}{"path": r.URL.Path, "timestamp": time.Now().UnixMilli()}})
 			logFile.Close()
 		}
 		// #endregion
 		http.NotFound(w, r)
 		return
 	}
-	
+
+	// Don't handle API routes - they should be handled by their specific handlers
+	// If we're here, it means ServeMux matched "/" instead of a specific route
+	// This shouldn't happen, but we'll reject API paths explicitly
+	if strings.HasPrefix(r.URL.Path, "/api/") || strings.HasPrefix(r.URL.Path, "/v1/") {
+		// #region agent log
+		if logFile, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "H", "location": "root_handler.go:107", "message": "Root handler rejecting API path (should not match)", "data": map[string]interface{}{"path": r.URL.Path, "method": r.Method, "timestamp": time.Now().UnixMilli()}})
+			logFile.Close()
+		}
+		// #endregion
+		http.NotFound(w, r)
+		return
+	}
+
 	if r.Method != http.MethodGet {
 		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
@@ -195,4 +211,3 @@ func (h *RootHandler) HandleRoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-

@@ -31,9 +31,11 @@ docker push "$IMAGE_NAME`:latest"
 # Prepare secrets
 $SECRET_ARGS = "SERVICE_API_KEY=svc-api-key-dev:latest"
 
+# Stripe secrets
 $testSecret = gcloud secrets describe stripe-secret-key-test --project=$PROJECT_ID 2>&1
 if ($LASTEXITCODE -eq 0) {
     $SECRET_ARGS += ",STRIPE_SECRET_KEY_TEST=stripe-secret-key-test:latest"
+    Write-Host "[INFO] Stripe test secret found" -ForegroundColor Green
 } else {
     Write-Host "[ERROR] Secret stripe-secret-key-test not found in $PROJECT_ID" -ForegroundColor Red
     exit 1
@@ -42,7 +44,29 @@ if ($LASTEXITCODE -eq 0) {
 $prodSecret = gcloud secrets describe stripe-secret-key-prod --project=$PROJECT_ID 2>&1
 if ($LASTEXITCODE -eq 0) {
     $SECRET_ARGS += ",STRIPE_SECRET_KEY_PROD=stripe-secret-key-prod:latest"
+    Write-Host "[INFO] Stripe prod secret found" -ForegroundColor Green
 }
+
+# Gmail credentials - check if it exists in main project (may have been copied)
+$EMAIL_PROJECT = "bizops360-email-dev"
+$gmailSecret = gcloud secrets describe gmail-credentials-json --project=$PROJECT_ID 2>&1
+if ($LASTEXITCODE -eq 0) {
+    $SECRET_ARGS += ",GMAIL_CREDENTIALS_JSON=gmail-credentials-json:latest"
+    Write-Host "[INFO] Gmail credentials found in $PROJECT_ID" -ForegroundColor Green
+} else {
+    # Check if it exists in email project (would need cross-project access)
+    $gmailSecretEmail = gcloud secrets describe gmail-credentials-json --project=$EMAIL_PROJECT 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[WARNING] Gmail credentials exist in $EMAIL_PROJECT but not in $PROJECT_ID" -ForegroundColor Yellow
+        Write-Host "[INFO] To use email features, copy the secret to $PROJECT_ID or grant cross-project access" -ForegroundColor Yellow
+    } else {
+        Write-Host "[WARNING] Gmail credentials not found (email features may not work)" -ForegroundColor Yellow
+    }
+}
+
+# Gmail FROM email
+$GMAIL_FROM = if ($env:GMAIL_FROM) { $env:GMAIL_FROM } else { "team@stlpartyhelpers.com" }
+Write-Host "[INFO] Gmail FROM: $GMAIL_FROM" -ForegroundColor Blue
 
 # Deploy to Cloud Run
 Write-Host "[INFO] Deploying to Cloud Run..." -ForegroundColor Blue
@@ -60,7 +84,7 @@ gcloud run deploy $SERVICE_NAME `
     --concurrency=80 `
     --timeout=300 `
     --set-secrets=$SECRET_ARGS `
-    --set-env-vars="ENV=dev,LOG_LEVEL=debug,CONFIG_DIR=/app/config,TEMPLATES_DIR=/app/templates" `
+    --set-env-vars="ENV=dev,LOG_LEVEL=debug,CONFIG_DIR=/app/config,TEMPLATES_DIR=/app/templates,GMAIL_FROM=$GMAIL_FROM" `
     --labels="env=dev,service=api-go,type=cloud-run"
 
 # Get service URL

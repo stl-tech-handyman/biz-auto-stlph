@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/bizops360/go-api/internal/infra/email"
 	"github.com/bizops360/go-api/internal/ports"
+	emailService "github.com/bizops360/go-api/internal/services/email"
 	"github.com/bizops360/go-api/internal/util"
 )
 
@@ -30,14 +32,14 @@ func NewEmailHandler(logger *slog.Logger) *EmailHandler {
 	handler := &EmailHandler{
 		logger: logger,
 	}
-	
+
 	// Try to use email service client first (if EMAIL_SERVICE_URL is set)
 	handler.emailClient = email.NewEmailServiceClient()
 	if handler.emailClient != nil {
 		logger.Info("Using email service API for email sending")
 		return handler
 	}
-	
+
 	// Fall back to Gmail sender (if credentials are available)
 	if gmailSender, err := email.NewGmailSender(); err == nil {
 		handler.gmailSender = gmailSender
@@ -46,7 +48,7 @@ func NewEmailHandler(logger *slog.Logger) *EmailHandler {
 		logger.Warn("Gmail API not available", "error", err)
 		logger.Warn("Email functionality requires EMAIL_SERVICE_URL or GMAIL_CREDENTIALS_JSON to be configured")
 	}
-	
+
 	return handler
 }
 
@@ -92,7 +94,7 @@ func (h *EmailHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 
 	var result *ports.SendEmailResult
 	var err error
-	
+
 	// Use Gmail sender if available, otherwise use HTTP client
 	if h.gmailSender != nil {
 		result, err = h.gmailSender.SendEmail(r.Context(), req)
@@ -102,7 +104,7 @@ func (h *EmailHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 		util.WriteError(w, http.StatusServiceUnavailable, "email service is not configured. Please set GMAIL_CREDENTIALS_JSON or EMAIL_SERVICE_URL")
 		return
 	}
-	
+
 	if err != nil {
 		h.logger.Error("failed to send email", "error", err)
 		util.WriteError(w, http.StatusInternalServerError, "failed to send email: "+err.Error())
@@ -156,10 +158,10 @@ func (h *EmailHandler) HandleBookingDeposit(w http.ResponseWriter, r *http.Reque
 		HTMLBody: fmt.Sprintf("<p>Hello %s,</p><p>Your booking deposit has been processed.</p>", getStringFromMap(body, "name")),
 		FromName: "BizOps360",
 	}
-	
+
 	var emailResult *ports.SendEmailResult
 	var err error
-	
+
 	if h.gmailSender != nil {
 		emailResult, err = h.gmailSender.SendEmail(r.Context(), emailReq)
 	} else if h.emailClient != nil {
@@ -168,13 +170,13 @@ func (h *EmailHandler) HandleBookingDeposit(w http.ResponseWriter, r *http.Reque
 		util.WriteError(w, http.StatusServiceUnavailable, "email service is not configured")
 		return
 	}
-	
+
 	if err != nil {
 		h.logger.Error("failed to send booking deposit email", "error", err)
 		util.WriteError(w, http.StatusInternalServerError, "failed to send booking deposit email: "+err.Error())
 		return
 	}
-	
+
 	if !emailResult.Success {
 		errorMsg := "unknown error"
 		if emailResult.Error != nil {
@@ -184,12 +186,12 @@ func (h *EmailHandler) HandleBookingDeposit(w http.ResponseWriter, r *http.Reque
 		util.WriteError(w, http.StatusInternalServerError, "email sending failed: "+errorMsg)
 		return
 	}
-	
+
 	result := map[string]interface{}{
 		"messageId": emailResult.MessageID,
 		"success":   emailResult.Success,
 	}
-	
+
 	h.logger.Info("booking deposit email sent successfully", "messageId", emailResult.MessageID, "to", emailReq.To)
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"ok":      true,
@@ -235,49 +237,9 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 	}
 
 	// Generate email HTML from template
-	htmlBody := fmt.Sprintf(`<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Final Invoice - STL Party Helpers</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #0047ab;">Hello %s!</h1>
-        
-        <p>Thank you for your business with STL Party Helpers!</p>
-        
-        <p>Your event has been completed. Please find your final invoice below for the remaining balance.</p>
-        
-        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <h2 style="margin-top: 0;">Invoice Details</h2>
-            <p><strong>Total Event Cost:</strong> $%.2f</p>
-            <p><strong>Deposit Paid:</strong> $%.2f</p>
-            <p><strong>Remaining Balance:</strong> <strong style="color: #0047ab; font-size: 1.2em;">$%.2f</strong></p>
-        </div>
-        
-        <p style="text-align: center; margin: 30px 0;">
-            <a href="%s" 
-               style="display: inline-block; background-color: #0047ab; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                Pay Final Invoice
-            </a>
-        </p>
-        
-        <p style="font-size: 0.9em; color: #666;">
-            If you have any questions about this invoice, please don't hesitate to contact us.
-        </p>
-        
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-        
-        <p style="font-size: 0.85em; color: #666; text-align: center;">
-            STL Party Helpers<br>
-            4220 Duncan Ave., Ste. 201, St. Louis, MO 63110<br>
-            <a href="tel:+13147145514" style="color: #0047ab;">(314) 714-5514</a><br>
-            <a href="https://stlpartyhelpers.com" style="color: #0047ab;">stlpartyhelpers.com</a>
-        </p>
-    </div>
-</body>
-</html>`, body.Name, body.TotalAmount, body.DepositPaid, body.RemainingBalance, body.InvoiceURL)
+	templateService := emailService.NewTemplateService()
+	htmlBody := templateService.GenerateFinalInvoiceEmail(
+		body.Name, body.TotalAmount, body.DepositPaid, body.RemainingBalance, body.InvoiceURL)
 
 	emailReq := &ports.SendEmailRequest{
 		To:       body.Email,
@@ -327,4 +289,48 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 	})
 }
 
+// SendFinalInvoiceEmail is a helper method that can be called from other handlers
+// Returns (success bool, errorMessage string)
+func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email string, totalAmount, depositPaid, remainingBalance float64, invoiceURL string) (bool, string) {
+	if name == "" || email == "" || invoiceURL == "" {
+		return false, "name, email, and invoiceUrl are required"
+	}
 
+	templateService := emailService.NewTemplateService()
+	htmlBody := templateService.GenerateFinalInvoiceEmail(name, totalAmount, depositPaid, remainingBalance, invoiceURL)
+
+	emailReq := &ports.SendEmailRequest{
+		To:       email,
+		Subject:  "Final Invoice - STL Party Helpers",
+		HTMLBody: htmlBody,
+		FromName: "STL Party Helpers",
+	}
+
+	var emailResult *ports.SendEmailResult
+	var err error
+
+	if h.gmailSender != nil {
+		emailResult, err = h.gmailSender.SendEmail(ctx, emailReq)
+	} else if h.emailClient != nil {
+		emailResult, err = h.emailClient.SendEmail(ctx, emailReq)
+	} else {
+		return false, "email service is not configured"
+	}
+
+	if err != nil {
+		h.logger.Error("failed to send final invoice email", "error", err)
+		return false, err.Error()
+	}
+
+	if !emailResult.Success {
+		errorMsg := "unknown error"
+		if emailResult.Error != nil {
+			errorMsg = *emailResult.Error
+		}
+		h.logger.Error("final invoice email sending failed", "error", errorMsg)
+		return false, errorMsg
+	}
+
+	h.logger.Info("final invoice email sent successfully", "messageId", emailResult.MessageID, "to", email)
+	return true, ""
+}

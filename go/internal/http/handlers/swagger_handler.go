@@ -81,6 +81,9 @@ func (h *SwaggerHandler) HandleSwaggerUI(w http.ResponseWriter, r *http.Request)
 	}
 	// #endregion
 
+	// Override CSP header to allow Swagger UI resources from CDN
+	// Allow: external stylesheets, scripts from unpkg.com, and inline scripts/styles
+	w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://unpkg.com; script-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https:; font-src 'self' data: https://unpkg.com;")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(tmplContent)

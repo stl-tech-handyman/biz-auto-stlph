@@ -1,8 +1,12 @@
 package config
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"time"
+
+	"github.com/joho/godotenv"
 )
 
 // Config holds application configuration
@@ -17,7 +21,11 @@ type Config struct {
 }
 
 // LoadConfig loads configuration from environment variables
+// It first tries to load from .env file in the current directory, then falls back to system env vars
 func LoadConfig() *Config {
+	// Try to load .env file (ignore error if file doesn't exist)
+	_ = godotenv.Load()
+	
 	env := GetEnvironment()
 	isProd := IsProduction()
 	isDev := IsDevelopment()
@@ -41,9 +49,78 @@ func LoadConfig() *Config {
 
 // getEnv gets an environment variable or returns a default value
 func getEnv(key, defaultValue string) string {
+	// #region agent log
+	if key == "PORT" {
+		if logFile, err := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			rawValue := os.Getenv(key)
+			containsBracket := false
+			if rawValue != "" {
+				containsBracket = (rawValue[0] == '[') || (len(rawValue) > 7 && rawValue[:7] == "[string")
+			}
+			logEntry := map[string]interface{}{
+				"sessionId":    "debug-session",
+				"runId":        "run1",
+				"hypothesisId": "A",
+				"location":     "config.go:getEnv",
+				"message":      "PORT env var raw value",
+				"data": map[string]interface{}{
+					"rawValue":       rawValue,
+					"key":            key,
+					"hasValue":       rawValue != "",
+					"containsBracket": containsBracket,
+					"length":         len(rawValue),
+				},
+				"timestamp": time.Now().UnixMilli(),
+			}
+			json.NewEncoder(logFile).Encode(logEntry)
+			logFile.Close()
+		}
+	}
+	// #endregion
 	if value := os.Getenv(key); value != "" {
+		// #region agent log
+		if key == "PORT" {
+			if logFile, err := os.OpenFile("../../.cursor/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+				containsBracket := (value[0] == '[') || (len(value) > 7 && value[:7] == "[string")
+				logEntry := map[string]interface{}{
+					"sessionId":    "debug-session",
+					"runId":        "run1",
+					"hypothesisId": "B",
+					"location":     "config.go:getEnv",
+					"message":      "PORT env var returned",
+					"data": map[string]interface{}{
+						"value":          value,
+						"length":         len(value),
+						"containsBracket": containsBracket,
+					},
+					"timestamp": time.Now().UnixMilli(),
+				}
+				json.NewEncoder(logFile).Encode(logEntry)
+				logFile.Close()
+			}
+		}
+		// #endregion
 		return value
 	}
+	// #region agent log
+	if key == "PORT" {
+		if logFile, err := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			logEntry := map[string]interface{}{
+				"sessionId":    "debug-session",
+				"runId":        "run1",
+				"hypothesisId": "D",
+				"location":     "config.go:getEnv",
+				"message":      "PORT using default",
+				"data": map[string]interface{}{
+					"defaultValue": defaultValue,
+				},
+				"timestamp": time.Now().UnixMilli(),
+			}
+			json.NewEncoder(logFile).Encode(logEntry)
+			logFile.Close()
+		}
+	}
+	// #endregion
 	return defaultValue
 }
 

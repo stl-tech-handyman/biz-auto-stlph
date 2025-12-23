@@ -27,6 +27,8 @@ info:
     name: Proprietary
 
 servers:
+  - url: http://localhost:8080
+    description: Локальный сервер разработки (Local Development)
   - url: https://bizops360-api-go-dev-gqqr4r256q-uc.a.run.app
     description: Сервер разработки (Development)
   - url: https://bizops360-api-go-prod-XXXXX-uc.a.run.app
@@ -198,6 +200,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DepositWithEmailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/stripe/final-invoice/with-email:
+    post:
+      tags:
+        - Stripe
+      summary: Создание финального инвойса с отправкой email (ORCHESTRATED)
+      description: |
+        **ОРКЕСТРИРОВАННЫЙ ЭНДПОИНТ** - Выполняет полный процесс:
+        1. Создает финальный инвойс в Stripe для оставшегося баланса
+        2. Автоматически отправляет кастомный email с деталями инвойса
+        
+        Это единая точка входа для создания и отправки финального инвойса.
+        Используйте этот эндпоинт вместо последовательных вызовов `/api/stripe/final-invoice` и `/api/email/final-invoice`.
+      operationId: createFinalInvoiceWithEmail
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalInvoiceRequest'
+      responses:
+        '200':
+          description: Инвойс создан и email отправлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalInvoiceWithEmailResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -534,7 +569,7 @@ components:
           type: string
           format: email
           description: Email клиента
-          example: "test@example.com"
+          example: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
         name:
           type: string
           description: Имя клиента
@@ -581,7 +616,7 @@ components:
           description: Использовать мок Stripe
           example: false
       example:
-        email: "test@example.com"
+        email: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
         name: "John Doe"
         estimatedTotal: 1000.0
         depositValue: null
@@ -643,7 +678,7 @@ components:
         email:
           type: string
           format: email
-          example: "test@example.com"
+          example: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
         eventType:
           type: string
           example: "Birthday Party"
@@ -692,7 +727,7 @@ components:
           example: false
       example:
         name: "John Doe"
-        email: "test@example.com"
+        email: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
         eventType: "Birthday Party"
         eventDateTimeLocal: "2025-06-15 17:00"
         eventDate: "2025-06-15"
@@ -717,6 +752,136 @@ components:
           type: string
         emailSent:
           type: boolean
+
+    FinalInvoiceRequest:
+      type: object
+      required:
+        - email
+        - name
+        - totalAmount
+        - depositPaid
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email клиента
+          example: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
+        name:
+          type: string
+          description: Имя клиента
+          example: "John Doe"
+        totalAmountCents:
+          type: integer
+          description: Общая стоимость в центах
+        totalAmount:
+          type: number
+          format: float
+          description: Общая стоимость в долларах
+          example: 1000.0
+        depositPaidCents:
+          type: integer
+          description: Оплаченный депозит в центах
+        depositPaid:
+          type: number
+          format: float
+          description: Оплаченный депозит в долларах
+          example: 400.0
+        currency:
+          type: string
+          description: Валюта
+          default: usd
+          example: "usd"
+        description:
+          type: string
+          description: Описание инвойса
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Дополнительные метаданные
+        useTest:
+          type: boolean
+          default: false
+          description: Использовать тестовый режим Stripe
+          example: false
+      example:
+        email: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
+        name: "John Doe"
+        totalAmount: 1000.0
+        depositPaid: 400.0
+        currency: "usd"
+
+    FinalInvoiceWithEmailResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Общий успех операции
+        message:
+          type: string
+          description: Сообщение о результате
+          example: "Final invoice created and email sent"
+        invoice:
+          type: object
+          properties:
+            id:
+              type: string
+              description: ID инвойса в Stripe
+            url:
+              type: string
+              format: uri
+              description: URL для оплаты инвойса
+            amount:
+              type: number
+              format: float
+              description: Сумма к оплате в долларах
+            status:
+              type: string
+              description: Статус инвойса
+            pdf:
+              type: string
+              format: uri
+              description: URL PDF инвойса
+        details:
+          type: object
+          properties:
+            totalAmount:
+              type: number
+              format: float
+              description: Общая стоимость
+            depositPaid:
+              type: number
+              format: float
+              description: Оплаченный депозит
+            remainingBalance:
+              type: number
+              format: float
+              description: Оставшийся баланс
+        email:
+          type: object
+          properties:
+            sent:
+              type: boolean
+              description: Был ли отправлен email
+            error:
+              type: string
+              nullable: true
+              description: Ошибка при отправке email (если была)
+      example:
+        ok: true
+        message: "Final invoice created and email sent"
+        invoice:
+          id: "in_1234567890"
+          url: "https://invoice.stripe.com/i/acct_123/invoice_123"
+          amount: 600.0
+          status: "open"
+        details:
+          totalAmount: 1000.0
+          depositPaid: 400.0
+          remainingBalance: 600.0
+        email:
+          sent: true
+          error: null
 
     EstimateRequest:
       type: object
@@ -853,7 +1018,7 @@ components:
           type: string
           format: email
           description: Email получателя
-          example: "test@example.com"
+          example: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
         subject:
           type: string
           description: Тема письма
@@ -863,7 +1028,7 @@ components:
           description: Тело письма
           example: "<p>This is a test email</p>"
       example:
-        to: "test@example.com"
+        to: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
         subject: "Test Email"
         body: "<p>This is a test email</p>"
 
@@ -964,7 +1129,7 @@ components:
         emailId:
           type: string
           description: Email клиента
-          example: "john@example.com"
+          example: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
         threadId:
           type: string
           description: ID потока Gmail (опционально, для ссылки на email)
@@ -990,7 +1155,7 @@ components:
         numHelpers: 2
         duration: 4.0
         totalCost: 400.0
-        emailId: "john@example.com"
+        emailId: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
         threadId: ""
         dataSource: "zapier"
         status: "Pending"
@@ -1076,7 +1241,7 @@ components:
       example:
         first_name: "John"
         last_name: "Doe"
-        email_address: "john@example.com"
+        email_address: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
         phone_number: "3145555555"
         event_date: "2025-07-10"
         event_time: "4:00 PM"
@@ -1176,7 +1341,7 @@ components:
           sendQuoteEmail: true
         fields:
           name: "John Doe"
-          email: "john@example.com"
+          email: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
           event_date: "2025-06-15"
           duration_hours: 4
           num_helpers: 2
@@ -1244,7 +1409,7 @@ components:
           itemId: 987654321
         payload:
           event_date: "2025-05-10"
-          client_email: "client@example.com"
+          client_email: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
 
     TriggerResponse:
       type: object
