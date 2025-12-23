@@ -82,7 +82,8 @@ type FinalInvoiceData struct {
 }
 
 // GenerateFinalInvoiceEmail generates HTML for final invoice email using template
-func (s *TemplateService) GenerateFinalInvoiceEmail(name, eventType, eventDate string, helpersCount *int, originalQuote, depositPaid, remainingBalance float64, invoiceURL string, showGratuity bool) (string, error) {
+// Returns (htmlBody, textBody, error)
+func (s *TemplateService) GenerateFinalInvoiceEmail(name, eventType, eventDate string, helpersCount *int, originalQuote, depositPaid, remainingBalance float64, invoiceURL string, showGratuity bool) (string, string, error) {
 	// Format helpers text
 	helpersText := ""
 	if helpersCount != nil {
@@ -116,13 +117,19 @@ func (s *TemplateService) GenerateFinalInvoiceEmail(name, eventType, eventDate s
 		ShowGratuity:     showGratuity,
 	}
 	
-	// Try to use template file first
+	// Generate plain text version
+	textBody := s.generateFinalInvoiceEmailText(data)
+	
+	// Try to use template file first for HTML
+	var htmlBody string
 	if html, err := s.renderTemplate("final_invoice.html", data); err == nil {
-		return html, nil
+		htmlBody = html
+	} else {
+		// Fallback to inline template if file not found
+		htmlBody = s.generateFinalInvoiceEmailInline(data)
 	}
 	
-	// Fallback to inline template if file not found
-	return s.generateFinalInvoiceEmailInline(data), nil
+	return htmlBody, textBody, nil
 }
 
 // generateFinalInvoiceEmailInline generates final invoice email inline (fallback)
@@ -138,11 +145,8 @@ func (s *TemplateService) generateFinalInvoiceEmailInline(data FinalInvoiceData)
             <p><strong>💛  Want to Include a Gratuity?</strong></p>
             <p>We're deeply grateful when clients choose to recognize our helpers' hard work (totally optional).<br>
             100%% of your gratuity goes directly to the event team.</p>
-            <p style="text-align: center; margin: 15px 0;">
-                <a href="%s" 
-                   style="display: inline-block; background-color: #0047ab; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                    👉 Add a Tip for Our Team
-                </a>
+            <p style="margin: 15px 0;">
+                👉 <a href="%s" style="color: #0047ab; text-decoration: underline;">Add a Tip for Our Team</a>
             </p>
         </div>`, data.GratuityURL)
 	}
@@ -173,16 +177,12 @@ func (s *TemplateService) generateFinalInvoiceEmailInline(data FinalInvoiceData)
         
         <div style="margin: 20px 0;">
             %s
-            <p><strong>Original Quote (USD):</strong> $%.2f</p>
             %s
             <p><strong>Balance Due:</strong> $%.2f</p>
         </div>
         
-        <p style="text-align: center; margin: 30px 0;">
-            <a href="%s" 
-               style="display: inline-block; background-color: #0047ab; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                👉 Click, to Pay Balance Now
-            </a>
+        <p style="margin: 30px 0;">
+            👉 <a href="%s" style="color: #0047ab; text-decoration: underline;">Click, to Pay Balance Now</a>
         </p>
         
         <p>We truly appreciate your trust in STL Party Helpers to support your event.</p>
@@ -203,7 +203,50 @@ func (s *TemplateService) generateFinalInvoiceEmailInline(data FinalInvoiceData)
         </p>
     </div>
 </body>
-</html>`, data.Name, data.EventType, data.EventDate, helpersSection, data.OriginalQuote, depositSection, data.RemainingBalance, data.InvoiceURL, gratuitySection)
+</html>`, data.Name, data.EventType, data.EventDate, helpersSection, depositSection, data.RemainingBalance, data.InvoiceURL, gratuitySection)
+}
+
+// generateFinalInvoiceEmailText generates plain text version of final invoice email
+func (s *TemplateService) generateFinalInvoiceEmailText(data FinalInvoiceData) string {
+	var text strings.Builder
+	
+	text.WriteString(fmt.Sprintf("Hi %s,\n\n", data.Name))
+	text.WriteString("We hope the celebration was everything you imagined — thank you for letting us be part of it.\n\n")
+	text.WriteString("As agreed, here is your final invoice for staffing services.\n\n")
+	
+	text.WriteString(fmt.Sprintf("Event: %s\n", data.EventType))
+	text.WriteString(fmt.Sprintf("Date: %s\n\n", data.EventDate))
+	
+	if data.HelpersText != "" {
+		text.WriteString(fmt.Sprintf("Staffing: %s\n", data.HelpersText))
+	}
+	
+	if data.DepositPaid > 0 {
+		text.WriteString(fmt.Sprintf("Deposit Paid: $%.2f\n", data.DepositPaid))
+	}
+	
+	text.WriteString(fmt.Sprintf("Balance Due: $%.2f\n\n", data.RemainingBalance))
+	text.WriteString(fmt.Sprintf("Pay Balance Now: %s\n\n", data.InvoiceURL))
+	
+	text.WriteString("We truly appreciate your trust in STL Party Helpers to support your event.\n\n")
+	
+	if data.ShowGratuity {
+		text.WriteString("💛  Want to Include a Gratuity?\n")
+		text.WriteString("We're deeply grateful when clients choose to recognize our helpers' hard work (totally optional).\n")
+		text.WriteString("100% of your gratuity goes directly to the event team.\n")
+		text.WriteString(fmt.Sprintf("Add a Tip for Our Team: %s\n\n", data.GratuityURL))
+	}
+	
+	text.WriteString("Thank you again for choosing STL Party Helpers — your support means the world to us!\n")
+	text.WriteString("We hope to work with you again soon.\n\n")
+	text.WriteString("Anna\n\n")
+	text.WriteString("Administrative Assistant\n")
+	text.WriteString("STL Party Helpers Team\n\n")
+	text.WriteString("Phone: 314.714.5514\n")
+	text.WriteString("Email: team@stlpartyhelpers.com\n")
+	text.WriteString("Website: stlpartyhelpers.com\n")
+	
+	return text.String()
 }
 
 // DepositData holds data for deposit email template
@@ -213,21 +256,28 @@ type DepositData struct {
 	InvoiceURL    string
 }
 
-// GenerateDepositEmail generates HTML for deposit invoice email using template
-func (s *TemplateService) GenerateDepositEmail(name string, depositAmount float64, invoiceURL string) (string, error) {
+// GenerateDepositEmail generates HTML and plain text for deposit invoice email using template
+// Returns (htmlBody, textBody, error)
+func (s *TemplateService) GenerateDepositEmail(name string, depositAmount float64, invoiceURL string) (string, string, error) {
 	data := DepositData{
 		Name:          name,
 		DepositAmount: depositAmount,
 		InvoiceURL:    invoiceURL,
 	}
 	
-	// Try to use template file first
+	// Generate plain text version
+	textBody := s.generateDepositEmailText(data)
+	
+	// Try to use template file first for HTML
+	var htmlBody string
 	if html, err := s.renderTemplate("deposit.html", data); err == nil {
-		return html, nil
+		htmlBody = html
+	} else {
+		// Fallback to inline template if file not found
+		htmlBody = s.generateDepositEmailInline(data)
 	}
 	
-	// Fallback to inline template if file not found
-	return s.generateDepositEmailInline(data), nil
+	return htmlBody, textBody, nil
 }
 
 // generateDepositEmailInline generates deposit email inline (fallback)
@@ -273,6 +323,25 @@ func (s *TemplateService) generateDepositEmailInline(data DepositData) string {
     </div>
 </body>
 </html>`, data.Name, data.DepositAmount, data.InvoiceURL)
+}
+
+// generateDepositEmailText generates plain text version of deposit email
+func (s *TemplateService) generateDepositEmailText(data DepositData) string {
+	var text strings.Builder
+	
+	text.WriteString(fmt.Sprintf("Hi %s,\n\n", data.Name))
+	text.WriteString("Thank you for choosing STL Party Helpers!\n\n")
+	text.WriteString("Your booking deposit invoice has been created. Please find the details below.\n\n")
+	text.WriteString("Deposit Details\n")
+	text.WriteString(fmt.Sprintf("Deposit Amount: $%.2f\n\n", data.DepositAmount))
+	text.WriteString(fmt.Sprintf("Pay Deposit: %s\n\n", data.InvoiceURL))
+	text.WriteString("If you have any questions about this deposit, please don't hesitate to contact us.\n\n")
+	text.WriteString("STL Party Helpers\n")
+	text.WriteString("4220 Duncan Ave., Ste. 201, St. Louis, MO 63110\n")
+	text.WriteString("(314) 714-5514\n")
+	text.WriteString("stlpartyhelpers.com\n")
+	
+	return text.String()
 }
 
 // ReviewRequestData holds data for review request email template

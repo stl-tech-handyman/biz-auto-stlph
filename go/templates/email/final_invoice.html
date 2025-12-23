@@ -19,16 +19,12 @@
         
         <div style="margin: 20px 0;">
             {{if .HelpersText}}<p><strong>Staffing:</strong> {{.HelpersText}}</p>{{end}}
-            <p><strong>Original Quote (USD):</strong> ${{printf "%.2f" .OriginalQuote}}</p>
             {{if .DepositPaid}}<p><strong>Deposit Paid:</strong> ${{printf "%.2f" .DepositPaid}}</p>{{end}}
             <p><strong>Balance Due:</strong> ${{printf "%.2f" .RemainingBalance}}</p>
         </div>
         
-        <p style="text-align: center; margin: 30px 0;">
-            <a href="{{.InvoiceURL}}" 
-               style="display: inline-block; background-color: #0047ab; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                👉 Click, to Pay Balance Now
-            </a>
+        <p style="margin: 30px 0;">
+            👉 <a href="{{.InvoiceURL}}" style="color: #0047ab; text-decoration: underline;">Click, to Pay Balance Now</a>
         </p>
         
         <p>We truly appreciate your trust in STL Party Helpers to support your event.</p>
@@ -38,11 +34,8 @@
             <p><strong>💛  Want to Include a Gratuity?</strong></p>
             <p>We're deeply grateful when clients choose to recognize our helpers' hard work (totally optional).<br>
             100% of your gratuity goes directly to the event team.</p>
-            <p style="text-align: center; margin: 15px 0;">
-                <a href="{{.GratuityURL}}" 
-                   style="display: inline-block; background-color: #0047ab; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                    👉 Add a Tip for Our Team
-                </a>
+            <p style="margin: 15px 0;">
+                👉 <a href="{{.GratuityURL}}" style="color: #0047ab; text-decoration: underline;">Add a Tip for Our Team</a>
             </p>
         </div>
         {{end}}

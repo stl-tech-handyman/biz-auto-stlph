@@ -172,9 +172,46 @@ func NewGmailSender() (*GmailSender, error) {
 		credsData = []byte(credentialsJSON)
 	}
 
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "A,B",
+			"location":     "gmail.go:NewGmailSender",
+			"message":      "Before JWT config creation - checking scope",
+			"data": map[string]interface{}{
+				"requestedScope": gmail.GmailModifyScope,
+				"credsDataLength": len(credsData),
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	// Try JWT config first (for service accounts)
 	// Use GmailModifyScope to allow both sending and creating drafts
 	config, err := google.JWTConfigFromJSON(credsData, gmail.GmailModifyScope)
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "A,B",
+			"location":     "gmail.go:NewGmailSender",
+			"message":      "After JWT config creation",
+			"data": map[string]interface{}{
+				"jwtConfigError": func() string { if err != nil { return err.Error() } else { return "" } }(),
+				"jwtConfigSuccess": err == nil,
+				"serviceAccountEmail": func() string { if config != nil { return config.Email } else { return "" } }(),
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	if err != nil {
 		// If JWT fails, try OAuth2 config
 		_, oauthErr := google.ConfigFromJSON(credsData, gmail.GmailModifyScope)
@@ -188,6 +225,24 @@ func NewGmailSender() (*GmailSender, error) {
 
 	// Get the email address to impersonate (required for domain-wide delegation)
 	impersonateEmail := os.Getenv("GMAIL_FROM")
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "C",
+			"location":     "gmail.go:NewGmailSender",
+			"message":      "Checking impersonation email",
+			"data": map[string]interface{}{
+				"gmailFromEnv": impersonateEmail,
+				"serviceAccountEmail": config.Email,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	if impersonateEmail == "" {
 		// Try to get from service account email (if it's a user email)
 		impersonateEmail = config.Email
@@ -203,13 +258,70 @@ func NewGmailSender() (*GmailSender, error) {
 	// Log configuration for debugging (without sensitive data)
 	fmt.Printf("[Gmail] Using service account: %s\n", config.Email)
 	fmt.Printf("[Gmail] Impersonating user: %s\n", impersonateEmail)
-	fmt.Printf("[Gmail] Scope: %s\n", gmail.GmailSendScope)
+	fmt.Printf("[Gmail] Scope: %s\n", gmail.GmailModifyScope)
 
 	// Create Gmail service with JWT config
 	ctx := context.Background()
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "A,B",
+			"location":     "gmail.go:NewGmailSender",
+			"message":      "Before creating OAuth2 client - will trigger token fetch",
+			"data": map[string]interface{}{
+				"serviceAccountEmail": config.Email,
+				"impersonateEmail":    impersonateEmail,
+				"scope":               gmail.GmailModifyScope,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
+	// config.Client(ctx) triggers token fetch - this is where 401 error occurs if scope is not authorized
 	client := config.Client(ctx)
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "A,B",
+			"location":     "gmail.go:NewGmailSender",
+			"message":      "After creating OAuth2 client - token fetch completed",
+			"data": map[string]interface{}{
+				"clientCreated": client != nil,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
+	// Note: If token fetch fails here with 401, it means the service account doesn't have
+	// GmailModifyScope authorized in Google Workspace Admin Console domain-wide delegation
 
 	service, err := gmail.NewService(ctx, option.WithHTTPClient(client))
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "A,B",
+			"location":     "gmail.go:NewGmailSender",
+			"message":      "After creating Gmail service",
+			"data": map[string]interface{}{
+				"serviceCreated": service != nil,
+				"error":          func() string { if err != nil { return err.Error() } else { return "" } }(),
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Gmail service: %w", err)
 	}
@@ -248,6 +360,26 @@ func (g *GmailSender) SendEmail(ctx context.Context, req *ports.SendEmailRequest
 
 // SendEmailDraft creates an email draft via Gmail API
 func (g *GmailSender) SendEmailDraft(ctx context.Context, req *ports.SendEmailRequest) (*ports.SendEmailResult, error) {
+	// #region agent log
+	logPath := "c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log"
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "A,B",
+			"location":     "gmail.go:SendEmailDraft",
+			"message":      "Before creating draft",
+			"data": map[string]interface{}{
+				"userEmail": g.from,
+				"to":        req.To,
+				"subject":   req.Subject,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	// Build email message
 	message := g.buildMessage(req)
 
@@ -259,9 +391,56 @@ func (g *GmailSender) SendEmailDraft(ctx context.Context, req *ports.SendEmailRe
 		Message: message,
 	}
 
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "A,B",
+			"location":     "gmail.go:SendEmailDraft",
+			"message":      "Before calling Drafts.Create API",
+			"data": map[string]interface{}{
+				"userEmail": userEmail,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	createdDraft, err := g.service.Users.Drafts.Create(userEmail, draft).Context(ctx).Do()
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "A,B",
+			"location":     "gmail.go:SendEmailDraft",
+			"message":      "After calling Drafts.Create API",
+			"data": map[string]interface{}{
+				"error":        func() string { if err != nil { return err.Error() } else { return "" } }(),
+				"success":      err == nil,
+				"draftCreated": createdDraft != nil,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	if err != nil {
 		errorMsg := err.Error()
+		// Check if error is due to unauthorized scope
+		if strings.Contains(errorMsg, "unauthorized_client") || strings.Contains(errorMsg, "401") {
+			enhancedError := fmt.Sprintf("Service account is not authorized for GmailModifyScope. "+
+				"Please add 'https://www.googleapis.com/auth/gmail.modify' to domain-wide delegation "+
+				"in Google Workspace Admin Console (Security → API Controls → Domain-wide Delegation). "+
+				"Find your service account's Client ID and add the scope. Original error: %s", errorMsg)
+			return &ports.SendEmailResult{
+				Success: false,
+				Error:   &enhancedError,
+			}, fmt.Errorf("failed to create draft: %w", err)
+		}
 		return &ports.SendEmailResult{
 			Success: false,
 			Error:   &errorMsg,

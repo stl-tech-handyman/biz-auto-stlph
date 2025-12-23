@@ -307,7 +307,7 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 	// Generate email HTML from template
 	templateService := emailService.NewTemplateService()
 	// For the standalone email endpoint, use defaults for missing fields
-	htmlBody, err := templateService.GenerateFinalInvoiceEmail(
+	htmlBody, textBody, err := templateService.GenerateFinalInvoiceEmail(
 		body.Name, "Event", "", nil, body.TotalAmount, body.DepositPaid, body.RemainingBalance, body.InvoiceURL, true)
 	if err != nil {
 		util.WriteError(w, http.StatusInternalServerError, "failed to generate email template: "+err.Error())
@@ -318,6 +318,7 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 		To:       body.Email,
 		Subject:  "Final Invoice - STL Party Helpers",
 		HTMLBody: htmlBody,
+		TextBody: textBody,
 		FromName: "STL Party Helpers",
 	}
 
@@ -370,7 +371,7 @@ func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, e
 	}
 
 	templateService := emailService.NewTemplateService()
-	htmlBody, err := templateService.GenerateFinalInvoiceEmail(name, eventType, eventDate, helpersCount, originalQuote, depositPaid, remainingBalance, invoiceURL, showGratuity)
+	htmlBody, textBody, err := templateService.GenerateFinalInvoiceEmail(name, eventType, eventDate, helpersCount, originalQuote, depositPaid, remainingBalance, invoiceURL, showGratuity)
 	if err != nil {
 		return false, fmt.Sprintf("failed to generate email template: %v", err)
 	}
@@ -379,10 +380,31 @@ func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, e
 		To:       email,
 		Subject:  "Final Invoice - STL Party Helpers",
 		HTMLBody: htmlBody,
+		TextBody: textBody,
 		FromName: "STL Party Helpers",
 	}
 
 	var emailResult *ports.SendEmailResult
+
+	// #region agent log
+	if logFile, logErr := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "H1",
+			"location":     "email_handler.go:SendFinalInvoiceEmail",
+			"message":      "Before calling email service",
+			"data": map[string]interface{}{
+				"saveAsDraft":    saveAsDraft,
+				"hasGmailSender": h.gmailSender != nil,
+				"hasEmailClient": h.emailClient != nil,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 
 	if saveAsDraft {
 		// Save as draft in Gmail
@@ -404,9 +426,54 @@ func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, e
 		}
 	}
 
+	// #region agent log
+	if logFile, logErr := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "H1",
+			"location":     "email_handler.go:SendFinalInvoiceEmail",
+			"message":      "After calling email service",
+			"data": map[string]interface{}{
+				"hasError": err != nil,
+				"error": func() string {
+					if err != nil {
+						return err.Error()
+					} else {
+						return ""
+					}
+				}(),
+				"hasResult": emailResult != nil,
+				"resultSuccess": func() bool {
+					if emailResult != nil {
+						return emailResult.Success
+					} else {
+						return false
+					}
+				}(),
+				"resultError": func() string {
+					if emailResult != nil && emailResult.Error != nil {
+						return *emailResult.Error
+					} else {
+						return ""
+					}
+				}(),
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
+
 	if err != nil {
 		h.logger.Error("failed to send final invoice email", "error", err)
 		return false, err.Error()
+	}
+
+	if emailResult == nil {
+		h.logger.Error("final invoice email sending failed: emailResult is nil")
+		return false, "email service returned nil result"
 	}
 
 	if !emailResult.Success {
@@ -430,7 +497,7 @@ func (h *EmailHandler) SendDepositEmail(ctx context.Context, name, email string,
 	}
 
 	templateService := emailService.NewTemplateService()
-	htmlBody, err := templateService.GenerateDepositEmail(name, depositAmount, invoiceURL)
+	htmlBody, textBody, err := templateService.GenerateDepositEmail(name, depositAmount, invoiceURL)
 	if err != nil {
 		return false, fmt.Sprintf("failed to generate email template: %v", err)
 	}
@@ -439,6 +506,7 @@ func (h *EmailHandler) SendDepositEmail(ctx context.Context, name, email string,
 		To:       email,
 		Subject:  "Booking Deposit - STL Party Helpers",
 		HTMLBody: htmlBody,
+		TextBody: textBody,
 		FromName: "STL Party Helpers",
 	}
 
