@@ -205,6 +205,35 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/stripe/final-invoice:
+    post:
+      tags:
+        - Stripe
+      summary: Создание финального инвойса
+      description: |
+        Создает финальный инвойс в Stripe для оставшегося баланса после депозита.
+        Используйте `/api/stripe/final-invoice/with-email` для автоматической отправки email.
+      operationId: createFinalInvoice
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalInvoiceRequest'
+      responses:
+        '200':
+          description: Инвойс создан успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalInvoiceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /api/stripe/final-invoice/with-email:
     post:
       tags:
@@ -799,6 +828,30 @@ components:
           additionalProperties:
             type: string
           description: Дополнительные метаданные
+        customFields:
+          type: array
+          description: Кастомные поля для отображения на инвойсе (например, Event Date & Time, Helpers Count, Hours, Deposit Amount)
+          items:
+            type: object
+            required:
+              - name
+              - value
+            properties:
+              name:
+                type: string
+                description: Название поля
+                example: "Event Date & Time"
+              value:
+                type: string
+                description: Значение поля
+                example: "Dec 20, 2025 - 5:45 PM"
+          example:
+            - name: "Event Date & Time"
+              value: "Dec 20, 2025 - 5:45 PM"
+            - name: "Helpers Count"
+              value: "2 Helpers"
+            - name: "Hours"
+              value: "4 Hours"
         useTest:
           type: boolean
           default: false
@@ -810,6 +863,53 @@ components:
         totalAmount: 1000.0
         depositPaid: 400.0
         currency: "usd"
+
+    FinalInvoiceResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Общий успех операции
+        message:
+          type: string
+          description: Сообщение о результате
+          example: "Final invoice created successfully"
+        invoice:
+          type: object
+          properties:
+            id:
+              type: string
+              description: ID инвойса в Stripe
+            url:
+              type: string
+              format: uri
+              description: URL для оплаты инвойса
+            amount:
+              type: number
+              format: float
+              description: Сумма к оплате в долларах
+            status:
+              type: string
+              description: Статус инвойса
+            pdf:
+              type: string
+              format: uri
+              description: URL PDF инвойса
+        details:
+          type: object
+          properties:
+            totalAmount:
+              type: number
+              format: float
+              description: Общая стоимость
+            depositPaid:
+              type: number
+              format: float
+              description: Оплаченный депозит
+            remainingBalance:
+              type: number
+              format: float
+              description: Оставшийся баланс
 
     FinalInvoiceWithEmailResponse:
       type: object
