@@ -389,8 +389,8 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusOK, response)
 }
 
-// formatDateTimeForStripe formats a date-time string to AM/PM format for Stripe
-// Input: "2025-06-15 17:00" -> Output: "Jun 15, 2025 5:00 PM"
+// formatDateTimeForStripe formats a date-time string to AM/PM format with day of week for Stripe
+// Input: "2025-06-15 17:00" -> Output: "Fri, Jun 15, 2025 5:00 PM"
 func formatDateTimeForStripe(dateTimeStr string) string {
 	// Try multiple formats
 	formats := []string{
@@ -403,8 +403,8 @@ func formatDateTimeForStripe(dateTimeStr string) string {
 
 	for _, format := range formats {
 		if t, err := time.Parse(format, dateTimeStr); err == nil {
-			// Format as "Jan 2, 2006 3:04 PM"
-			return t.Format("Jan 2, 2006 3:04 PM")
+			// Format as "Mon, Jan 2, 2006 3:04 PM" (day of week prefix)
+			return t.Format("Mon, Jan 2, 2006 3:04 PM")
 		}
 	}
 
