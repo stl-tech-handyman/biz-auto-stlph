@@ -262,10 +262,31 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 		saveEmailAsDraft = *req.SaveEmailAsDraft
 	}
 
+	// Send deposit email (only if not saving as draft)
+	var emailSent bool
+	var emailError string
+	if !saveEmailAsDraft {
+		if h.emailHandler != nil {
+			// Calculate deposit amount for email
+			depositAmount := util.CentsToDollars(invoiceResult.AmountDue)
+			emailSent, emailError = h.emailHandler.SendDepositEmail(
+				r.Context(),
+				req.Name,
+				req.Email,
+				depositAmount,
+				invoiceResult.HostedInvoiceURL,
+			)
+		} else {
+			emailError = "email handler is not configured"
+		}
+	} else {
+		emailError = "email saved as draft (not sent)"
+	}
+
 	response := map[string]interface{}{
-		"ok":              true,
-		"message":         "Deposit invoice created successfully",
-		"dryRun":          req.DryRun,
+		"ok":               true,
+		"message":          "Deposit invoice created",
+		"dryRun":           req.DryRun,
 		"saveEmailAsDraft": saveEmailAsDraft,
 		"invoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,
@@ -273,6 +294,10 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 			"amount": util.CentsToDollars(invoiceResult.AmountDue),
 			"status": invoiceResult.Status,
 			"pdf":    invoiceResult.InvoicePDF,
+		},
+		"email": map[string]interface{}{
+			"sent":  emailSent,
+			"error": emailError,
 		},
 	}
 
@@ -746,8 +771,8 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 	}
 
 	response := map[string]interface{}{
-		"ok":              true,
-		"message":         "Final invoice created",
+		"ok":               true,
+		"message":          "Final invoice created",
 		"saveEmailAsDraft": saveEmailAsDraft,
 		"invoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,

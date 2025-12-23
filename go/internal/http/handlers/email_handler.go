@@ -402,3 +402,49 @@ func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email st
 	h.logger.Info("final invoice email sent successfully", "messageId", emailResult.MessageID, "to", email)
 	return true, ""
 }
+
+// SendDepositEmail sends a deposit invoice email
+// Returns (success bool, errorMessage string)
+func (h *EmailHandler) SendDepositEmail(ctx context.Context, name, email string, depositAmount float64, invoiceURL string) (bool, string) {
+	if name == "" || email == "" || invoiceURL == "" {
+		return false, "name, email, and invoiceUrl are required"
+	}
+
+	templateService := emailService.NewTemplateService()
+	htmlBody := templateService.GenerateDepositEmail(name, depositAmount, invoiceURL)
+
+	emailReq := &ports.SendEmailRequest{
+		To:       email,
+		Subject:  "Booking Deposit - STL Party Helpers",
+		HTMLBody: htmlBody,
+		FromName: "STL Party Helpers",
+	}
+
+	var emailResult *ports.SendEmailResult
+	var err error
+
+	if h.gmailSender != nil {
+		emailResult, err = h.gmailSender.SendEmail(ctx, emailReq)
+	} else if h.emailClient != nil {
+		emailResult, err = h.emailClient.SendEmail(ctx, emailReq)
+	} else {
+		return false, "email service is not configured"
+	}
+
+	if err != nil {
+		h.logger.Error("failed to send deposit email", "error", err)
+		return false, err.Error()
+	}
+
+	if !emailResult.Success {
+		errorMsg := "unknown error"
+		if emailResult.Error != nil {
+			errorMsg = *emailResult.Error
+		}
+		h.logger.Error("deposit email sending failed", "error", errorMsg)
+		return false, errorMsg
+	}
+
+	h.logger.Info("deposit email sent successfully", "messageId", emailResult.MessageID, "to", email)
+	return true, ""
+}
