@@ -34,9 +34,14 @@ type DepositWithEmailRequest struct {
 	Estimate           *float64 `json:"estimate"`
 	EstimatedTotal     *float64 `json:"estimatedTotal"`
 	DepositValue       *float64 `json:"depositValue"`
-	UseTest            bool     `json:"useTest"`
-	DryRun             bool     `json:"dryRun"`
-	SaveAsDraft        bool     `json:"saveAsDraft"`
+	// Memo and Footer with toggles
+	Memo            string `json:"memo"`
+	ShowMemo        *bool  `json:"showMemo"`        // Toggle to show/hide memo (default: true if memo provided)
+	Footer          string `json:"footer"`
+	ShowFooter      *bool  `json:"showFooter"`      // Toggle to show/hide footer (default: true if footer provided)
+	UseTest         bool   `json:"useTest"`
+	DryRun          bool   `json:"dryRun"`
+	SaveAsDraft     bool   `json:"saveAsDraft"`
 }
 
 // CustomField represents a custom field for Stripe invoices
@@ -63,8 +68,15 @@ type FinalInvoiceRequest struct {
 	HelpersCount       *int     `json:"helpersCount"`
 	Hours              *float64 `json:"hours"`
 	Duration           *float64 `json:"duration"`
-	UseTest            bool     `json:"useTest"`
-	SendEmail          bool     `json:"sendEmail"`
+	// Memo and Footer with toggles
+	Memo            string `json:"memo"`
+	ShowMemo        *bool  `json:"showMemo"`        // Toggle to show/hide memo (default: true if memo provided)
+	Footer          string `json:"footer"`
+	ShowFooter      *bool  `json:"showFooter"`      // Toggle to show/hide footer (default: true if footer provided)
+	InvoiceType     string `json:"invoiceType"`      // "final" or "deposit" - used for stamp prefix
+	SaveAsDraft     bool   `json:"saveAsDraft"`     // If true, invoice is saved as draft and not finalized
+	UseTest         bool   `json:"useTest"`
+	SendEmail       bool   `json:"sendEmail"`
 }
 
 // TestInvoiceRequest represents a request to test invoice creation

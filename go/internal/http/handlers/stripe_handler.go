@@ -222,6 +222,25 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 	// Extract custom fields from request
 	customFields := extractCustomFieldsFromDepositRequest(req)
 
+	// Extract memo and footer with toggles
+	memo := ""
+	if req.ShowMemo == nil || *req.ShowMemo {
+		// Default memo for deposits if not provided
+		if req.Memo != "" {
+			memo = req.Memo
+		} else {
+			// Default memo text for deposits
+			memo = "❤️ Thanks for trusting STL Party Helpers. As a local, woman-owned business in St. Louis, we truly value your support."
+		}
+	}
+
+	footer := ""
+	if req.ShowFooter == nil || *req.ShowFooter {
+		if req.Footer != "" {
+			footer = req.Footer
+		}
+	}
+
 	// Create deposit invoice with custom fields
 	invoiceResult, err := h.invoiceService.CreateDepositInvoice(r.Context(), &stripeService.CreateDepositInvoiceRequest{
 		CustomerEmail:     req.Email,
@@ -229,6 +248,8 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 		DepositValueCents: &depositCents,
 		Description:       "Booking Deposit Invoice",
 		CustomFields:      customFields,
+		Memo:              memo,
+		Footer:            footer,
 	})
 	if err != nil {
 		util.WriteError(w, http.StatusBadRequest, "Failed to create deposit invoice: "+err.Error())
@@ -543,6 +564,25 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 	serviceCustomFields := make([]ports.CustomField, len(customFields))
 	copy(serviceCustomFields, customFields)
 
+	// Extract memo and footer with toggles
+	memo := ""
+	if req.ShowMemo == nil || *req.ShowMemo {
+		// Default memo for final invoices if not provided
+		if req.Memo != "" {
+			memo = req.Memo
+		} else {
+			// Default memo text for final invoices
+			memo = "❤️ Thanks for trusting STL Party Helpers. As a local, woman-owned business in St. Louis, we truly value your support."
+		}
+	}
+
+	footer := ""
+	if req.ShowFooter == nil || *req.ShowFooter {
+		if req.Footer != "" {
+			footer = req.Footer
+		}
+	}
+
 	invoiceReq := &stripeService.CreateFinalInvoiceRequest{
 		CustomerEmail:    req.Email,
 		CustomerName:     req.Name,
@@ -554,6 +594,9 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 		Description:      req.Description,
 		Metadata:         req.Metadata,
 		CustomFields:     serviceCustomFields,
+		Memo:             memo,
+		Footer:           footer,
+		SaveAsDraft:      req.SaveAsDraft,
 	}
 
 	return h.invoiceService.CreateFinalInvoice(ctx, invoiceReq)
@@ -598,8 +641,9 @@ func (h *StripeHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Reques
 	}
 
 	response := map[string]interface{}{
-		"ok":      true,
-		"message": "Final invoice created successfully",
+		"ok":          true,
+		"message":     "Final invoice created successfully",
+		"saveAsDraft": req.SaveAsDraft,
 		"invoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,
 			"url":    invoiceResult.HostedInvoiceURL,
@@ -686,8 +730,9 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 	}
 
 	response := map[string]interface{}{
-		"ok":      true,
-		"message": "Final invoice created and email sent",
+		"ok":          true,
+		"message":     "Final invoice created and email sent",
+		"saveAsDraft": req.SaveAsDraft,
 		"invoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,
 			"url":    invoiceResult.HostedInvoiceURL,

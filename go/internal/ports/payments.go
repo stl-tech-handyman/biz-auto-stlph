@@ -23,6 +23,9 @@ type CreateInvoiceRequest struct {
 	Description   string
 	Metadata      map[string]string
 	CustomFields  []CustomField
+	Memo          string // Memo text (appears on invoice)
+	Footer        string // Footer text (appears at bottom)
+	InvoiceType   string // "final" or "deposit" - used for stamp prefix
 }
 
 // CustomField represents a custom field for Stripe invoices
@@ -41,6 +44,10 @@ type CreateFinalInvoiceRequest struct {
 	Description     string
 	Metadata        map[string]string
 	CustomFields    []CustomField
+	Memo            string // Memo text (appears on invoice)
+	Footer          string // Footer text (appears at bottom)
+	InvoiceType     string // "final" or "deposit" - used for stamp prefix
+	SaveAsDraft     bool   // If true, invoice is saved as draft and not finalized
 }
 
 // InvoiceResult contains the result of invoice creation

@@ -74,6 +74,9 @@ func (s *InvoiceService) CreateDepositInvoice(ctx context.Context, req *CreateDe
 		Description:   req.Description,
 		Metadata:      req.Metadata,
 		CustomFields:  req.CustomFields,
+		Memo:          req.Memo,
+		Footer:        req.Footer,
+		InvoiceType:   "deposit",
 	}
 
 	if invoiceReq.Description == "" {
@@ -124,6 +127,10 @@ func (s *InvoiceService) CreateFinalInvoice(ctx context.Context, req *CreateFina
 		Description:      req.Description,
 		Metadata:         metadata,
 		CustomFields:     req.CustomFields,
+		Memo:             req.Memo,
+		Footer:            req.Footer,
+		InvoiceType:       "final",
+		SaveAsDraft:       req.SaveAsDraft,
 	}
 
 	if finalInvoiceReq.Currency == "" {
@@ -147,6 +154,8 @@ type CreateDepositInvoiceRequest struct {
 	Description      string
 	Metadata         map[string]string
 	CustomFields     []ports.CustomField
+	Memo             string
+	Footer           string
 }
 
 // CreateFinalInvoiceRequest contains data needed to create a final invoice
@@ -161,5 +170,8 @@ type CreateFinalInvoiceRequest struct {
 	Description      string
 	Metadata         map[string]string
 	CustomFields     []ports.CustomField
+	Memo             string
+	Footer           string
+	SaveAsDraft      bool
 }
 

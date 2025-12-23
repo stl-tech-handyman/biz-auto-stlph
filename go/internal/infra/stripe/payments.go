@@ -73,7 +73,11 @@ func (s *StripePayments) CreateInvoice(ctx context.Context, req *ports.CreateInv
 	}
 
 	// Create invoice
-	invoice, err := s.createInvoice(ctx, apiKey, customerID, req.Metadata, req.CustomFields)
+	invoiceType := req.InvoiceType
+	if invoiceType == "" {
+		invoiceType = "deposit" // Default for regular invoices
+	}
+	invoice, err := s.createInvoice(ctx, apiKey, customerID, req.Metadata, req.CustomFields, req.Memo, req.Footer, invoiceType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create invoice: %w", err)
 	}
@@ -197,15 +201,30 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 	metadata["remaining_balance_cents"] = strconv.FormatInt(remainingCents, 10)
 
 	// Create invoice (with auto_advance=true, it will automatically finalize and include pending items)
-	invoice, err := s.createInvoice(ctx, apiKey, customerID, metadata, req.CustomFields)
+	invoiceType := req.InvoiceType
+	if invoiceType == "" {
+		invoiceType = "final" // Default for final invoices
+	}
+	invoice, err := s.createInvoice(ctx, apiKey, customerID, metadata, req.CustomFields, req.Memo, req.Footer, invoiceType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create invoice: %w", err)
 	}
 
 	fmt.Printf("[Stripe] Invoice created: ID=%s, AmountDue=%d, Status=%s\n", invoice.ID, invoice.AmountDue, invoice.Status)
 
-	// With auto_advance=true, invoice is already finalized, so we can use it directly
-	// But if it's still draft, we need to finalize it
+	// If saveAsDraft is true, return the draft invoice without finalizing
+	if req.SaveAsDraft {
+		fmt.Printf("[Stripe] Invoice saved as draft (not finalized)\n")
+		return &ports.InvoiceResult{
+			InvoiceID:        invoice.ID,
+			HostedInvoiceURL: invoice.HostedInvoiceURL,
+			AmountDue:        invoice.AmountDue,
+			Status:           invoice.Status,
+			InvoicePDF:       invoice.InvoicePDF,
+		}, nil
+	}
+
+	// With auto_advance=false, invoice is created as draft, so we need to finalize it
 	var finalized *Invoice
 	if invoice.Status == "draft" {
 		finalized, err = s.finalizeInvoice(ctx, apiKey, invoice.ID)
@@ -456,7 +475,7 @@ func (s *StripePayments) addInvoiceItem(ctx context.Context, apiKey, customerID 
 }
 
 // createInvoice creates a draft invoice
-func (s *StripePayments) createInvoice(ctx context.Context, apiKey, customerID string, metadata map[string]string, customFields []ports.CustomField) (*Invoice, error) {
+func (s *StripePayments) createInvoice(ctx context.Context, apiKey, customerID string, metadata map[string]string, customFields []ports.CustomField, memo, footer, invoiceType string) (*Invoice, error) {
 	form := url.Values{}
 	form.Set("customer", customerID)
 	form.Set("collection_method", "send_invoice")
@@ -474,6 +493,23 @@ func (s *StripePayments) createInvoice(ctx context.Context, apiKey, customerID s
 			form.Set(fmt.Sprintf("custom_fields[%d][name]", i), strings.TrimSpace(cf.Name))
 			form.Set(fmt.Sprintf("custom_fields[%d][value]", i), strings.TrimSpace(cf.Value))
 		}
+	}
+
+	// Add memo (description) with invoice type prefix if needed
+	if memo != "" {
+		description := memo
+		// Add stamp prefix based on invoice type
+		if invoiceType == "final" {
+			description = "FINAL INVOICE - " + memo
+		} else if invoiceType == "deposit" {
+			description = "DEPOSIT - " + memo
+		}
+		form.Set("description", description)
+	}
+
+	// Add footer (only if provided)
+	if footer != "" {
+		form.Set("footer", footer)
 	}
 
 	req, _ := http.NewRequestWithContext(ctx, "POST", "https://api.stripe.com/v1/invoices", strings.NewReader(form.Encode()))
