@@ -73,10 +73,10 @@ type FinalInvoiceRequest struct {
 	ShowMemo        *bool  `json:"showMemo"`        // Toggle to show/hide memo (default: true if memo provided)
 	Footer          string `json:"footer"`
 	ShowFooter      *bool  `json:"showFooter"`      // Toggle to show/hide footer (default: true if footer provided)
-	InvoiceType     string `json:"invoiceType"`      // "final" or "deposit" - used for stamp prefix
-	SaveAsDraft     bool   `json:"saveAsDraft"`     // If true, invoice is saved as draft and not finalized
-	UseTest         bool   `json:"useTest"`
-	SendEmail       bool   `json:"sendEmail"`
+	InvoiceType     string  `json:"invoiceType"`      // "final" or "deposit" - used for stamp prefix
+	SaveAsDraft     *bool   `json:"saveAsDraft"`     // If true, invoice is saved as draft and not finalized (default: true for final invoices)
+	UseTest         bool    `json:"useTest"`
+	SendEmail       bool    `json:"sendEmail"`
 }
 
 // TestInvoiceRequest represents a request to test invoice creation

@@ -583,6 +583,12 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 		}
 	}
 
+	// Default saveAsDraft to true for final invoices if not explicitly set
+	saveAsDraft := true // Default to true for final invoices
+	if req.SaveAsDraft != nil {
+		saveAsDraft = *req.SaveAsDraft
+	}
+
 	invoiceReq := &stripeService.CreateFinalInvoiceRequest{
 		CustomerEmail:    req.Email,
 		CustomerName:     req.Name,
@@ -596,7 +602,7 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 		CustomFields:     serviceCustomFields,
 		Memo:             memo,
 		Footer:           footer,
-		SaveAsDraft:      req.SaveAsDraft,
+		SaveAsDraft:      saveAsDraft,
 	}
 
 	return h.invoiceService.CreateFinalInvoice(ctx, invoiceReq)
@@ -640,10 +646,16 @@ func (h *StripeHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Reques
 		depositPaidCents = util.DollarsToCents(*req.DepositPaid)
 	}
 
+	// Determine saveAsDraft value (default to true if not set)
+	saveAsDraftValue := true
+	if req.SaveAsDraft != nil {
+		saveAsDraftValue = *req.SaveAsDraft
+	}
+
 	response := map[string]interface{}{
 		"ok":          true,
 		"message":     "Final invoice created successfully",
-		"saveAsDraft": req.SaveAsDraft,
+		"saveAsDraft": saveAsDraftValue,
 		"invoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,
 			"url":    invoiceResult.HostedInvoiceURL,
@@ -729,10 +741,16 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 		emailError = "email handler is not configured"
 	}
 
+	// Determine saveAsDraft value (default to true if not set)
+	saveAsDraftValue := true
+	if req.SaveAsDraft != nil {
+		saveAsDraftValue = *req.SaveAsDraft
+	}
+
 	response := map[string]interface{}{
 		"ok":          true,
 		"message":     "Final invoice created and email sent",
-		"saveAsDraft": req.SaveAsDraft,
+		"saveAsDraft": saveAsDraftValue,
 		"invoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,
 			"url":    invoiceResult.HostedInvoiceURL,
