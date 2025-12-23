@@ -307,8 +307,12 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 	// Generate email HTML from template
 	templateService := emailService.NewTemplateService()
 	// For the standalone email endpoint, use defaults for missing fields
-	htmlBody := templateService.GenerateFinalInvoiceEmail(
-		body.Name, "Event", "", nil, body.TotalAmount, body.DepositPaid, body.RemainingBalance, body.InvoiceURL)
+	htmlBody, err := templateService.GenerateFinalInvoiceEmail(
+		body.Name, "Event", "", nil, body.TotalAmount, body.DepositPaid, body.RemainingBalance, body.InvoiceURL, true)
+	if err != nil {
+		util.WriteError(w, http.StatusInternalServerError, "failed to generate email template: "+err.Error())
+		return
+	}
 
 	emailReq := &ports.SendEmailRequest{
 		To:       body.Email,
@@ -318,7 +322,7 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 	}
 
 	var emailResult *ports.SendEmailResult
-	var err error
+	err = nil
 
 	if h.gmailSender != nil {
 		emailResult, err = h.gmailSender.SendEmail(r.Context(), emailReq)
@@ -360,13 +364,16 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 
 // SendFinalInvoiceEmail is a helper method that can be called from other handlers
 // Returns (success bool, errorMessage string)
-func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, eventType, eventDate string, helpersCount *int, originalQuote, depositPaid, remainingBalance float64, invoiceURL string) (bool, string) {
+func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, eventType, eventDate string, helpersCount *int, originalQuote, depositPaid, remainingBalance float64, invoiceURL string, showGratuity bool) (bool, string) {
 	if name == "" || email == "" || invoiceURL == "" {
 		return false, "name, email, and invoiceUrl are required"
 	}
 
 	templateService := emailService.NewTemplateService()
-	htmlBody := templateService.GenerateFinalInvoiceEmail(name, eventType, eventDate, helpersCount, originalQuote, depositPaid, remainingBalance, invoiceURL)
+	htmlBody, err := templateService.GenerateFinalInvoiceEmail(name, eventType, eventDate, helpersCount, originalQuote, depositPaid, remainingBalance, invoiceURL, showGratuity)
+	if err != nil {
+		return false, fmt.Sprintf("failed to generate email template: %v", err)
+	}
 
 	emailReq := &ports.SendEmailRequest{
 		To:       email,
@@ -376,7 +383,6 @@ func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, e
 	}
 
 	var emailResult *ports.SendEmailResult
-	var err error
 
 	if h.gmailSender != nil {
 		emailResult, err = h.gmailSender.SendEmail(ctx, emailReq)
@@ -412,7 +418,10 @@ func (h *EmailHandler) SendDepositEmail(ctx context.Context, name, email string,
 	}
 
 	templateService := emailService.NewTemplateService()
-	htmlBody := templateService.GenerateDepositEmail(name, depositAmount, invoiceURL)
+	htmlBody, err := templateService.GenerateDepositEmail(name, depositAmount, invoiceURL)
+	if err != nil {
+		return false, fmt.Sprintf("failed to generate email template: %v", err)
+	}
 
 	emailReq := &ports.SendEmailRequest{
 		To:       email,
@@ -422,7 +431,6 @@ func (h *EmailHandler) SendDepositEmail(ctx context.Context, name, email string,
 	}
 
 	var emailResult *ports.SendEmailResult
-	var err error
 
 	if h.gmailSender != nil {
 		emailResult, err = h.gmailSender.SendEmail(ctx, emailReq)

@@ -75,6 +75,7 @@ type FinalInvoiceRequest struct {
 	ShowFooter      *bool  `json:"showFooter"`      // Toggle to show/hide footer (default: true if footer provided)
 	InvoiceType        string  `json:"invoiceType"`        // "final" or "deposit" - used for stamp prefix
 	SaveEmailAsDraft   *bool   `json:"saveEmailAsDraft"`  // If true, email is saved as draft and not sent (default: false - email is sent)
+	ShowGratuity       *bool   `json:"showGratuity"`      // If true, show gratuity section in final invoice email (default: true)
 	UseTest            bool    `json:"useTest"`
 	SendEmail          bool    `json:"sendEmail"`
 }

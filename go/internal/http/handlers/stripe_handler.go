@@ -772,7 +772,13 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 					}
 				}
 			}
-			
+
+			// Determine if gratuity should be shown (default to true if not set)
+			showGratuity := true
+			if req.ShowGratuity != nil {
+				showGratuity = *req.ShowGratuity
+			}
+
 			emailSent, emailError = h.emailHandler.SendFinalInvoiceEmail(
 				r.Context(),
 				req.Name,
@@ -784,6 +790,7 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 				depositPaid,
 				remainingBalance,
 				invoiceResult.HostedInvoiceURL,
+				showGratuity,
 			)
 		} else {
 			emailError = "email handler is not configured"
