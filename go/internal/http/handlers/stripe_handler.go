@@ -754,11 +754,33 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 	var emailError string
 	if !saveEmailAsDraft {
 		if h.emailHandler != nil {
+			// Format event date from EventDateTimeLocal
+			eventDateFormatted := req.EventDateTimeLocal
+			if eventDateFormatted != "" {
+				// Try to parse and format the date
+				formats := []string{
+					"2006-01-02 15:04",
+					"2006-01-02 15:04:05",
+					"2006-01-02",
+					time.RFC3339,
+				}
+				for _, format := range formats {
+					if t, err := time.Parse(format, eventDateFormatted); err == nil {
+						// Format as "Dec 6, 2025"
+						eventDateFormatted = t.Format("Jan 2, 2006")
+						break
+					}
+				}
+			}
+			
 			emailSent, emailError = h.emailHandler.SendFinalInvoiceEmail(
 				r.Context(),
 				req.Name,
 				req.Email,
-				totalAmount,
+				req.EventType,
+				eventDateFormatted,
+				req.HelpersCount,
+				totalAmount, // Original quote
 				depositPaid,
 				remainingBalance,
 				invoiceResult.HostedInvoiceURL,

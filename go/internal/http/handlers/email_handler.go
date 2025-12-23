@@ -306,8 +306,9 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 
 	// Generate email HTML from template
 	templateService := emailService.NewTemplateService()
+	// For the standalone email endpoint, use defaults for missing fields
 	htmlBody := templateService.GenerateFinalInvoiceEmail(
-		body.Name, body.TotalAmount, body.DepositPaid, body.RemainingBalance, body.InvoiceURL)
+		body.Name, "Event", "", nil, body.TotalAmount, body.DepositPaid, body.RemainingBalance, body.InvoiceURL)
 
 	emailReq := &ports.SendEmailRequest{
 		To:       body.Email,
@@ -359,13 +360,13 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 
 // SendFinalInvoiceEmail is a helper method that can be called from other handlers
 // Returns (success bool, errorMessage string)
-func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email string, totalAmount, depositPaid, remainingBalance float64, invoiceURL string) (bool, string) {
+func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, eventType, eventDate string, helpersCount *int, originalQuote, depositPaid, remainingBalance float64, invoiceURL string) (bool, string) {
 	if name == "" || email == "" || invoiceURL == "" {
 		return false, "name, email, and invoiceUrl are required"
 	}
 
 	templateService := emailService.NewTemplateService()
-	htmlBody := templateService.GenerateFinalInvoiceEmail(name, totalAmount, depositPaid, remainingBalance, invoiceURL)
+	htmlBody := templateService.GenerateFinalInvoiceEmail(name, eventType, eventDate, helpersCount, originalQuote, depositPaid, remainingBalance, invoiceURL)
 
 	emailReq := &ports.SendEmailRequest{
 		To:       email,
