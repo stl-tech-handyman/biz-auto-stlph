@@ -256,8 +256,8 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Determine if email should be sent (default to false - send email)
-	saveEmailAsDraft := false
+	// Determine if email should be sent (default to true - save as draft)
+	saveEmailAsDraft := true
 	if req.SaveEmailAsDraft != nil {
 		saveEmailAsDraft = *req.SaveEmailAsDraft
 	}
@@ -743,8 +743,8 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 	totalAmount := util.CentsToDollars(totalCents)
 	depositPaid := util.CentsToDollars(depositPaidCents)
 
-	// Determine if email should be sent (default to false - send email)
-	saveEmailAsDraft := false
+	// Determine if email should be sent (default to true - save as draft)
+	saveEmailAsDraft := true
 	if req.SaveEmailAsDraft != nil {
 		saveEmailAsDraft = *req.SaveEmailAsDraft
 	}

@@ -752,9 +752,9 @@ components:
           example: true
         saveEmailAsDraft:
           type: boolean
-          default: false
-          description: Сохранить email как черновик (не отправлять). По умолчанию false - email отправляется
-          example: false
+          default: true
+          description: Сохранить email как черновик (не отправлять). По умолчанию true - email сохраняется как черновик
+          example: true
       example:
         name: "John Doe"
         email: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
@@ -769,7 +769,7 @@ components:
         depositValue: null
         useTest: false
         dryRun: true
-        saveEmailAsDraft: false
+        saveEmailAsDraft: true
 
     DepositWithEmailResponse:
       type: object
@@ -879,9 +879,9 @@ components:
               value: "4 Hours"
         saveEmailAsDraft:
           type: boolean
-          default: false
-          description: Сохранить email как черновик (не отправлять). По умолчанию false - email отправляется
-          example: false
+          default: true
+          description: Сохранить email как черновик (не отправлять). По умолчанию true - email сохраняется как черновик
+          example: true
         useTest:
           type: boolean
           default: false
@@ -896,7 +896,7 @@ components:
         eventDateTimeLocal: "2025-06-15 17:00"
         helpersCount: 2
         hours: 4.0
-        saveEmailAsDraft: false
+        saveEmailAsDraft: true
         currency: "usd"
 
     FinalInvoiceResponse:
