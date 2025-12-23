@@ -39,9 +39,9 @@ type DepositWithEmailRequest struct {
 	ShowMemo        *bool  `json:"showMemo"`        // Toggle to show/hide memo (default: true if memo provided)
 	Footer          string `json:"footer"`
 	ShowFooter      *bool  `json:"showFooter"`      // Toggle to show/hide footer (default: true if footer provided)
-	UseTest         bool   `json:"useTest"`
-	DryRun          bool   `json:"dryRun"`
-	SaveAsDraft     bool   `json:"saveAsDraft"`
+	UseTest           bool   `json:"useTest"`
+	DryRun            bool   `json:"dryRun"`
+	SaveEmailAsDraft  *bool  `json:"saveEmailAsDraft"`  // If true, email is saved as draft and not sent (default: false - email is sent)
 }
 
 // CustomField represents a custom field for Stripe invoices
@@ -73,10 +73,10 @@ type FinalInvoiceRequest struct {
 	ShowMemo        *bool  `json:"showMemo"`        // Toggle to show/hide memo (default: true if memo provided)
 	Footer          string `json:"footer"`
 	ShowFooter      *bool  `json:"showFooter"`      // Toggle to show/hide footer (default: true if footer provided)
-	InvoiceType     string  `json:"invoiceType"`      // "final" or "deposit" - used for stamp prefix
-	SaveAsDraft     *bool   `json:"saveAsDraft"`     // If true, invoice is saved as draft and not finalized (default: true for final invoices)
-	UseTest         bool    `json:"useTest"`
-	SendEmail       bool    `json:"sendEmail"`
+	InvoiceType        string  `json:"invoiceType"`        // "final" or "deposit" - used for stamp prefix
+	SaveEmailAsDraft   *bool   `json:"saveEmailAsDraft"`  // If true, email is saved as draft and not sent (default: false - email is sent)
+	UseTest            bool    `json:"useTest"`
+	SendEmail          bool    `json:"sendEmail"`
 }
 
 // TestInvoiceRequest represents a request to test invoice creation

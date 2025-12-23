@@ -130,7 +130,7 @@ func (s *InvoiceService) CreateFinalInvoice(ctx context.Context, req *CreateFina
 		Memo:             req.Memo,
 		Footer:            req.Footer,
 		InvoiceType:       "final",
-		SaveAsDraft:       req.SaveAsDraft,
+		SaveAsDraft:       false, // Always finalize invoices
 	}
 
 	if finalInvoiceReq.Currency == "" {
@@ -172,6 +172,6 @@ type CreateFinalInvoiceRequest struct {
 	CustomFields     []ports.CustomField
 	Memo             string
 	Footer           string
-	SaveAsDraft      bool
+	SaveAsDraft      bool // Always false - invoices are always finalized (kept for backward compatibility)
 }
 

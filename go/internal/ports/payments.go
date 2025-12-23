@@ -47,7 +47,7 @@ type CreateFinalInvoiceRequest struct {
 	Memo            string // Memo text (appears on invoice)
 	Footer          string // Footer text (appears at bottom)
 	InvoiceType     string // "final" or "deposit" - used for stamp prefix
-	SaveAsDraft     bool   // If true, invoice is saved as draft and not finalized
+	SaveAsDraft     bool   // Always false - invoices are always finalized (kept for backward compatibility)
 }
 
 // InvoiceResult contains the result of invoice creation

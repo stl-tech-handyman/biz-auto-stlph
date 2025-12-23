@@ -256,11 +256,17 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// Determine if email should be sent (default to false - send email)
+	saveEmailAsDraft := false
+	if req.SaveEmailAsDraft != nil {
+		saveEmailAsDraft = *req.SaveEmailAsDraft
+	}
+
 	response := map[string]interface{}{
-		"ok":          true,
-		"message":     "Deposit invoice created successfully",
-		"dryRun":      req.DryRun,
-		"saveAsDraft": req.SaveAsDraft,
+		"ok":              true,
+		"message":         "Deposit invoice created successfully",
+		"dryRun":          req.DryRun,
+		"saveEmailAsDraft": saveEmailAsDraft,
 		"invoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,
 			"url":    invoiceResult.HostedInvoiceURL,
@@ -583,12 +589,7 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 		}
 	}
 
-	// Default saveAsDraft to true for final invoices if not explicitly set
-	saveAsDraft := true // Default to true for final invoices
-	if req.SaveAsDraft != nil {
-		saveAsDraft = *req.SaveAsDraft
-	}
-
+	// Invoices are always finalized (no draft option)
 	invoiceReq := &stripeService.CreateFinalInvoiceRequest{
 		CustomerEmail:    req.Email,
 		CustomerName:     req.Name,
@@ -602,7 +603,7 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 		CustomFields:     serviceCustomFields,
 		Memo:             memo,
 		Footer:           footer,
-		SaveAsDraft:      saveAsDraft,
+		SaveAsDraft:      false, // Always finalize invoices
 	}
 
 	return h.invoiceService.CreateFinalInvoice(ctx, invoiceReq)
@@ -646,16 +647,9 @@ func (h *StripeHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Reques
 		depositPaidCents = util.DollarsToCents(*req.DepositPaid)
 	}
 
-	// Determine saveAsDraft value (default to true if not set)
-	saveAsDraftValue := true
-	if req.SaveAsDraft != nil {
-		saveAsDraftValue = *req.SaveAsDraft
-	}
-
 	response := map[string]interface{}{
-		"ok":          true,
-		"message":     "Final invoice created successfully",
-		"saveAsDraft": saveAsDraftValue,
+		"ok":      true,
+		"message": "Final invoice created successfully",
 		"invoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,
 			"url":    invoiceResult.HostedInvoiceURL,
@@ -724,33 +718,37 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 	totalAmount := util.CentsToDollars(totalCents)
 	depositPaid := util.CentsToDollars(depositPaidCents)
 
-	// Send custom email
-	var emailSent bool
-	var emailError string
-	if h.emailHandler != nil {
-		emailSent, emailError = h.emailHandler.SendFinalInvoiceEmail(
-			r.Context(),
-			req.Name,
-			req.Email,
-			totalAmount,
-			depositPaid,
-			remainingBalance,
-			invoiceResult.HostedInvoiceURL,
-		)
-	} else {
-		emailError = "email handler is not configured"
+	// Determine if email should be sent (default to false - send email)
+	saveEmailAsDraft := false
+	if req.SaveEmailAsDraft != nil {
+		saveEmailAsDraft = *req.SaveEmailAsDraft
 	}
 
-	// Determine saveAsDraft value (default to true if not set)
-	saveAsDraftValue := true
-	if req.SaveAsDraft != nil {
-		saveAsDraftValue = *req.SaveAsDraft
+	// Send custom email (only if not saving as draft)
+	var emailSent bool
+	var emailError string
+	if !saveEmailAsDraft {
+		if h.emailHandler != nil {
+			emailSent, emailError = h.emailHandler.SendFinalInvoiceEmail(
+				r.Context(),
+				req.Name,
+				req.Email,
+				totalAmount,
+				depositPaid,
+				remainingBalance,
+				invoiceResult.HostedInvoiceURL,
+			)
+		} else {
+			emailError = "email handler is not configured"
+		}
+	} else {
+		emailError = "email saved as draft (not sent)"
 	}
 
 	response := map[string]interface{}{
-		"ok":          true,
-		"message":     "Final invoice created and email sent",
-		"saveAsDraft": saveAsDraftValue,
+		"ok":              true,
+		"message":         "Final invoice created",
+		"saveEmailAsDraft": saveEmailAsDraft,
 		"invoice": map[string]interface{}{
 			"id":     invoiceResult.InvoiceID,
 			"url":    invoiceResult.HostedInvoiceURL,

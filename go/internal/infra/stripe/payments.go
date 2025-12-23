@@ -212,19 +212,7 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 
 	fmt.Printf("[Stripe] Invoice created: ID=%s, AmountDue=%d, Status=%s\n", invoice.ID, invoice.AmountDue, invoice.Status)
 
-	// If saveAsDraft is true, return the draft invoice without finalizing
-	if req.SaveAsDraft {
-		fmt.Printf("[Stripe] Invoice saved as draft (not finalized)\n")
-		return &ports.InvoiceResult{
-			InvoiceID:        invoice.ID,
-			HostedInvoiceURL: invoice.HostedInvoiceURL,
-			AmountDue:        invoice.AmountDue,
-			Status:           invoice.Status,
-			InvoicePDF:       invoice.InvoicePDF,
-		}, nil
-	}
-
-	// With auto_advance=false, invoice is created as draft, so we need to finalize it
+	// Always finalize invoices (auto_advance=false creates as draft, so we finalize it)
 	var finalized *Invoice
 	if invoice.Status == "draft" {
 		finalized, err = s.finalizeInvoice(ctx, apiKey, invoice.ID)

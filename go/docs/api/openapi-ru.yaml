@@ -750,9 +750,10 @@ components:
           type: boolean
           default: false
           example: true
-        saveAsDraft:
+        saveEmailAsDraft:
           type: boolean
           default: false
+          description: Сохранить email как черновик (не отправлять). По умолчанию false - email отправляется
           example: false
       example:
         name: "John Doe"
@@ -768,7 +769,7 @@ components:
         depositValue: null
         useTest: false
         dryRun: true
-        saveAsDraft: false
+        saveEmailAsDraft: false
 
     DepositWithEmailResponse:
       type: object
@@ -876,11 +877,11 @@ components:
               value: "2 Helpers"
             - name: "Hours"
               value: "4 Hours"
-        saveAsDraft:
+        saveEmailAsDraft:
           type: boolean
-          default: true
-          description: Сохранить инвойс как черновик (не финализировать). По умолчанию true для финальных инвойсов
-          example: true
+          default: false
+          description: Сохранить email как черновик (не отправлять). По умолчанию false - email отправляется
+          example: false
         useTest:
           type: boolean
           default: false
@@ -895,7 +896,7 @@ components:
         eventDateTimeLocal: "2025-06-15 17:00"
         helpersCount: 2
         hours: 4.0
-        saveAsDraft: true
+        saveEmailAsDraft: false
         currency: "usd"
 
     FinalInvoiceResponse:
