@@ -262,25 +262,22 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 		saveEmailAsDraft = *req.SaveEmailAsDraft
 	}
 
-	// Send deposit email (only if not saving as draft)
+	// Send deposit email (save as draft or send based on flag)
 	var emailSent bool
 	var emailError string
-	if !saveEmailAsDraft {
-		if h.emailHandler != nil {
-			// Calculate deposit amount for email
-			depositAmount := util.CentsToDollars(invoiceResult.AmountDue)
-			emailSent, emailError = h.emailHandler.SendDepositEmail(
-				r.Context(),
-				req.Name,
-				req.Email,
-				depositAmount,
-				invoiceResult.HostedInvoiceURL,
-			)
-		} else {
-			emailError = "email handler is not configured"
-		}
+	if h.emailHandler != nil {
+		// Calculate deposit amount for email
+		depositAmount := util.CentsToDollars(invoiceResult.AmountDue)
+		emailSent, emailError = h.emailHandler.SendDepositEmail(
+			r.Context(),
+			req.Name,
+			req.Email,
+			depositAmount,
+			invoiceResult.HostedInvoiceURL,
+			saveEmailAsDraft,
+		)
 	} else {
-		emailError = "email saved as draft (not sent)"
+		emailError = "email handler is not configured"
 	}
 
 	response := map[string]interface{}{
@@ -749,54 +746,51 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 		saveEmailAsDraft = *req.SaveEmailAsDraft
 	}
 
-	// Send custom email (only if not saving as draft)
+	// Send custom email (save as draft or send based on flag)
 	var emailSent bool
 	var emailError string
-	if !saveEmailAsDraft {
-		if h.emailHandler != nil {
-			// Format event date from EventDateTimeLocal
-			eventDateFormatted := req.EventDateTimeLocal
-			if eventDateFormatted != "" {
-				// Try to parse and format the date
-				formats := []string{
-					"2006-01-02 15:04",
-					"2006-01-02 15:04:05",
-					"2006-01-02",
-					time.RFC3339,
-				}
-				for _, format := range formats {
-					if t, err := time.Parse(format, eventDateFormatted); err == nil {
-						// Format as "Dec 6, 2025"
-						eventDateFormatted = t.Format("Jan 2, 2006")
-						break
-					}
+	if h.emailHandler != nil {
+		// Format event date from EventDateTimeLocal
+		eventDateFormatted := req.EventDateTimeLocal
+		if eventDateFormatted != "" {
+			// Try to parse and format the date
+			formats := []string{
+				"2006-01-02 15:04",
+				"2006-01-02 15:04:05",
+				"2006-01-02",
+				time.RFC3339,
+			}
+			for _, format := range formats {
+				if t, err := time.Parse(format, eventDateFormatted); err == nil {
+					// Format as "Dec 6, 2025"
+					eventDateFormatted = t.Format("Jan 2, 2006")
+					break
 				}
 			}
-
-			// Determine if gratuity should be shown (default to true if not set)
-			showGratuity := true
-			if req.ShowGratuity != nil {
-				showGratuity = *req.ShowGratuity
-			}
-
-			emailSent, emailError = h.emailHandler.SendFinalInvoiceEmail(
-				r.Context(),
-				req.Name,
-				req.Email,
-				req.EventType,
-				eventDateFormatted,
-				req.HelpersCount,
-				totalAmount, // Original quote
-				depositPaid,
-				remainingBalance,
-				invoiceResult.HostedInvoiceURL,
-				showGratuity,
-			)
-		} else {
-			emailError = "email handler is not configured"
 		}
+
+		// Determine if gratuity should be shown (default to true if not set)
+		showGratuity := true
+		if req.ShowGratuity != nil {
+			showGratuity = *req.ShowGratuity
+		}
+
+		emailSent, emailError = h.emailHandler.SendFinalInvoiceEmail(
+			r.Context(),
+			req.Name,
+			req.Email,
+			req.EventType,
+			eventDateFormatted,
+			req.HelpersCount,
+			totalAmount, // Original quote
+			depositPaid,
+			remainingBalance,
+			invoiceResult.HostedInvoiceURL,
+			showGratuity,
+			saveEmailAsDraft,
+		)
 	} else {
-		emailError = "email saved as draft (not sent)"
+		emailError = "email handler is not configured"
 	}
 
 	response := map[string]interface{}{

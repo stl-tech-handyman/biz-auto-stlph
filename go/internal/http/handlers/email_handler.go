@@ -364,7 +364,7 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 
 // SendFinalInvoiceEmail is a helper method that can be called from other handlers
 // Returns (success bool, errorMessage string)
-func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, eventType, eventDate string, helpersCount *int, originalQuote, depositPaid, remainingBalance float64, invoiceURL string, showGratuity bool) (bool, string) {
+func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, eventType, eventDate string, helpersCount *int, originalQuote, depositPaid, remainingBalance float64, invoiceURL string, showGratuity bool, saveAsDraft bool) (bool, string) {
 	if name == "" || email == "" || invoiceURL == "" {
 		return false, "name, email, and invoiceUrl are required"
 	}
@@ -384,12 +384,24 @@ func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, e
 
 	var emailResult *ports.SendEmailResult
 
-	if h.gmailSender != nil {
-		emailResult, err = h.gmailSender.SendEmail(ctx, emailReq)
-	} else if h.emailClient != nil {
-		emailResult, err = h.emailClient.SendEmail(ctx, emailReq)
+	if saveAsDraft {
+		// Save as draft in Gmail
+		if h.gmailSender != nil {
+			emailResult, err = h.gmailSender.SendEmailDraft(ctx, emailReq)
+		} else if h.emailClient != nil {
+			emailResult, err = h.emailClient.SendEmailDraft(ctx, emailReq)
+		} else {
+			return false, "email service is not configured"
+		}
 	} else {
-		return false, "email service is not configured"
+		// Send email immediately
+		if h.gmailSender != nil {
+			emailResult, err = h.gmailSender.SendEmail(ctx, emailReq)
+		} else if h.emailClient != nil {
+			emailResult, err = h.emailClient.SendEmail(ctx, emailReq)
+		} else {
+			return false, "email service is not configured"
+		}
 	}
 
 	if err != nil {
@@ -412,7 +424,7 @@ func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, e
 
 // SendDepositEmail sends a deposit invoice email
 // Returns (success bool, errorMessage string)
-func (h *EmailHandler) SendDepositEmail(ctx context.Context, name, email string, depositAmount float64, invoiceURL string) (bool, string) {
+func (h *EmailHandler) SendDepositEmail(ctx context.Context, name, email string, depositAmount float64, invoiceURL string, saveAsDraft bool) (bool, string) {
 	if name == "" || email == "" || invoiceURL == "" {
 		return false, "name, email, and invoiceUrl are required"
 	}
@@ -432,12 +444,24 @@ func (h *EmailHandler) SendDepositEmail(ctx context.Context, name, email string,
 
 	var emailResult *ports.SendEmailResult
 
-	if h.gmailSender != nil {
-		emailResult, err = h.gmailSender.SendEmail(ctx, emailReq)
-	} else if h.emailClient != nil {
-		emailResult, err = h.emailClient.SendEmail(ctx, emailReq)
+	if saveAsDraft {
+		// Save as draft in Gmail
+		if h.gmailSender != nil {
+			emailResult, err = h.gmailSender.SendEmailDraft(ctx, emailReq)
+		} else if h.emailClient != nil {
+			emailResult, err = h.emailClient.SendEmailDraft(ctx, emailReq)
+		} else {
+			return false, "email service is not configured"
+		}
 	} else {
-		return false, "email service is not configured"
+		// Send email immediately
+		if h.gmailSender != nil {
+			emailResult, err = h.gmailSender.SendEmail(ctx, emailReq)
+		} else if h.emailClient != nil {
+			emailResult, err = h.emailClient.SendEmail(ctx, emailReq)
+		} else {
+			return false, "email service is not configured"
+		}
 	}
 
 	if err != nil {

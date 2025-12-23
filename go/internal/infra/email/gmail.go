@@ -173,10 +173,11 @@ func NewGmailSender() (*GmailSender, error) {
 	}
 
 	// Try JWT config first (for service accounts)
-	config, err := google.JWTConfigFromJSON(credsData, gmail.GmailSendScope)
+	// Use GmailModifyScope to allow both sending and creating drafts
+	config, err := google.JWTConfigFromJSON(credsData, gmail.GmailModifyScope)
 	if err != nil {
 		// If JWT fails, try OAuth2 config
-		_, oauthErr := google.ConfigFromJSON(credsData, gmail.GmailSendScope)
+		_, oauthErr := google.ConfigFromJSON(credsData, gmail.GmailModifyScope)
 		if oauthErr != nil {
 			return nil, fmt.Errorf("failed to parse Gmail credentials (tried JWT and OAuth2): %w", err)
 		}
