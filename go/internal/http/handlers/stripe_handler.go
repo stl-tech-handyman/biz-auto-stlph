@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bizops360/go-api/internal/http/handlers/dto"
 	"github.com/bizops360/go-api/internal/ports"
@@ -388,15 +389,39 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusOK, response)
 }
 
+// formatDateTimeForStripe formats a date-time string to AM/PM format for Stripe
+// Input: "2025-06-15 17:00" -> Output: "Jun 15, 2025 5:00 PM"
+func formatDateTimeForStripe(dateTimeStr string) string {
+	// Try multiple formats
+	formats := []string{
+		"2006-01-02 15:04",
+		"2006-01-02 15:04:05",
+		"2006-01-02 3:04 PM",
+		"2006-01-02 3:04PM",
+		time.RFC3339,
+	}
+
+	for _, format := range formats {
+		if t, err := time.Parse(format, dateTimeStr); err == nil {
+			// Format as "Jan 2, 2006 3:04 PM"
+			return t.Format("Jan 2, 2006 3:04 PM")
+		}
+	}
+
+	// If parsing fails, return original string
+	return dateTimeStr
+}
+
 // extractCustomFieldsFromDepositRequest extracts custom fields from DepositWithEmailRequest
 func extractCustomFieldsFromDepositRequest(req dto.DepositWithEmailRequest) []ports.CustomField {
 	customFields := make([]ports.CustomField, 0, 4)
 
 	// Event Date & Time
 	if req.EventDateTimeLocal != "" {
+		formattedDateTime := formatDateTimeForStripe(req.EventDateTimeLocal)
 		customFields = append(customFields, ports.CustomField{
 			Name:  "Event Date & Time",
-			Value: req.EventDateTimeLocal,
+			Value: formattedDateTime,
 		})
 	}
 
@@ -452,16 +477,17 @@ func extractCustomFieldsFromFinalInvoiceRequest(req dto.FinalInvoiceRequest) []p
 	// For final invoices: Event Type and Event Date & Time are REQUIRED
 	// Helpers Count and Duration are OPTIONAL (only add if provided)
 	customFields := make([]ports.CustomField, 0, 4)
-	
+
 	// Event Date & Time (REQUIRED for final invoices)
 	// Validation happens in createFinalInvoiceCommon, so this should always be present
 	if req.EventDateTimeLocal != "" {
+		formattedDateTime := formatDateTimeForStripe(req.EventDateTimeLocal)
 		customFields = append(customFields, ports.CustomField{
 			Name:  "Event Date & Time",
-			Value: req.EventDateTimeLocal,
+			Value: formattedDateTime,
 		})
 	}
-	
+
 	// Event Type (REQUIRED for final invoices)
 	// Validation happens in createFinalInvoiceCommon, so this should always be present
 	if req.EventType != "" {
@@ -470,7 +496,7 @@ func extractCustomFieldsFromFinalInvoiceRequest(req dto.FinalInvoiceRequest) []p
 			Value: req.EventType,
 		})
 	}
-	
+
 	// Helpers Count (OPTIONAL - only add if provided)
 	if req.HelpersCount != nil {
 		customFields = append(customFields, ports.CustomField{
@@ -478,7 +504,7 @@ func extractCustomFieldsFromFinalInvoiceRequest(req dto.FinalInvoiceRequest) []p
 			Value: fmt.Sprintf("%d Helpers", *req.HelpersCount),
 		})
 	}
-	
+
 	// Hours/Duration (OPTIONAL - only add if provided)
 	if req.Hours != nil {
 		customFields = append(customFields, ports.CustomField{
@@ -491,7 +517,7 @@ func extractCustomFieldsFromFinalInvoiceRequest(req dto.FinalInvoiceRequest) []p
 			Value: fmt.Sprintf("%.0f Hours", *req.Duration),
 		})
 	}
-	
+
 	return customFields
 }
 
@@ -501,7 +527,7 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 	if req.Email == "" || req.Name == "" {
 		return nil, fmt.Errorf("email and name are required")
 	}
-	
+
 	// For final invoices, Event Type and Event Date & Time are required
 	if req.EventType == "" {
 		return nil, fmt.Errorf("eventType is required for final invoices")
