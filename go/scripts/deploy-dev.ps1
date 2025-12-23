@@ -47,18 +47,19 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "[INFO] Stripe prod secret found" -ForegroundColor Green
 }
 
-# Gmail credentials - check if it exists in main project (may have been copied)
+# Gmail credentials - check if it exists in main project or email project
 $EMAIL_PROJECT = "bizops360-email-dev"
 $gmailSecret = gcloud secrets describe gmail-credentials-json --project=$PROJECT_ID 2>&1
 if ($LASTEXITCODE -eq 0) {
     $SECRET_ARGS += ",GMAIL_CREDENTIALS_JSON=gmail-credentials-json:latest"
     Write-Host "[INFO] Gmail credentials found in $PROJECT_ID" -ForegroundColor Green
 } else {
-    # Check if it exists in email project (would need cross-project access)
+    # Check if it exists in email project - use cross-project reference
     $gmailSecretEmail = gcloud secrets describe gmail-credentials-json --project=$EMAIL_PROJECT 2>&1
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "[WARNING] Gmail credentials exist in $EMAIL_PROJECT but not in $PROJECT_ID" -ForegroundColor Yellow
-        Write-Host "[INFO] To use email features, copy the secret to $PROJECT_ID or grant cross-project access" -ForegroundColor Yellow
+        # Use cross-project secret reference
+        $SECRET_ARGS += ",GMAIL_CREDENTIALS_JSON=projects/$EMAIL_PROJECT/secrets/gmail-credentials-json:latest"
+        Write-Host "[INFO] Gmail credentials found in $EMAIL_PROJECT (using cross-project reference)" -ForegroundColor Green
     } else {
         Write-Host "[WARNING] Gmail credentials not found (email features may not work)" -ForegroundColor Yellow
     }

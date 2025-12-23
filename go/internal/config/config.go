@@ -23,8 +23,58 @@ type Config struct {
 // LoadConfig loads configuration from environment variables
 // It first tries to load from .env file in the current directory, then falls back to system env vars
 func LoadConfig() *Config {
+	// #region agent log
+	if logFile, err := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		wd, _ := os.Getwd()
+		envFile := filepath.Join(wd, ".env")
+		envFileExists := false
+		if _, err := os.Stat(envFile); err == nil {
+			envFileExists = true
+		}
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "H1",
+			"location":     "config.go:LoadConfig",
+			"message":      "Before godotenv.Load - checking .env file",
+			"data": map[string]interface{}{
+				"workingDir":    wd,
+				"envFilePath":   envFile,
+				"envFileExists": envFileExists,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	// Try to load .env file (ignore error if file doesn't exist)
-	_ = godotenv.Load()
+	err := godotenv.Load()
+	// #region agent log
+	if logFile, logErr := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		gmailCreds := os.Getenv("GMAIL_CREDENTIALS_JSON")
+		gmailFrom := os.Getenv("GMAIL_FROM")
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "H1,H5",
+			"location":     "config.go:LoadConfig",
+			"message":      "After godotenv.Load - GMAIL env vars",
+			"data": map[string]interface{}{
+				"godotenvError":        err != nil,
+				"godotenvErrorMsg":     func() string { if err != nil { return err.Error() } else { return "" } }(),
+				"gmailCredsSet":        gmailCreds != "",
+				"gmailCredsLength":     len(gmailCreds),
+				"gmailCredsValue":      gmailCreds,
+				"gmailFromSet":         gmailFrom != "",
+				"gmailFromValue":       gmailFrom,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	
 	env := GetEnvironment()
 	isProd := IsProduction()

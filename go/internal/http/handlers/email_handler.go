@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/bizops360/go-api/internal/infra/email"
 	"github.com/bizops360/go-api/internal/ports"
@@ -41,12 +44,59 @@ func NewEmailHandler(logger *slog.Logger) *EmailHandler {
 	}
 
 	// Fall back to Gmail sender (if credentials are available)
+	// #region agent log
+	if logFile, logErr := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "H1,H2,H3,H4,H5",
+			"location":     "email_handler.go:NewEmailHandler",
+			"message":      "Attempting to create Gmail sender",
+			"data":         map[string]interface{}{},
+			"timestamp":    time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	if gmailSender, err := email.NewGmailSender(); err == nil {
 		handler.gmailSender = gmailSender
 		logger.Info("Using Gmail API for email sending")
+		// #region agent log
+		if logFile, logErr := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+			logEntry := map[string]interface{}{
+				"sessionId":    "debug-session",
+				"runId":        "run1",
+				"hypothesisId": "H1,H2,H3,H4,H5",
+				"location":     "email_handler.go:NewEmailHandler",
+				"message":      "Gmail sender created successfully",
+				"data":         map[string]interface{}{},
+				"timestamp":    time.Now().UnixMilli(),
+			}
+			json.NewEncoder(logFile).Encode(logEntry)
+			logFile.Close()
+		}
+		// #endregion
 	} else {
 		logger.Warn("Gmail API not available", "error", err)
 		logger.Warn("Email functionality requires EMAIL_SERVICE_URL or GMAIL_CREDENTIALS_JSON to be configured")
+		// #region agent log
+		if logFile, logErr := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+			logEntry := map[string]interface{}{
+				"sessionId":    "debug-session",
+				"runId":        "run1",
+				"hypothesisId": "H1,H2,H3,H4,H5",
+				"location":     "email_handler.go:NewEmailHandler",
+				"message":      "Gmail sender creation failed",
+				"data": map[string]interface{}{
+					"error": err.Error(),
+				},
+				"timestamp": time.Now().UnixMilli(),
+			}
+			json.NewEncoder(logFile).Encode(logEntry)
+			logFile.Close()
+		}
+		// #endregion
 	}
 
 	return handler
@@ -95,6 +145,24 @@ func (h *EmailHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 	var result *ports.SendEmailResult
 	var err error
 
+	// #region agent log
+	if logFile, logErr := os.OpenFile("c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "H1,H2,H3,H4,H5",
+			"location":     "email_handler.go:HandleTest",
+			"message":      "Checking email service availability",
+			"data": map[string]interface{}{
+				"gmailSenderIsNil": h.gmailSender == nil,
+				"emailClientIsNil": h.emailClient == nil,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	// Use Gmail sender if available, otherwise use HTTP client
 	if h.gmailSender != nil {
 		result, err = h.gmailSender.SendEmail(r.Context(), req)

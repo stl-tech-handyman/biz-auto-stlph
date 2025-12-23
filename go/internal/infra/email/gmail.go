@@ -3,9 +3,11 @@ package email
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/bizops360/go-api/internal/ports"
 	"golang.org/x/oauth2/google"
@@ -21,22 +23,152 @@ type GmailSender struct {
 
 // NewGmailSender creates a new Gmail sender
 func NewGmailSender() (*GmailSender, error) {
+	// #region agent log
+	logPath := "c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log"
+	if logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		credentialsJSON := os.Getenv("GMAIL_CREDENTIALS_JSON")
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "H1,H2,H3",
+			"location":     "gmail.go:NewGmailSender",
+			"message":      "Checking GMAIL_CREDENTIALS_JSON env var",
+			"data": map[string]interface{}{
+				"gmailCredsSet":    credentialsJSON != "",
+				"gmailCredsLength": len(credentialsJSON),
+				"gmailCredsValue":  credentialsJSON,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	// Get Gmail credentials from environment (can be file path or JSON string)
 	credentialsJSON := os.Getenv("GMAIL_CREDENTIALS_JSON")
 	if credentialsJSON == "" {
+		// #region agent log
+		if logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			logEntry := map[string]interface{}{
+				"sessionId":    "debug-session",
+				"runId":        "run1",
+				"hypothesisId": "H1,H5",
+				"location":     "gmail.go:NewGmailSender",
+				"message":      "GMAIL_CREDENTIALS_JSON not set - returning error",
+				"data":          map[string]interface{}{},
+				"timestamp":     time.Now().UnixMilli(),
+			}
+			json.NewEncoder(logFile).Encode(logEntry)
+			logFile.Close()
+		}
+		// #endregion
 		return nil, fmt.Errorf("GMAIL_CREDENTIALS_JSON environment variable is not set")
 	}
 
+	// #region agent log
+	if logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		fileInfo, statErr := os.Stat(credentialsJSON)
+		fileExists := statErr == nil
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "H2,H3,H4",
+			"location":     "gmail.go:NewGmailSender",
+			"message":      "Checking if credentials path is a file",
+			"data": map[string]interface{}{
+				"credentialsPath": credentialsJSON,
+				"fileExists":      fileExists,
+				"statError":       func() string { if statErr != nil { return statErr.Error() } else { return "" } }(),
+				"isFile":          fileExists && !fileInfo.IsDir(),
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	// Try to read from file if it's a path, otherwise use as JSON string
 	var credsData []byte
 	if _, err := os.Stat(credentialsJSON); err == nil {
 		// It's a file path
+		// #region agent log
+		if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+			logEntry := map[string]interface{}{
+				"sessionId":    "debug-session",
+				"runId":        "run1",
+				"hypothesisId": "H4",
+				"location":     "gmail.go:NewGmailSender",
+				"message":      "Attempting to read credentials file",
+				"data": map[string]interface{}{
+					"credentialsPath": credentialsJSON,
+				},
+				"timestamp": time.Now().UnixMilli(),
+			}
+			json.NewEncoder(logFile).Encode(logEntry)
+			logFile.Close()
+		}
+		// #endregion
 		credsData, err = os.ReadFile(credentialsJSON)
 		if err != nil {
+			// #region agent log
+			if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+				logEntry := map[string]interface{}{
+					"sessionId":    "debug-session",
+					"runId":        "run1",
+					"hypothesisId": "H4",
+					"location":     "gmail.go:NewGmailSender",
+					"message":      "Failed to read credentials file",
+					"data": map[string]interface{}{
+						"credentialsPath": credentialsJSON,
+						"readError":       err.Error(),
+					},
+					"timestamp": time.Now().UnixMilli(),
+				}
+				json.NewEncoder(logFile).Encode(logEntry)
+				logFile.Close()
+			}
+			// #endregion
 			return nil, fmt.Errorf("failed to read credentials file: %w", err)
 		}
+		// #region agent log
+		if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+			logEntry := map[string]interface{}{
+				"sessionId":    "debug-session",
+				"runId":        "run1",
+				"hypothesisId": "H4",
+				"location":     "gmail.go:NewGmailSender",
+				"message":      "Successfully read credentials file",
+				"data": map[string]interface{}{
+					"credentialsPath": credentialsJSON,
+					"fileSize":        len(credsData),
+				},
+				"timestamp": time.Now().UnixMilli(),
+			}
+			json.NewEncoder(logFile).Encode(logEntry)
+			logFile.Close()
+		}
+		// #endregion
 	} else {
 		// It's JSON string
+		// #region agent log
+		if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+			logEntry := map[string]interface{}{
+				"sessionId":    "debug-session",
+				"runId":        "run1",
+				"hypothesisId": "H2",
+				"location":     "gmail.go:NewGmailSender",
+				"message":      "Treating credentials as JSON string (file not found)",
+				"data": map[string]interface{}{
+					"credentialsPath": credentialsJSON,
+					"statError":       err.Error(),
+					"jsonLength":      len(credentialsJSON),
+				},
+				"timestamp": time.Now().UnixMilli(),
+			}
+			json.NewEncoder(logFile).Encode(logEntry)
+			logFile.Close()
+		}
+		// #endregion
 		credsData = []byte(credentialsJSON)
 	}
 

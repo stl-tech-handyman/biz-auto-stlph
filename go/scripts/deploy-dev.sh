@@ -51,36 +51,29 @@ docker build -f go/Dockerfile.dev -t "$IMAGE_NAME:latest" .
 print_status "Pushing image to Artifact Registry..."
 docker push "$IMAGE_NAME:latest"
 
-# Prepare secrets
+# Prepare secrets and env vars
 SECRET_ARGS="SERVICE_API_KEY=svc-api-key-dev:latest"
+ENV_VARS=""
 
-# Email service URL (use separate email API if available)
+# Gmail credentials - check if it exists in main project or email project
 EMAIL_PROJECT="bizops360-email-dev"
-EMAIL_SERVICE_NAME="bizops360-email-api-dev"
-EMAIL_SERVICE_URL="${EMAIL_SERVICE_URL:-}"
-
-if [ -z "$EMAIL_SERVICE_URL" ]; then
-    # Try to get email API URL from email project
-    EMAIL_SERVICE_URL=$(gcloud run services describe "$EMAIL_SERVICE_NAME" \
-        --project="$EMAIL_PROJECT" \
-        --region="$REGION" \
-        --format="value(status.url)" 2>/dev/null || echo "")
-fi
-
-if [ -n "$EMAIL_SERVICE_URL" ]; then
-    print_status "Found email API service: $EMAIL_SERVICE_URL"
-    # Get email API key from secret
-    EMAIL_API_KEY=$(gcloud secrets versions access latest --secret=email-api-key-dev --project="$EMAIL_PROJECT" 2>/dev/null || echo "")
-    if [ -n "$EMAIL_API_KEY" ]; then
-        print_status "Email API key found"
-        ENV_VARS="${ENV_VARS:+$ENV_VARS,}EMAIL_SERVICE_URL=${EMAIL_SERVICE_URL},EMAIL_SERVICE_API_KEY=${EMAIL_API_KEY}"
-    else
-        print_warning "Email API key not found, email features may not work"
-        ENV_VARS="${ENV_VARS:+$ENV_VARS,}EMAIL_SERVICE_URL=${EMAIL_SERVICE_URL}"
-    fi
+if gcloud secrets describe gmail-credentials-json --project="$PROJECT_ID" >/dev/null 2>&1; then
+    SECRET_ARGS="$SECRET_ARGS,GMAIL_CREDENTIALS_JSON=gmail-credentials-json:latest"
+    print_status "Gmail credentials found in $PROJECT_ID"
 else
-    print_warning "Email API service not found, email features will not work"
+    # Check if it exists in email project - use cross-project reference
+    if gcloud secrets describe gmail-credentials-json --project="$EMAIL_PROJECT" >/dev/null 2>&1; then
+        # Use cross-project secret reference
+        SECRET_ARGS="$SECRET_ARGS,GMAIL_CREDENTIALS_JSON=projects/$EMAIL_PROJECT/secrets/gmail-credentials-json:latest"
+        print_status "Gmail credentials found in $EMAIL_PROJECT (using cross-project reference)"
+    else
+        print_warning "Gmail credentials not found (email features may not work)"
+    fi
 fi
+
+# Gmail FROM email
+GMAIL_FROM="${GMAIL_FROM:-team@stlpartyhelpers.com}"
+print_status "Gmail FROM: $GMAIL_FROM"
 
 # Stripe secrets are optional
 if gcloud secrets describe stripe-secret-key-test --project="$PROJECT_ID" >/dev/null 2>&1; then
