@@ -73,6 +73,7 @@ func (s *InvoiceService) CreateDepositInvoice(ctx context.Context, req *CreateDe
 		Currency:      "usd",
 		Description:   req.Description,
 		Metadata:      req.Metadata,
+		CustomFields:  req.CustomFields,
 	}
 
 	if invoiceReq.Description == "" {
@@ -145,6 +146,7 @@ type CreateDepositInvoiceRequest struct {
 	EstimateCents    *int64
 	Description      string
 	Metadata         map[string]string
+	CustomFields     []ports.CustomField
 }
 
 // CreateFinalInvoiceRequest contains data needed to create a final invoice

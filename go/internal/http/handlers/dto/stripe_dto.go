@@ -57,8 +57,14 @@ type FinalInvoiceRequest struct {
 	Description      string            `json:"description"`
 	Metadata         map[string]string `json:"metadata"`
 	CustomFields     []CustomField     `json:"customFields"`
-	UseTest          bool              `json:"useTest"`
-	SendEmail        bool              `json:"sendEmail"`
+	// Fields for extracting custom fields if not explicitly provided
+	EventType          string   `json:"eventType"`
+	EventDateTimeLocal string   `json:"eventDateTimeLocal"`
+	HelpersCount       *int     `json:"helpersCount"`
+	Hours              *float64 `json:"hours"`
+	Duration           *float64 `json:"duration"`
+	UseTest            bool     `json:"useTest"`
+	SendEmail          bool     `json:"sendEmail"`
 }
 
 // TestInvoiceRequest represents a request to test invoice creation

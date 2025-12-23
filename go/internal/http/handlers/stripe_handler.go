@@ -218,15 +218,33 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 		}
 	}
 
+	// Extract custom fields from request
+	customFields := extractCustomFieldsFromDepositRequest(req)
+
+	// Create deposit invoice with custom fields
+	invoiceResult, err := h.invoiceService.CreateDepositInvoice(r.Context(), &stripeService.CreateDepositInvoiceRequest{
+		CustomerEmail:     req.Email,
+		CustomerName:      req.Name,
+		DepositValueCents: &depositCents,
+		Description:       "Booking Deposit Invoice",
+		CustomFields:      customFields,
+	})
+	if err != nil {
+		util.WriteError(w, http.StatusBadRequest, "Failed to create deposit invoice: "+err.Error())
+		return
+	}
+
 	response := map[string]interface{}{
 		"ok":          true,
-		"message":     "Invoice generated (stub - full Stripe integration pending)",
+		"message":     "Deposit invoice created successfully",
 		"dryRun":      req.DryRun,
 		"saveAsDraft": req.SaveAsDraft,
-		"generatedInvoice": map[string]interface{}{
-			"id":     "stub_invoice_id",
-			"url":    "https://stripe.com/invoice/stub",
-			"amount": util.CentsToDollars(depositCents),
+		"invoice": map[string]interface{}{
+			"id":     invoiceResult.InvoiceID,
+			"url":    invoiceResult.HostedInvoiceURL,
+			"amount": util.CentsToDollars(invoiceResult.AmountDue),
+			"status": invoiceResult.Status,
+			"pdf":    invoiceResult.InvoicePDF,
 		},
 	}
 
@@ -370,6 +388,109 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusOK, response)
 }
 
+// extractCustomFieldsFromDepositRequest extracts custom fields from DepositWithEmailRequest
+func extractCustomFieldsFromDepositRequest(req dto.DepositWithEmailRequest) []ports.CustomField {
+	customFields := make([]ports.CustomField, 0, 4)
+	
+	// Event Date & Time
+	if req.EventDateTimeLocal != "" {
+		customFields = append(customFields, ports.CustomField{
+			Name:  "Event Date & Time",
+			Value: req.EventDateTimeLocal,
+		})
+	}
+	
+	// Event Type
+	if req.EventType != "" {
+		customFields = append(customFields, ports.CustomField{
+			Name:  "Event Type",
+			Value: req.EventType,
+		})
+	}
+	
+	// Helpers Count
+	if req.HelpersCount != nil {
+		customFields = append(customFields, ports.CustomField{
+			Name:  "Helpers Count",
+			Value: fmt.Sprintf("%d Helpers", *req.HelpersCount),
+		})
+	}
+	
+	// Hours
+	if req.Hours != nil {
+		customFields = append(customFields, ports.CustomField{
+			Name:  "Hours",
+			Value: fmt.Sprintf("%.0f Hours", *req.Hours),
+		})
+	} else if req.Duration != nil {
+		customFields = append(customFields, ports.CustomField{
+			Name:  "Hours",
+			Value: fmt.Sprintf("%.0f Hours", *req.Duration),
+		})
+	}
+	
+	return customFields
+}
+
+// extractCustomFieldsFromFinalInvoiceRequest extracts custom fields from FinalInvoiceRequest if not already provided
+func extractCustomFieldsFromFinalInvoiceRequest(req dto.FinalInvoiceRequest) []ports.CustomField {
+	// If custom fields are already provided, use them
+	if len(req.CustomFields) > 0 {
+		customFields := make([]ports.CustomField, 0, len(req.CustomFields))
+		for _, cf := range req.CustomFields {
+			if strings.TrimSpace(cf.Name) != "" && strings.TrimSpace(cf.Value) != "" {
+				customFields = append(customFields, ports.CustomField{
+					Name:  strings.TrimSpace(cf.Name),
+					Value: strings.TrimSpace(cf.Value),
+				})
+			}
+		}
+		return customFields
+	}
+	
+	// Otherwise, extract from request fields (same as deposit)
+	customFields := make([]ports.CustomField, 0, 4)
+	
+	// Event Date & Time
+	if req.EventDateTimeLocal != "" {
+		customFields = append(customFields, ports.CustomField{
+			Name:  "Event Date & Time",
+			Value: req.EventDateTimeLocal,
+		})
+	}
+	
+	// Event Type
+	if req.EventType != "" {
+		customFields = append(customFields, ports.CustomField{
+			Name:  "Event Type",
+			Value: req.EventType,
+		})
+	}
+	
+	// Helpers Count
+	if req.HelpersCount != nil {
+		customFields = append(customFields, ports.CustomField{
+			Name:  "Helpers Count",
+			Value: fmt.Sprintf("%d Helpers", *req.HelpersCount),
+		})
+	}
+	
+	// Hours
+	if req.Hours != nil {
+		customFields = append(customFields, ports.CustomField{
+			Name:  "Hours",
+			Value: fmt.Sprintf("%.0f Hours", *req.Hours),
+		})
+	} else if req.Duration != nil {
+		customFields = append(customFields, ports.CustomField{
+			Name:  "Hours",
+			Value: fmt.Sprintf("%.0f Hours", *req.Duration),
+		})
+	}
+	
+	return customFields
+}
+
 // createFinalInvoiceCommon contains common logic for creating final invoices
 func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.FinalInvoiceRequest) (*ports.InvoiceResult, error) {
 	// Validate required fields
@@ -377,18 +498,8 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 		return nil, fmt.Errorf("email and name are required")
 	}
 
-	// Create final invoice using service
-	// Convert DTO CustomFields to ports CustomFields (only non-empty fields)
-	customFields := make([]ports.CustomField, 0, len(req.CustomFields))
-	for _, cf := range req.CustomFields {
-		// Only include non-empty fields (both name and value must be non-empty)
-		if strings.TrimSpace(cf.Name) != "" && strings.TrimSpace(cf.Value) != "" {
-			customFields = append(customFields, ports.CustomField{
-				Name:  strings.TrimSpace(cf.Name),
-				Value: strings.TrimSpace(cf.Value),
-			})
-		}
-	}
+	// Extract custom fields (from explicit customFields or extract from request)
+	customFields := extractCustomFieldsFromFinalInvoiceRequest(req)
 
 	// Convert ports CustomFields to service layer CustomFields
 	serviceCustomFields := make([]ports.CustomField, len(customFields))

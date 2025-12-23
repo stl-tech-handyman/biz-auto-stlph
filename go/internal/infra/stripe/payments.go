@@ -72,8 +72,8 @@ func (s *StripePayments) CreateInvoice(ctx context.Context, req *ports.CreateInv
 		return nil, fmt.Errorf("failed to add invoice item: %w", err)
 	}
 
-	// Create invoice (CreateInvoice doesn't support custom fields yet)
-	invoice, err := s.createInvoice(ctx, apiKey, customerID, req.Metadata, nil)
+	// Create invoice
+	invoice, err := s.createInvoice(ctx, apiKey, customerID, req.Metadata, req.CustomFields)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create invoice: %w", err)
 	}

@@ -22,6 +22,7 @@ type CreateInvoiceRequest struct {
 	Currency      string
 	Description   string
 	Metadata      map[string]string
+	CustomFields  []CustomField
 }
 
 // CustomField represents a custom field for Stripe invoices
