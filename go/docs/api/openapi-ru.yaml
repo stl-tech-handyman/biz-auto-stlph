@@ -876,6 +876,11 @@ components:
               value: "2 Helpers"
             - name: "Hours"
               value: "4 Hours"
+        saveAsDraft:
+          type: boolean
+          default: true
+          description: Сохранить инвойс как черновик (не финализировать). По умолчанию true для финальных инвойсов
+          example: true
         useTest:
           type: boolean
           default: false
@@ -890,6 +895,7 @@ components:
         eventDateTimeLocal: "2025-06-15 17:00"
         helpersCount: 2
         hours: 4.0
+        saveAsDraft: true
         currency: "usd"
 
     FinalInvoiceResponse:
