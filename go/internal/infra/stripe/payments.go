@@ -115,6 +115,11 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 
 	// Calculate remaining balance
 	remainingCents := req.TotalAmountCents - req.DepositPaidCents
+	
+	// Debug logging
+	fmt.Printf("[Stripe] CreateFinalInvoice: TotalAmountCents=%d, DepositPaidCents=%d, RemainingCents=%d\n", 
+		req.TotalAmountCents, req.DepositPaidCents, remainingCents)
+	
 	if remainingCents <= 0 {
 		return nil, fmt.Errorf("no remaining balance: total %d, deposit paid %d", req.TotalAmountCents, req.DepositPaidCents)
 	}
@@ -142,6 +147,34 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 		return nil, fmt.Errorf("failed to add invoice item: %w", err)
 	}
 
+	fmt.Printf("[Stripe] Invoice item added: %d cents (%s)\n", remainingCents, description)
+	
+	// Wait and verify invoice item was added - retry up to 3 times
+	var items []InvoiceItem
+	var pendingCount int
+	for i := 0; i < 3; i++ {
+		time.Sleep(500 * time.Millisecond)
+		items, err = s.listInvoiceItems(ctx, apiKey, customerID)
+		if err == nil {
+			pendingCount = 0
+			for _, item := range items {
+				if item.Invoice == "" {
+					pendingCount++
+					fmt.Printf("[Stripe] Pending item: ID=%s, Amount=%d, Description=%s\n", item.ID, item.Amount, item.Description)
+				}
+			}
+			if pendingCount > 0 {
+				fmt.Printf("[Stripe] Found %d pending invoice item(s)\n", pendingCount)
+				break
+			}
+		}
+		fmt.Printf("[Stripe] Retry %d: Waiting for invoice item to appear...\n", i+1)
+	}
+	
+	if pendingCount == 0 {
+		return nil, fmt.Errorf("invoice item was not created or was deleted - cannot create invoice with $0 amount")
+	}
+
 	// Add metadata
 	metadata := req.Metadata
 	if metadata == nil {
@@ -156,16 +189,25 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 	}
 	metadata["remaining_balance_cents"] = strconv.FormatInt(remainingCents, 10)
 
-	// Create invoice
+	// Create invoice (with auto_advance=true, it will automatically finalize and include pending items)
 	invoice, err := s.createInvoice(ctx, apiKey, customerID, metadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create invoice: %w", err)
 	}
 
-	// Finalize invoice
-	finalized, err := s.finalizeInvoice(ctx, apiKey, invoice.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to finalize invoice: %w", err)
+	fmt.Printf("[Stripe] Invoice created: ID=%s, AmountDue=%d, Status=%s\n", invoice.ID, invoice.AmountDue, invoice.Status)
+
+	// With auto_advance=true, invoice is already finalized, so we can use it directly
+	// But if it's still draft, we need to finalize it
+	var finalized *Invoice
+	if invoice.Status == "draft" {
+		finalized, err = s.finalizeInvoice(ctx, apiKey, invoice.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to finalize invoice: %w", err)
+		}
+		fmt.Printf("[Stripe] Invoice finalized: AmountDue=%d, Status=%s\n", finalized.AmountDue, finalized.Status)
+	} else {
+		finalized = invoice
 	}
 
 	return &ports.InvoiceResult{
@@ -411,7 +453,8 @@ func (s *StripePayments) createInvoice(ctx context.Context, apiKey, customerID s
 	form := url.Values{}
 	form.Set("customer", customerID)
 	form.Set("collection_method", "send_invoice")
-	form.Set("auto_advance", "false")
+	form.Set("auto_advance", "false") // We'll finalize manually after verifying items are included
+	form.Set("pending_invoice_items_behavior", "include") // CRITICAL: Include pending invoice items (like JS version)
 	form.Set("days_until_due", "7")
 	
 	for k, v := range metadata {
@@ -472,8 +515,10 @@ type Customer struct {
 
 // InvoiceItem represents a Stripe invoice item
 type InvoiceItem struct {
-	ID      string `json:"id"`
-	Invoice string `json:"invoice"`
+	ID          string `json:"id"`
+	Invoice     string `json:"invoice"`
+	Amount      int64  `json:"amount"`
+	Description string `json:"description"`
 }
 
 // Invoice represents a Stripe invoice
