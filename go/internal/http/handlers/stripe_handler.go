@@ -391,7 +391,7 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 // extractCustomFieldsFromDepositRequest extracts custom fields from DepositWithEmailRequest
 func extractCustomFieldsFromDepositRequest(req dto.DepositWithEmailRequest) []ports.CustomField {
 	customFields := make([]ports.CustomField, 0, 4)
-	
+
 	// Event Date & Time
 	if req.EventDateTimeLocal != "" {
 		customFields = append(customFields, ports.CustomField{
@@ -399,7 +399,7 @@ func extractCustomFieldsFromDepositRequest(req dto.DepositWithEmailRequest) []po
 			Value: req.EventDateTimeLocal,
 		})
 	}
-	
+
 	// Event Type
 	if req.EventType != "" {
 		customFields = append(customFields, ports.CustomField{
@@ -407,7 +407,7 @@ func extractCustomFieldsFromDepositRequest(req dto.DepositWithEmailRequest) []po
 			Value: req.EventType,
 		})
 	}
-	
+
 	// Helpers Count
 	if req.HelpersCount != nil {
 		customFields = append(customFields, ports.CustomField{
@@ -415,7 +415,7 @@ func extractCustomFieldsFromDepositRequest(req dto.DepositWithEmailRequest) []po
 			Value: fmt.Sprintf("%d Helpers", *req.HelpersCount),
 		})
 	}
-	
+
 	// Hours
 	if req.Hours != nil {
 		customFields = append(customFields, ports.CustomField{
@@ -428,7 +428,7 @@ func extractCustomFieldsFromDepositRequest(req dto.DepositWithEmailRequest) []po
 			Value: fmt.Sprintf("%.0f Hours", *req.Duration),
 		})
 	}
-	
+
 	return customFields
 }
 
@@ -447,11 +447,14 @@ func extractCustomFieldsFromFinalInvoiceRequest(req dto.FinalInvoiceRequest) []p
 		}
 		return customFields
 	}
-	
-	// Otherwise, extract from request fields (same as deposit)
+
+	// Otherwise, extract from request fields
+	// For final invoices: Event Type and Event Date & Time are REQUIRED
+	// Helpers Count and Duration are OPTIONAL (only add if provided)
 	customFields := make([]ports.CustomField, 0, 4)
 	
-	// Event Date & Time
+	// Event Date & Time (REQUIRED for final invoices)
+	// Validation happens in createFinalInvoiceCommon, so this should always be present
 	if req.EventDateTimeLocal != "" {
 		customFields = append(customFields, ports.CustomField{
 			Name:  "Event Date & Time",
@@ -459,7 +462,8 @@ func extractCustomFieldsFromFinalInvoiceRequest(req dto.FinalInvoiceRequest) []p
 		})
 	}
 	
-	// Event Type
+	// Event Type (REQUIRED for final invoices)
+	// Validation happens in createFinalInvoiceCommon, so this should always be present
 	if req.EventType != "" {
 		customFields = append(customFields, ports.CustomField{
 			Name:  "Event Type",
@@ -467,7 +471,7 @@ func extractCustomFieldsFromFinalInvoiceRequest(req dto.FinalInvoiceRequest) []p
 		})
 	}
 	
-	// Helpers Count
+	// Helpers Count (OPTIONAL - only add if provided)
 	if req.HelpersCount != nil {
 		customFields = append(customFields, ports.CustomField{
 			Name:  "Helpers Count",
@@ -475,7 +479,7 @@ func extractCustomFieldsFromFinalInvoiceRequest(req dto.FinalInvoiceRequest) []p
 		})
 	}
 	
-	// Hours
+	// Hours/Duration (OPTIONAL - only add if provided)
 	if req.Hours != nil {
 		customFields = append(customFields, ports.CustomField{
 			Name:  "Hours",
@@ -496,6 +500,14 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 	// Validate required fields
 	if req.Email == "" || req.Name == "" {
 		return nil, fmt.Errorf("email and name are required")
+	}
+	
+	// For final invoices, Event Type and Event Date & Time are required
+	if req.EventType == "" {
+		return nil, fmt.Errorf("eventType is required for final invoices")
+	}
+	if req.EventDateTimeLocal == "" {
+		return nil, fmt.Errorf("eventDateTimeLocal is required for final invoices")
 	}
 
 	// Extract custom fields (from explicit customFields or extract from request)

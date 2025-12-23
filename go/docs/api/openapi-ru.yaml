@@ -789,6 +789,8 @@ components:
         - name
         - totalAmount
         - depositPaid
+        - eventType
+        - eventDateTimeLocal
       properties:
         email:
           type: string
@@ -813,7 +815,7 @@ components:
         depositPaid:
           type: number
           format: float
-          description: Оплаченный депозит в долларах
+          description: Оплаченный депозит в долларах (если не указан, поле не будет добавлено в инвойс)
           example: 400.0
         currency:
           type: string
@@ -828,6 +830,28 @@ components:
           additionalProperties:
             type: string
           description: Дополнительные метаданные
+        eventType:
+          type: string
+          description: Тип мероприятия (ОБЯЗАТЕЛЬНО для финального инвойса)
+          example: "Birthday Party"
+        eventDateTimeLocal:
+          type: string
+          description: Дата и время мероприятия в формате "YYYY-MM-DD HH:mm" (ОБЯЗАТЕЛЬНО для финального инвойса)
+          example: "2025-06-15 17:00"
+        helpersCount:
+          type: integer
+          description: Количество помощников (опционально - добавляется в инвойс только если указано)
+          example: 2
+        hours:
+          type: number
+          format: float
+          description: Длительность в часах (опционально - добавляется в инвойс только если указано)
+          example: 4.0
+        duration:
+          type: number
+          format: float
+          description: Длительность в часах (альтернатива hours, опционально)
+          example: 4.0
         customFields:
           type: array
           description: Кастомные поля для отображения на инвойсе (например, Event Date & Time, Helpers Count, Hours, Deposit Amount)
@@ -862,6 +886,10 @@ components:
         name: "John Doe"
         totalAmount: 1000.0
         depositPaid: 400.0
+        eventType: "Birthday Party"
+        eventDateTimeLocal: "2025-06-15 17:00"
+        helpersCount: 2
+        hours: 4.0
         currency: "usd"
 
     FinalInvoiceResponse:
