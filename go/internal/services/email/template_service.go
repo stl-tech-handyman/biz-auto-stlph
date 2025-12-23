@@ -12,6 +12,13 @@ func NewTemplateService() *TemplateService {
 
 // GenerateFinalInvoiceEmail generates HTML for final invoice email
 func (s *TemplateService) GenerateFinalInvoiceEmail(name string, totalAmount, depositPaid, remainingBalance float64, invoiceURL string) string {
+	// Only show deposit info if deposit was actually paid (> 0)
+	depositSection := ""
+	if depositPaid > 0 {
+		depositSection = fmt.Sprintf(`<p><strong>Deposit Paid:</strong> $%.2f</p>
+            `, depositPaid)
+	}
+	
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>
@@ -29,7 +36,7 @@ func (s *TemplateService) GenerateFinalInvoiceEmail(name string, totalAmount, de
         <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <h2 style="margin-top: 0;">Invoice Details</h2>
             <p><strong>Total Event Cost:</strong> $%.2f</p>
-            <p><strong>Deposit Paid:</strong> $%.2f</p>
+            %s
             <p><strong>Remaining Balance:</strong> <strong style="color: #0047ab; font-size: 1.2em;">$%.2f</strong></p>
         </div>
         
@@ -54,6 +61,6 @@ func (s *TemplateService) GenerateFinalInvoiceEmail(name string, totalAmount, de
         </p>
     </div>
 </body>
-</html>`, name, totalAmount, depositPaid, remainingBalance, invoiceURL)
+</html>`, name, totalAmount, depositSection, remainingBalance, invoiceURL)
 }
 

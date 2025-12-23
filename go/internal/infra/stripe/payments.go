@@ -37,7 +37,7 @@ func (s *StripePayments) getAPIKey(businessID string, useTest bool) (string, err
 	if useTest {
 		envVar = "STRIPE_SECRET_KEY_TEST"
 	}
-	
+
 	apiKey := os.Getenv(envVar)
 	if apiKey == "" {
 		return "", fmt.Errorf("Stripe API key not set. Environment variable '%s' must be configured", envVar)
@@ -49,7 +49,7 @@ func (s *StripePayments) getAPIKey(businessID string, useTest bool) (string, err
 func (s *StripePayments) CreateInvoice(ctx context.Context, req *ports.CreateInvoiceRequest) (*ports.InvoiceResult, error) {
 	// Determine if test mode (for now, default to production)
 	useTest := false // Can be enhanced to read from request or business config
-	
+
 	apiKey, err := s.getAPIKey("", useTest)
 	if err != nil {
 		return nil, err
@@ -85,11 +85,11 @@ func (s *StripePayments) CreateInvoice(ctx context.Context, req *ports.CreateInv
 	}
 
 	return &ports.InvoiceResult{
-		InvoiceID:       finalized.ID,
+		InvoiceID:        finalized.ID,
 		HostedInvoiceURL: finalized.HostedInvoiceURL,
-		AmountDue:       finalized.AmountDue,
-		Status:          finalized.Status,
-		InvoicePDF:     finalized.InvoicePDF,
+		AmountDue:        finalized.AmountDue,
+		Status:           finalized.Status,
+		InvoicePDF:       finalized.InvoicePDF,
 	}, nil
 }
 
@@ -107,7 +107,7 @@ func (s *StripePayments) CalculateDeposit(ctx context.Context, estimateTotalCent
 // CreateFinalInvoice creates a final invoice for the remaining balance after deposit
 func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.CreateFinalInvoiceRequest) (*ports.InvoiceResult, error) {
 	useTest := false // Can be enhanced to read from request or business config
-	
+
 	apiKey, err := s.getAPIKey("", useTest)
 	if err != nil {
 		return nil, err
@@ -115,11 +115,11 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 
 	// Calculate remaining balance
 	remainingCents := req.TotalAmountCents - req.DepositPaidCents
-	
+
 	// Debug logging
-	fmt.Printf("[Stripe] CreateFinalInvoice: TotalAmountCents=%d, DepositPaidCents=%d, RemainingCents=%d\n", 
+	fmt.Printf("[Stripe] CreateFinalInvoice: TotalAmountCents=%d, DepositPaidCents=%d, RemainingCents=%d\n",
 		req.TotalAmountCents, req.DepositPaidCents, remainingCents)
-	
+
 	if remainingCents <= 0 {
 		return nil, fmt.Errorf("no remaining balance: total %d, deposit paid %d", req.TotalAmountCents, req.DepositPaidCents)
 	}
@@ -139,16 +139,23 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 	// Add invoice item for remaining balance
 	description := req.Description
 	if description == "" {
-		description = fmt.Sprintf("Final Payment - Remaining Balance (Total: $%.2f, Deposit Paid: $%.2f)", 
-			float64(req.TotalAmountCents)/100, float64(req.DepositPaidCents)/100)
+		if req.DepositPaidCents > 0 {
+			// Show deposit info only if deposit was actually paid
+			description = fmt.Sprintf("Final Payment - Remaining Balance (Total: $%.2f, Deposit Paid: $%.2f)",
+				float64(req.TotalAmountCents)/100, float64(req.DepositPaidCents)/100)
+		} else {
+			// No deposit - just show total
+			description = fmt.Sprintf("Final Payment (Total: $%.2f)",
+				float64(req.TotalAmountCents)/100)
+		}
 	}
-	
+
 	if err := s.addInvoiceItem(ctx, apiKey, customerID, remainingCents, req.Currency, description); err != nil {
 		return nil, fmt.Errorf("failed to add invoice item: %w", err)
 	}
 
 	fmt.Printf("[Stripe] Invoice item added: %d cents (%s)\n", remainingCents, description)
-	
+
 	// Wait and verify invoice item was added - retry up to 3 times
 	var items []InvoiceItem
 	var pendingCount int
@@ -170,7 +177,7 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 		}
 		fmt.Printf("[Stripe] Retry %d: Waiting for invoice item to appear...\n", i+1)
 	}
-	
+
 	if pendingCount == 0 {
 		return nil, fmt.Errorf("invoice item was not created or was deleted - cannot create invoice with $0 amount")
 	}
@@ -211,11 +218,11 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 	}
 
 	return &ports.InvoiceResult{
-		InvoiceID:       finalized.ID,
+		InvoiceID:        finalized.ID,
 		HostedInvoiceURL: finalized.HostedInvoiceURL,
-		AmountDue:       finalized.AmountDue,
-		Status:          finalized.Status,
-		InvoicePDF:     finalized.InvoicePDF,
+		AmountDue:        finalized.AmountDue,
+		Status:           finalized.Status,
+		InvoicePDF:       finalized.InvoicePDF,
 	}, nil
 }
 
@@ -246,11 +253,11 @@ func (s *StripePayments) GetInvoice(ctx context.Context, invoiceID string, useTe
 	}
 
 	return &ports.InvoiceResult{
-		InvoiceID:       invoice.ID,
+		InvoiceID:        invoice.ID,
 		HostedInvoiceURL: invoice.HostedInvoiceURL,
-		AmountDue:       invoice.AmountDue,
-		Status:          invoice.Status,
-		InvoicePDF:     invoice.InvoicePDF,
+		AmountDue:        invoice.AmountDue,
+		Status:           invoice.Status,
+		InvoicePDF:       invoice.InvoicePDF,
 	}, nil
 }
 
@@ -302,7 +309,7 @@ func (s *StripePayments) getOrCreateCustomer(ctx context.Context, apiKey, email,
 func (s *StripePayments) listCustomers(ctx context.Context, apiKey, email string) ([]Customer, error) {
 	req, _ := http.NewRequestWithContext(ctx, "GET", "https://api.stripe.com/v1/customers", nil)
 	req.Header.Set("Authorization", "Bearer "+apiKey)
-	
+
 	q := req.URL.Query()
 	q.Set("email", email)
 	q.Set("limit", "1")
@@ -379,7 +386,7 @@ func (s *StripePayments) clearPendingInvoiceItems(ctx context.Context, apiKey, c
 func (s *StripePayments) listInvoiceItems(ctx context.Context, apiKey, customerID string) ([]InvoiceItem, error) {
 	req, _ := http.NewRequestWithContext(ctx, "GET", "https://api.stripe.com/v1/invoiceitems", nil)
 	req.Header.Set("Authorization", "Bearer "+apiKey)
-	
+
 	q := req.URL.Query()
 	q.Set("customer", customerID)
 	q.Set("limit", "100")
@@ -453,10 +460,10 @@ func (s *StripePayments) createInvoice(ctx context.Context, apiKey, customerID s
 	form := url.Values{}
 	form.Set("customer", customerID)
 	form.Set("collection_method", "send_invoice")
-	form.Set("auto_advance", "false") // We'll finalize manually after verifying items are included
+	form.Set("auto_advance", "false")                     // We'll finalize manually after verifying items are included
 	form.Set("pending_invoice_items_behavior", "include") // CRITICAL: Include pending invoice items (like JS version)
 	form.Set("days_until_due", "7")
-	
+
 	for k, v := range metadata {
 		form.Set("metadata["+k+"]", v)
 	}
@@ -523,12 +530,11 @@ type InvoiceItem struct {
 
 // Invoice represents a Stripe invoice
 type Invoice struct {
-	ID              string `json:"id"`
-	Status          string `json:"status"`
+	ID               string `json:"id"`
+	Status           string `json:"status"`
 	HostedInvoiceURL string `json:"hosted_invoice_url"`
-	InvoicePDF      string `json:"invoice_pdf"`
-	AmountDue       int64  `json:"amount_due"`
-	Customer        string `json:"customer"`
-	CustomerEmail   string `json:"customer_email"`
+	InvoicePDF       string `json:"invoice_pdf"`
+	AmountDue        int64  `json:"amount_due"`
+	Customer         string `json:"customer"`
+	CustomerEmail    string `json:"customer_email"`
 }
-
