@@ -3,6 +3,7 @@ package handlers
 import (
 	"embed"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -91,9 +92,22 @@ func (h *SwaggerHandler) HandleSwaggerUI(w http.ResponseWriter, r *http.Request)
 
 // HandleOpenAPISpec serves the OpenAPI spec as JSON
 func (h *SwaggerHandler) HandleOpenAPISpec(w http.ResponseWriter, r *http.Request) {
+	// Add panic recovery
+	defer func() {
+		if rec := recover(); rec != nil {
+			// #region agent log
+			if logFile, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+				json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "swagger_handler.go:96", "message": "Panic recovered in HandleOpenAPISpec", "data": map[string]interface{}{"panic": fmt.Sprintf("%v", rec), "timestamp": time.Now().UnixMilli()}})
+				logFile.Close()
+			}
+			// #endregion
+			util.WriteError(w, http.StatusInternalServerError, fmt.Sprintf("internal server error: %v", rec))
+		}
+	}()
+
 	// #region agent log
 	if logFile, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
-		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "swagger_handler.go:52", "message": "HandleOpenAPISpec called", "data": map[string]interface{}{"path": r.URL.Path, "method": r.Method, "openAPIPath": h.openAPIPath, "timestamp": time.Now().UnixMilli()}})
+		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "swagger_handler.go:105", "message": "HandleOpenAPISpec called", "data": map[string]interface{}{"path": r.URL.Path, "method": r.Method, "openAPIPath": h.openAPIPath, "timestamp": time.Now().UnixMilli()}})
 		logFile.Close()
 	}
 	// #endregion
@@ -124,26 +138,50 @@ func (h *SwaggerHandler) HandleOpenAPISpec(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// #region agent log
+	if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
+		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A", "location": "swagger_handler.go:127", "message": "About to read OpenAPI file", "data": map[string]interface{}{"openAPIPath": h.openAPIPath, "timestamp": time.Now().UnixMilli()}})
+		logFile.Close()
+	}
+	// #endregion
+
 	openAPIContent, err := os.ReadFile(h.openAPIPath)
 	
 	// #region agent log
-	if logFile, err2 := os.OpenFile("../../.cursor/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
-		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "swagger_handler.go:60", "message": "ReadFile OpenAPI spec result", "data": map[string]interface{}{"error": func() string { if err != nil { return err.Error() }; return "" }(), "contentLength": len(openAPIContent), "timestamp": time.Now().UnixMilli()}})
+	if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
+		errorMsg := ""
+		if err != nil {
+			errorMsg = err.Error()
+		}
+		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A", "location": "swagger_handler.go:135", "message": "ReadFile OpenAPI spec result", "data": map[string]interface{}{"error": errorMsg, "contentLength": len(openAPIContent), "hasContent": len(openAPIContent) > 0, "timestamp": time.Now().UnixMilli()}})
 		logFile.Close()
 	}
 	// #endregion
 	
 	if err != nil {
+		// #region agent log
+		if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
+			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A", "location": "swagger_handler.go:143", "message": "ReadFile failed, returning error", "data": map[string]interface{}{"error": err.Error(), "timestamp": time.Now().UnixMilli()}})
+			logFile.Close()
+		}
+		// #endregion
 		util.WriteError(w, http.StatusInternalServerError, "failed to read OpenAPI spec: "+err.Error())
 		return
 	}
+
+	// #region agent log
+	if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
+		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "swagger_handler.go:152", "message": "About to unmarshal YAML", "data": map[string]interface{}{"contentLength": len(openAPIContent), "firstBytes": string(openAPIContent[:min(200, len(openAPIContent))]), "timestamp": time.Now().UnixMilli()}})
+		logFile.Close()
+	}
+	// #endregion
 
 	// Convert YAML to JSON
 	var specData interface{}
 	if err := yaml.Unmarshal(openAPIContent, &specData); err != nil {
 		// #region agent log
-		if logFile, err2 := os.OpenFile(".cursor/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
-			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "E", "location": "swagger_handler.go:70", "message": "YAML Unmarshal error", "data": map[string]interface{}{"error": err.Error(), "timestamp": time.Now().UnixMilli()}})
+		if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
+			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "swagger_handler.go:161", "message": "YAML Unmarshal error", "data": map[string]interface{}{"error": err.Error(), "timestamp": time.Now().UnixMilli()}})
 			logFile.Close()
 		}
 		// #endregion
@@ -151,11 +189,18 @@ func (h *SwaggerHandler) HandleOpenAPISpec(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// #region agent log
+	if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
+		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C", "location": "swagger_handler.go:171", "message": "About to marshal to JSON", "data": map[string]interface{}{"specDataType": fmt.Sprintf("%T", specData), "timestamp": time.Now().UnixMilli()}})
+		logFile.Close()
+	}
+	// #endregion
+
 	jsonData, err := json.Marshal(specData)
 	if err != nil {
 		// #region agent log
-		if logFile, err2 := os.OpenFile(".cursor/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
-			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "E", "location": "swagger_handler.go:78", "message": "JSON Marshal error", "data": map[string]interface{}{"error": err.Error(), "timestamp": time.Now().UnixMilli()}})
+		if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
+			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C", "location": "swagger_handler.go:179", "message": "JSON Marshal error", "data": map[string]interface{}{"error": err.Error(), "timestamp": time.Now().UnixMilli()}})
 			logFile.Close()
 		}
 		// #endregion
@@ -164,8 +209,8 @@ func (h *SwaggerHandler) HandleOpenAPISpec(w http.ResponseWriter, r *http.Reques
 	}
 
 	// #region agent log
-	if logFile, err2 := os.OpenFile("../../.cursor/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
-		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "E", "location": "swagger_handler.go:85", "message": "OpenAPI spec converted successfully", "data": map[string]interface{}{"jsonLength": len(jsonData), "timestamp": time.Now().UnixMilli()}})
+	if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
+		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C", "location": "swagger_handler.go:188", "message": "OpenAPI spec converted successfully", "data": map[string]interface{}{"jsonLength": len(jsonData), "timestamp": time.Now().UnixMilli()}})
 		logFile.Close()
 	}
 	// #endregion
@@ -197,12 +242,12 @@ func GetOpenAPIPath() string {
 		"../../docs/api/openapi-ru.yaml",
 	}
 
-	for _, path := range possiblePaths {
+		for _, path := range possiblePaths {
 		if info, err := os.Stat(path); err == nil && !info.IsDir() {
 			absPath, err := filepath.Abs(path)
 			// #region agent log
-			if logFile, err2 := os.OpenFile(".cursor/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
-				json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "swagger_handler.go:96", "message": "OpenAPI file found", "data": map[string]interface{}{"path": path, "absPath": func() string { if err == nil { return absPath }; return path }(), "timestamp": time.Now().UnixMilli()}})
+			if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
+				json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "swagger_handler.go:201", "message": "OpenAPI file found", "data": map[string]interface{}{"path": path, "absPath": func() string { if err == nil { return absPath }; return path }(), "timestamp": time.Now().UnixMilli()}})
 				logFile.Close()
 			}
 			// #endregion
@@ -212,8 +257,12 @@ func GetOpenAPIPath() string {
 			return path
 		}
 		// #region agent log
-		if logFile, err2 := os.OpenFile(".cursor/debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
-			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "swagger_handler.go:103", "message": "OpenAPI file not found at path", "data": map[string]interface{}{"path": path, "error": func() string { if _, err := os.Stat(path); err != nil { return err.Error() }; return "" }(), "timestamp": time.Now().UnixMilli()}})
+		if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
+			statErr := ""
+			if _, err := os.Stat(path); err != nil {
+				statErr = err.Error()
+			}
+			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "swagger_handler.go:212", "message": "OpenAPI file not found at path", "data": map[string]interface{}{"path": path, "error": statErr, "timestamp": time.Now().UnixMilli()}})
 			logFile.Close()
 		}
 		// #endregion

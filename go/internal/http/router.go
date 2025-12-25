@@ -166,6 +166,11 @@ func (r *Router) Handler() http.Handler {
 	mux.Handle("/api/email/test", middleware.APIKeyMiddleware(r.logger, http.HandlerFunc(r.emailHandler.HandleTest)))
 	mux.Handle("/api/email/booking-deposit", middleware.APIKeyMiddleware(r.logger, http.HandlerFunc(r.emailHandler.HandleBookingDeposit)))
 	mux.Handle("/api/email/final-invoice", middleware.APIKeyMiddleware(r.logger, http.HandlerFunc(r.emailHandler.HandleFinalInvoice)))
+	mux.Handle("/api/email/quote", middleware.APIKeyMiddleware(r.logger, http.HandlerFunc(r.emailHandler.HandleQuoteEmail)))
+	mux.Handle("/api/email/quote/preview", middleware.APIKeyMiddleware(r.logger, http.HandlerFunc(r.emailHandler.HandleQuoteEmailPreview)))
+	mux.Handle("/api/email/deposit/preview", middleware.APIKeyMiddleware(r.logger, http.HandlerFunc(r.emailHandler.HandleDepositEmailPreview)))
+	mux.Handle("/api/email/final-invoice/preview", middleware.APIKeyMiddleware(r.logger, http.HandlerFunc(r.emailHandler.HandleFinalInvoiceEmailPreview)))
+	mux.Handle("/api/email/review-request/preview", middleware.APIKeyMiddleware(r.logger, http.HandlerFunc(r.emailHandler.HandleReviewRequestEmailPreview)))
 
 	// Stripe webhook - no auth required (Stripe signs the request)
 	mux.HandleFunc("/api/stripe/webhook", r.stripeWebhookHandler.HandleWebhook)

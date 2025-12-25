@@ -1,0 +1,82 @@
+/* Typography: Fallback font family  */
+.email_section a,
+.email_section a:visited,
+.email_section p,
+.email_section li,
+.email_section h1,
+.email_section h2,
+.email_section h3,
+.email_section h4,
+.email_section h5,
+.email_section h6 {
+	color: inherit;
+	font-family: Arial, Helvetica, sans-serif;
+	Margin-top: 0px;
+	Margin-bottom: 0px;
+	word-break: break-word;
+}
+/* Typography: Default Sizes  */
+.email_section p,
+.email_section li {
+	font-size: 16px;
+	line-height: 26px;
+}
+.email_section .text_lead {
+	font-size: 19px;
+	line-height: 31px;
+}
+.email_section .text_xs {
+	font-size: 14px;
+	line-height: 22px;
+}
+/* Typography: Headings  */
+.email_section h1 {
+	font-size: 38px;
+	line-height: 48px;
+}
+.email_section h2 {
+	font-size: 28px;
+	line-height: 38px;
+}
+.email_section h3 {
+	font-size: 21px;
+  line-height: 28px;
+}
+.email_section h4 {
+	font-size: 18px;
+  line-height: 24px;
+}
+.email_section h5 {
+  font-size: 16px;
+  line-height: 21px;
+}
+.email_section h6 {
+	font-size: 12px;
+  line-height: 14px;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+}
+/* Typography: Bold  */
+.ebutton a,
+.ebutton_xs a,
+.email_section h1,
+.email_section h2,
+.email_section h3,
+.email_section h4,
+.email_section h5,
+.email_section h6,
+.email_section strong {
+	font-weight: bold;
+}
+/* Typography: Display  */
+.column_cell .text_display {
+	font-weight: lighter;
+	color: inherit;
+}
+/* Typography: Buttons  */
+.ebutton td {
+	font-size: 16px;
+}
+.ebutton_xs td {
+	font-size: 14px;
+}

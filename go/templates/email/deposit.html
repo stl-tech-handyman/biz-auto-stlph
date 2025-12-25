@@ -2,38 +2,35 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Booking Deposit - STL Party Helpers</title>
+    <title>Action needed to secure your reservation - STL Party Helpers</title>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <p>Hi {{.Name}},</p>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #000;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 5px;">
+        <p>Hello {{.Name}},</p>
         
-        <p>Thank you for choosing STL Party Helpers!</p>
+        <p>Thanks for choosing STL Party Helpers!</p>
         
-        <p>Your booking deposit invoice has been created. Please find the details below.</p>
+        <p><strong>Action needed to secure your reservation</strong></p>
+        <p>To lock in your date, please pay the ${{printf "%.2f" .DepositAmount}} deposit using the link below.</p>
+        <p>Your reservation isn't confirmed until the deposit is received.</p>
         
-        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <h2 style="margin-top: 0;">Deposit Details</h2>
-            <p><strong>Deposit Amount:</strong> <strong style="color: #0047ab; font-size: 1.2em;">${{printf "%.2f" .DepositAmount}}</strong></p>
-        </div>
-        
-        <p style="margin: 30px 0;">
-            👉 <a href="{{.InvoiceURL}}" style="color: #0047ab; text-decoration: underline;">Pay Deposit</a>
+        <p style="margin: 8px 0;">
+            👉 <a href="{{.InvoiceURL}}" style="color: #0047ab; text-decoration: underline;">Pay Deposit via Stripe</a>
         </p>
         
-        <p style="font-size: 0.9em; color: #666;">
-            If you have any questions about this deposit, please don't hesitate to contact us.
-        </p>
+        <p><strong>Deposit Refund Policy</strong></p>
+        <p>Deposits are fully refundable if you cancel at least 3 days before your event.</p>
         
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+        <p>Questions? Reply to this email or call us at 314.714.5514.</p>
         
-        <p style="font-size: 0.85em; color: #666; text-align: center;">
-            STL Party Helpers<br>
-            4220 Duncan Ave., Ste. 201, St. Louis, MO 63110<br>
-            <a href="tel:+13147145514" style="color: #0047ab;">(314) 714-5514</a><br>
-            <a href="https://stlpartyhelpers.com" style="color: #0047ab;">stlpartyhelpers.com</a>
+        <p>Sincerely,</p>
+        
+        <p>
+            <strong>STL Party Helpers Team</strong><br>
+            Phone: 314.714.5514<br>
+            Email: team@stlpartyhelpers.com<br>
+            Website: stlpartyhelpers.com
         </p>
     </div>
 </body>
 </html>
-

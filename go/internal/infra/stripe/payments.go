@@ -118,13 +118,16 @@ func (s *StripePayments) CreateFinalInvoice(ctx context.Context, req *ports.Crea
 	}
 
 	// Calculate remaining balance
+	// If DepositPaidCents is 0 (not provided), charge the full TotalAmountCents (estimate)
 	remainingCents := req.TotalAmountCents - req.DepositPaidCents
 
 	// Debug logging
 	fmt.Printf("[Stripe] CreateFinalInvoice: TotalAmountCents=%d, DepositPaidCents=%d, RemainingCents=%d\n",
 		req.TotalAmountCents, req.DepositPaidCents, remainingCents)
 
-	if remainingCents <= 0 {
+	// Only error if deposit was provided and it's >= total (which would mean nothing to charge)
+	// If deposit is 0 (not provided), remainingCents = totalAmountCents, which is correct
+	if req.DepositPaidCents > 0 && remainingCents <= 0 {
 		return nil, fmt.Errorf("no remaining balance: total %d, deposit paid %d", req.TotalAmountCents, req.DepositPaidCents)
 	}
 
@@ -295,12 +298,21 @@ func (s *StripePayments) SendInvoice(ctx context.Context, invoiceID string, useT
 }
 
 // getOrCreateCustomer gets or creates a Stripe customer
+// If customer exists, updates the name if it's different
 func (s *StripePayments) getOrCreateCustomer(ctx context.Context, apiKey, email, name string) (string, error) {
 	// Try to find existing customer
 	if email != "" {
 		customers, err := s.listCustomers(ctx, apiKey, email)
 		if err == nil && len(customers) > 0 {
-			return customers[0].ID, nil
+			customer := customers[0]
+			// Update customer name if it's different and name is provided
+			if name != "" && customer.Name != name {
+				if err := s.updateCustomer(ctx, apiKey, customer.ID, name); err != nil {
+					// Log error but don't fail - customer exists, just name update failed
+					fmt.Printf("[Stripe] Warning: Failed to update customer name: %v\n", err)
+				}
+			}
+			return customer.ID, nil
 		}
 	}
 
@@ -372,6 +384,31 @@ func (s *StripePayments) createCustomer(ctx context.Context, apiKey, email, name
 		return nil, err
 	}
 	return &customer, nil
+}
+
+// updateCustomer updates a customer's name
+func (s *StripePayments) updateCustomer(ctx context.Context, apiKey, customerID, name string) error {
+	form := url.Values{}
+	if name != "" {
+		form.Set("name", name)
+	}
+
+	req, _ := http.NewRequestWithContext(ctx, "POST", "https://api.stripe.com/v1/customers/"+customerID, strings.NewReader(form.Encode()))
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("stripe API error: %s", string(body))
+	}
+
+	return nil
 }
 
 // clearPendingInvoiceItems clears pending invoice items

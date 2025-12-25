@@ -4,37 +4,37 @@
     <meta charset="UTF-8">
     <title>Final Invoice - STL Party Helpers</title>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #000;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 5px;">
         <p>Hi {{.Name}},</p>
         
         <p>We hope the celebration was everything you imagined — thank you for letting us be part of it.</p>
         
         <p>As agreed, here is your final invoice for staffing services.</p>
         
-        <div style="margin: 20px 0;">
+        <div style="margin: 5px 0;">
             <p><strong>Event:</strong> {{.EventType}}</p>
             <p><strong>Date:</strong> {{.EventDate}}</p>
         </div>
         
-        <div style="margin: 20px 0;">
+        <div style="margin: 5px 0;">
             {{if .HelpersText}}<p><strong>Staffing:</strong> {{.HelpersText}}</p>{{end}}
             {{if .DepositPaid}}<p><strong>Deposit Paid:</strong> ${{printf "%.2f" .DepositPaid}}</p>{{end}}
             <p><strong>Balance Due:</strong> ${{printf "%.2f" .RemainingBalance}}</p>
         </div>
         
-        <p style="margin: 30px 0;">
+        <p style="margin: 8px 0;">
             👉 <a href="{{.InvoiceURL}}" style="color: #0047ab; text-decoration: underline;">Click, to Pay Balance Now</a>
         </p>
         
         <p>We truly appreciate your trust in STL Party Helpers to support your event.</p>
         
         {{if .ShowGratuity}}
-        <div style="margin: 20px 0;">
+        <div style="margin: 5px 0;">
             <p><strong>💛  Want to Include a Gratuity?</strong></p>
             <p>We're deeply grateful when clients choose to recognize our helpers' hard work (totally optional).<br>
             100% of your gratuity goes directly to the event team.</p>
-            <p style="margin: 15px 0;">
+            <p style="margin: 10px 0;">
                 👉 <a href="{{.GratuityURL}}" style="color: #0047ab; text-decoration: underline;">Add a Tip for Our Team</a>
             </p>
         </div>
@@ -45,7 +45,7 @@
         
         <p>Anna</p>
         
-        <p style="font-size: 0.9em; color: #666;">
+        <p style="font-size: 0.9em; color: #000;">
             <strong>Administrative Assistant</strong><br>
             STL Party Helpers Team<br><br>
             Phone: 314.714.5514<br>

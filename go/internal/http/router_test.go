@@ -92,7 +92,7 @@ func TestRouter_AllEndpoints(t *testing.T) {
 			method:         "POST",
 			path:           "/api/stripe/deposit",
 			headers:        map[string]string{"X-Api-Key": "test-api-key", "Content-Type": "application/json"},
-			body:           `{"email":"test@example.com","name":"Test","estimatedTotal":1000}`,
+			body:           `{"email":"test@example.com","name":"Test","estimate":1000}`,
 			expectedStatus: http.StatusOK,
 		},
 		{

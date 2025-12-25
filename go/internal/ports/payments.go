@@ -36,18 +36,18 @@ type CustomField struct {
 
 // CreateFinalInvoiceRequest contains data needed to create a final invoice (remaining balance)
 type CreateFinalInvoiceRequest struct {
-	CustomerEmail   string
-	CustomerName    string
-	TotalAmountCents int64  // Total event cost
-	DepositPaidCents int64  // Amount already paid as deposit
-	Currency        string
-	Description     string
-	Metadata        map[string]string
-	CustomFields    []CustomField
-	Memo            string // Memo text (appears on invoice)
-	Footer          string // Footer text (appears at bottom)
-	InvoiceType     string // "final" or "deposit" - used for stamp prefix
-	SaveAsDraft     bool   // Always false - invoices are always finalized (kept for backward compatibility)
+	CustomerEmail     string
+	CustomerName      string
+	TotalAmountCents  int64   // Total event cost (estimate if provided)
+	DepositPaidCents  int64   // Amount already paid as deposit (0 if not provided - charges full amount)
+	Currency          string
+	Description       string
+	Metadata          map[string]string
+	CustomFields      []CustomField
+	Memo              string // Memo text (appears on invoice)
+	Footer            string // Footer text (appears at bottom)
+	InvoiceType       string // "final" or "deposit" - used for stamp prefix
+	SaveAsDraft       bool   // Always false - invoices are always finalized (kept for backward compatibility)
 }
 
 // InvoiceResult contains the result of invoice creation

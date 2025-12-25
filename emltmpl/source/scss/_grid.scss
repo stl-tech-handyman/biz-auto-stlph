@@ -1,0 +1,68 @@
+/* Grid: Email Wrapper */
+.email_bg {
+	font-size: 0;
+	text-align: center;
+	line-height: 100%;
+}
+/* Grid: Email Section */
+.content_section {
+	max-width: 800px;
+	Margin: 0 auto;
+}
+.content_section_xs {
+	max-width: 416px;
+	Margin: 0 auto;
+}
+/* Grid: Row */
+.content_cell,
+.column_row {
+	font-size: 0;
+	text-align: center;
+}
+.column_row {
+	max-width: 624px;
+	Margin: 0 auto;
+}
+.column_row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+/* Grid: Columns */
+.column {
+	vertical-align: top;
+}
+.column_cell {
+	vertical-align: top;
+}
+.column_inline {
+	width: auto;
+	Margin: 0 auto;
+	clear: both;
+}
+/* Grid: Columns */
+.col_1,
+.col_2,
+.col_3,
+.col_50,
+.col_order,
+.col_order_xs {
+	vertical-align: top;
+	display: inline-block;
+	width: 100%;
+}
+.col_1 {
+	max-width: 208px;
+}
+.col_2 {
+	max-width: 312px;
+}
+.col_3 {
+	max-width: 416px;
+}
+.col_50 {
+	max-width: 400px;
+}
+.col_order {
+	max-width: 156px;
+}

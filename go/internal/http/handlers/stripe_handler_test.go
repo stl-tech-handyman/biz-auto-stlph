@@ -102,7 +102,7 @@ func TestStripeHandler_HandleDeposit(t *testing.T) {
 			body: map[string]interface{}{
 				"email":          "test@example.com",
 				"name":           "Test User",
-				"estimatedTotal": 1000.0,
+				"estimate": 1000.0,
 			},
 			expectedStatus: http.StatusOK,
 		},

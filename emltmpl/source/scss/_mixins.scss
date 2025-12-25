@@ -1,0 +1,22 @@
+@mixin border-radius($radius) {
+  border-radius: $radius;
+}
+@mixin border-radius-top($radius) {
+  border-radius: $radius $radius 0 0;
+}
+@mixin border-radius-bottom($radius) {
+  border-radius: 0 0 $radius $radius;
+}
+@mixin border-radius-left($radius) {
+  border-radius: $radius 0 0 $radius;
+}
+@mixin border-radius-right($radius) {
+  border-radius: 0 $radius $radius 0;
+}
+@mixin transition($transition) {
+  -webkit-transition: $transition .25s;
+  -moz-transition: $transition .25s;
+  -ms-transition: $transition .25s;
+  -o-transition: $transition .25s;
+  transition: $transition .25s;
+}

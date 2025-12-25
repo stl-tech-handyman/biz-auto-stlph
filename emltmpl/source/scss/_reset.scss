@@ -1,0 +1,39 @@
+/* Reset */
+.email_body,
+.email_section table,
+.email_section td,
+.email_section a {
+	-webkit-text-size-adjust: 100%;
+	-ms-text-size-adjust: 100%;
+}
+.email_section table,
+.email_section td {
+	mso-table-lspace: 0pt;
+	mso-table-rspace: 0pt;
+}
+.email_section a,
+.email_section a span,
+.content_section a:visited,
+.content_section a:visited span,
+.email_section address {
+	text-decoration: none;
+}
+.email_section img {
+	-ms-interpolation-mode: bicubic;
+	border: 0;
+	height: auto;
+	line-height: 100%;
+	outline: none;
+	text-decoration: none;
+	-ms-interpolation-mode:bicubic;
+}
+.email_body {
+	height: 100% !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	width: 100% !important;
+}
+.email_html,
+.email_body {
+	min-width: 100%;
+}

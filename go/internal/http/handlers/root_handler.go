@@ -70,6 +70,11 @@ func getEndpoints() []EndpointInfo {
 		// Email endpoints
 		{Method: "POST", Path: "/api/email/test", Summary: "Тест отправки email", AuthRequired: true, Tags: []string{"Email"}},
 		{Method: "POST", Path: "/api/email/booking-deposit", Summary: "Отправка email с информацией о депозите", AuthRequired: true, Tags: []string{"Email"}},
+		{Method: "POST", Path: "/api/email/quote", Summary: "Отправка quote email с переменными", AuthRequired: true, Tags: []string{"Email"}},
+		{Method: "POST", Path: "/api/email/quote/preview", Summary: "Отправка quote email с тестовыми данными", AuthRequired: true, Tags: []string{"Email"}},
+		{Method: "POST", Path: "/api/email/deposit/preview", Summary: "Отправка deposit email с тестовыми данными", AuthRequired: true, Tags: []string{"Email"}},
+		{Method: "POST", Path: "/api/email/final-invoice/preview", Summary: "Отправка final invoice email с тестовыми данными", AuthRequired: true, Tags: []string{"Email"}},
+		{Method: "POST", Path: "/api/email/review-request/preview", Summary: "Отправка review request email с тестовыми данными", AuthRequired: true, Tags: []string{"Email"}},
 
 		// Calendar endpoints
 		{Method: "POST", Path: "/api/calendar/create", Summary: "Создание события в Google Calendar", AuthRequired: false, Tags: []string{"Календарь"}},

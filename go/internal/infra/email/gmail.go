@@ -336,14 +336,76 @@ func NewGmailSender() (*GmailSender, error) {
 
 // SendEmail sends an email via Gmail API
 func (g *GmailSender) SendEmail(ctx context.Context, req *ports.SendEmailRequest) (*ports.SendEmailResult, error) {
+	// #region agent log
+	logPath := "c:\\Users\\Alexey\\Code\\biz-operating-system\\stlph\\.cursor\\debug.log"
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "C",
+			"location":     "gmail.go:SendEmail",
+			"message":      "Before sending email",
+			"data": map[string]interface{}{
+				"userEmail": g.from,
+				"to":        req.To,
+				"subject":   req.Subject,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	// Build email message
 	message := g.buildMessage(req)
 
 	// Use the from email address as the user (for domain-wide delegation)
 	userEmail := g.from
 
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "C",
+			"location":     "gmail.go:SendEmail",
+			"message":      "Before calling Messages.Send API",
+			"data": map[string]interface{}{
+				"userEmail": userEmail,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	// Send email
 	sentMsg, err := g.service.Users.Messages.Send(userEmail, message).Context(ctx).Do()
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		messageID := ""
+		if sentMsg != nil {
+			messageID = sentMsg.Id
+		}
+		logEntry := map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "C",
+			"location":     "gmail.go:SendEmail",
+			"message":      "After calling Messages.Send API",
+			"data": map[string]interface{}{
+				"error":     func() string { if err != nil { return err.Error() } else { return "" } }(),
+				"success":   err == nil,
+				"messageID": messageID,
+				"to":        req.To,
+				"subject":   req.Subject,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		}
+		json.NewEncoder(logFile).Encode(logEntry)
+		logFile.Close()
+	}
+	// #endregion
 	if err != nil {
 		errorMsg := err.Error()
 		return &ports.SendEmailResult{
@@ -411,6 +473,14 @@ func (g *GmailSender) SendEmailDraft(ctx context.Context, req *ports.SendEmailRe
 	createdDraft, err := g.service.Users.Drafts.Create(userEmail, draft).Context(ctx).Do()
 	// #region agent log
 	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		draftID := ""
+		draftMessageID := ""
+		if createdDraft != nil {
+			draftID = createdDraft.Id
+			if createdDraft.Message != nil {
+				draftMessageID = createdDraft.Message.Id
+			}
+		}
 		logEntry := map[string]interface{}{
 			"sessionId":    "debug-session",
 			"runId":        "run1",
@@ -418,9 +488,13 @@ func (g *GmailSender) SendEmailDraft(ctx context.Context, req *ports.SendEmailRe
 			"location":     "gmail.go:SendEmailDraft",
 			"message":      "After calling Drafts.Create API",
 			"data": map[string]interface{}{
-				"error":        func() string { if err != nil { return err.Error() } else { return "" } }(),
-				"success":      err == nil,
-				"draftCreated": createdDraft != nil,
+				"error":          func() string { if err != nil { return err.Error() } else { return "" } }(),
+				"success":        err == nil,
+				"draftCreated":   createdDraft != nil,
+				"draftID":        draftID,
+				"draftMessageID": draftMessageID,
+				"to":             req.To,
+				"subject":         req.Subject,
 			},
 			"timestamp": time.Now().UnixMilli(),
 		}

@@ -1,0 +1,384 @@
+Delivered-To: bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com
+Received: by 2002:a05:6500:4c5:b0:2e6:7dfd:3bf0 with SMTP id y5csp1699779lqc;
+        Tue, 23 Dec 2025 21:45:21 -0800 (PST)
+X-Received: by 2002:a05:690c:700f:b0:788:247f:3648 with SMTP id 00721157ae682-78fb40afde0mr144253167b3.66.1766555121289;
+        Tue, 23 Dec 2025 21:45:21 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1766555121; cv=none;
+        d=google.com; s=arc-20240605;
+        b=GT+c8/QEKFsI4m/JGUeiI2QhQWYlSdjUK3Ojt5lAMLJkm1hC+BKdqjDkvI/7LSI2A6
+         qBXv2St7l5+vvTzrXMeeik85eWyHICoQl6tH931BPKPUR+qxYbFJBj215IKcOfxrGN8g
+         SE+QDTpquljQZIpIXTkVCr/liIvAxzcpQlJHseeMyTCzHAoExR7GIhDtqrHsWDjGExFO
+         KnSRSFq6Rmd1/2QpFzTAYmh3LHJXjmneFIbHPoBnsYB1iLXe7OZBoGqZZHvHL7LPj3vJ
+         ZfWB0mP7BBluTGhKUaE9fZeBK9ZGwdYFRjvLkKYd1ahIC5mbm6nHmK1JePspZuzCBSd/
+         Zq/A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=to:subject:message-id:date:mime-version:from:dkim-signature;
+        bh=YwScmsgBkDAKMQRU+rJAXgnlk2p5gtUxHBwa+PrNLWs=;
+        fh=wf1UqQE6CBqI9TJhtJ2GSxRp2SnxqPlNnlQF515NT0A=;
+        b=GAmiQYvFL6ZBT++31axLHcYmEOMTMTajY6rKktqFdGiRCfdbZ5/5+IBUOZwgbH3rAW
+         2xBij52eHDoZySmDgh81YZhcjk0L76F/BowRICyWPsUGBzYtQ7yQ+ZX//qynNWSIIvMn
+         QYBuUVPNAV4rGAx36UcqLbPDqJks0PPPcSqxpZYzUCpF93esbQtgIP9o4n8CArbwDgpI
+         Ni7hbpiJqj+sMsHOiq73JfKTXLdBmso09chpUp0Gl3ZeNe4c4TNJHvrnF54XwgpKoBa2
+         l6AorEM2SFujvA11eVDqN+PrEwZQ+ghtYzoKhjzeC8C/4aqmHDK9VY0aNbAnob9mcvvf
+         dS1A==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@stlpartyhelpers.com header.s=google header.b=r1dak+qr;
+       spf=pass (google.com: domain of team@stlpartyhelpers.com designates 209.85.220.41 as permitted sender) smtp.mailfrom=team@stlpartyhelpers.com;
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=stlpartyhelpers.com;
+       dara=neutral header.i=@shevelyov.com
+Return-Path: <team@stlpartyhelpers.com>
+Received: from mail-sor-f41.google.com (mail-sor-f41.google.com. [209.85.220.41])
+        by mx.google.com with SMTPS id 00721157ae682-78fa725591dsor80944427b3.15.2025.12.23.21.45.20
+        for <bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com>
+        (Google Transport Security);
+        Tue, 23 Dec 2025 21:45:21 -0800 (PST)
+Received-SPF: pass (google.com: domain of team@stlpartyhelpers.com designates 209.85.220.41 as permitted sender) client-ip=209.85.220.41;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@stlpartyhelpers.com header.s=google header.b=r1dak+qr;
+       spf=pass (google.com: domain of team@stlpartyhelpers.com designates 209.85.220.41 as permitted sender) smtp.mailfrom=team@stlpartyhelpers.com;
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=stlpartyhelpers.com;
+       dara=neutral header.i=@shevelyov.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=stlpartyhelpers.com; s=google; t=1766555120; x=1767159920; darn=shevelyov.com;
+        h=to:subject:message-id:date:mime-version:from:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=YwScmsgBkDAKMQRU+rJAXgnlk2p5gtUxHBwa+PrNLWs=;
+        b=r1dak+qrlqS8KI8Zg5bAOLYmWg66CCCEE/PLdw0BbtgLAyub2O+HkQIbExHKNe24WR
+         yNinh1/rqQct5euxrEnkn/V1MLg2ubiEp95wayeOx0FNpG4p6oDIaIw+Um3DW8T/olFi
+         xBfIDj+QvSS+AQ0iLtg6XrtZ6PfzU4Zr5C+9VVuGm6Vu63k6LRX0DSZuJRYEik09Jt7f
+         HIvlRDsCYtSSS7fuwzrLKsXhOwqH8kUM7ETV9bh8nGaGjs/Lw9sSYgjpWODcicGo+PXP
+         rI7AspIAfEnXh7bd4+ZnD0XI7UEr/FsGn4o4p7InMN4O+7xbx7W8Y2mO5hNuLYLDjjzW
+         +7YQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1766555120; x=1767159920;
+        h=to:subject:message-id:date:mime-version:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=YwScmsgBkDAKMQRU+rJAXgnlk2p5gtUxHBwa+PrNLWs=;
+        b=cqT3sZbeQkqOU2+saIEQsQbqKvWEyloXTSN5R+CUxi7OgXwS0+c9axMeTwh/c3fb4S
+         8QmC6X45//SR1/mtE56RBe4+rpf5dUmJym8V3wHOcxLR5vffhWkQ0nTQys4EKe4nWaAx
+         e5502q9/6GlVbDNlvsAFkQV+VDdo5uov56ew/yaFMJ+cO8kX+9+3pcXQ73LqZ9jttF/z
+         bruE+Z0Yk9j42GgHz4hSn6lyVeF7oJLZvTtHkpctVrR8Lj5+w9km3oQQcHT29Np/BSMb
+         1BeodrMoIYr/fWklK/zQMZiOki5Ps1ZE+CxAjOPq0spR3Mw5GYA0C3CQKwdPjunmNU29
+         IAPA==
+X-Gm-Message-State: AOJu0Yx1V1Qc850xCpnVt7pVDGKVQ9hjuVEl+pRK9T7Ik1VZ/SElnEqy
+	P6lwkMIJPDLYBpxBOYy64ev5//iHpWCXmNwOFdvVsipnHFXksPKDaMaxh51PKWV5NASq0FwH41x
+	39iXtdetu95Zvx6qHoOUZhQ2O1nm1bXyLBA8nVDerea0cheKFG9c/k3k=
+X-Gm-Gg: AY/fxX6PG8xLFJvvPTcCOTWQvbdJMUwi8vJ1sZqsu0fTvDMdpYMPmexXt22VALmrxX5
+	+h/QbU9bFooq2D6uRZgo8D+6KwoIbsH1xMcFftNm6w2llJGTDEmKvSgvlr3+O2h6fBmhqQc3OCw
+	SU9N/r35NStzrDtnVOQaumO16UadtdGNLKmLy6mZNbpNnmHBYn2I7Hjr9GgPrRanzzLZTPWwOks
+	/b8Tieyo9dQ+6sPqFe6gM0OCvmy0CgXPc76O9Mbhs8WX0Z3Q1qfDnGaW7DRGuwzVNuxlCk=
+X-Google-Smtp-Source: AGHT+IHCMyvQ1LC1qN7l8fIn5mvcTl7wH74FbtJ89qf1TtmmdemP09sVfqm4N0Vx8mH0sg6QZnq6sEYcXzSoB0tOZtc=
+X-Received: by 2002:a05:690c:63c7:b0:787:d3f9:3fac with SMTP id
+ 00721157ae682-78fb40b1423mr141859577b3.67.1766555120429; Tue, 23 Dec 2025
+ 21:45:20 -0800 (PST)
+Received: from 254762852232 named unknown by gmailapi.google.com with
+ HTTPREST; Wed, 24 Dec 2025 00:45:20 -0500
+Received: from 254762852232 named unknown by gmailapi.google.com with
+ HTTPREST; Wed, 24 Dec 2025 00:45:20 -0500
+From: STL Party Helpers Team <team@stlpartyhelpers.com>
+MIME-Version: 1.0
+Date: Wed, 24 Dec 2025 00:45:20 -0500
+X-Gm-Features: AQt7F2rjj7f0Sm7_ZRSEVWWYXfXRgdwtUzd9yuGa-bx9KOy6aQAD_Pz8sVikX_A
+Message-ID: <CAL_ZiEybH9nXu65NHAQY87WF1YaGdFy=8Zbk04-=+TcHz=X+vw@mail.gmail.com>
+Subject: [PREVIEW] Party Helpers for Birthday Party - December 25, 2025 -
+ Estimate & Details for John Doe
+To: bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com
+Content-Type: multipart/alternative; boundary="0000000000006dfda30646ac2a05"
+
+--0000000000006dfda30646ac2a05
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+ STL Party Helpers - Quote
+[image: STL Party Helpers Logo]
+Hi John Doe!
+Thank you for reaching out!
+Below is your event quote, along with important details and next steps.
+Our Rates & Pricing
+Base Rate: $275 / helper (first 4 hours)
+Deposit Amount: $400
+Additional Hours: $50 per additional hour per helper
+Estimated Total: $1100
+
+Final total may adjust based on our call. Gratuity is not included but
+always appreciated!
+Event Details
+=F0=9F=93=85 When: $400 December 25, 2025
+=F0=9F=93=8D Where: 6:00 PM
+=F0=9F=8C=90 Occasion: 123 Main St, St. Louis, MO 63110
+=F0=9F=91=A5 Guest Count: %!d(string=3DBirthday Party)
+=F0=9F=A7=91 Helpers Needed: 50
+=E2=8F=B0 For How Long: %!s(int=3D2) Hours
+Services Included
+
+*Setup & Presentation*
+
+   - Arranging tables, chairs, and decorations
+   - Buffet setup & live buffet service
+   - Butler-passed appetizers & cocktails
+
+*Dining & Guest Assistance*
+
+   - Multi-course plated dinners
+   - General bussing (plates, silverware, glassware)
+   - Beverage service (water, wine, champagne, coffee, etc.)
+   - Special services (cake cutting, dessert plating, etc.)
+
+*Cleanup & End-of-Event Support*
+
+   - Washing dishes, managing trash, and keeping the event space tidy
+   - Kitchen cleanup & end-of-event breakdown
+   - Assisting with food storage & leftovers
+
+Need something specific? Let us know! We'll do our best to accommodate your
+request.
+Payment Options
+Check, Debit / Credit Cards (via Stripe), Venmo, Zelle
+What Happens Next
+
+You can book an appointment with us
+<https://calendly.com/stlpartyhelpers/quote-intake> to learn more, or
+respond to this email if you are ready to proceed.
+
+If you already booked an appointment, we will talk to you soon!
+
+If you are ready to proceed, we will send you a deposit link. Once the
+deposit is paid, your reservation is confirmed and your date is secured.
+
+*Secure Your Date*
+
+Paying the deposit (4) locks in your event date and confirms your
+reservation. You can always cancel and receive a 100% full refund as long
+as it's done at least 3 days prior to the start of your event.
+4220 Duncan Ave., Ste. 201, St. Louis, MO 63110
+Tap to Call Us: (314) 714-5514 <+13147145514>
+stlpartyhelpers.com
+=C2=A9 2025 STL Party Helpers
+v1.1
+
+--0000000000006dfda30646ac2a05
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+
+<html>
+  <head>
+    <meta charset=3D"UTF-8">
+    <title>STL Party Helpers - Quote</title>
+  </head>
+  <body style=3D"margin:0;padding:0;font-family:Arial,sans-serif;background=
+-color:#ffffff;color:#333">
+    <table width=3D"100%" cellpadding=3D"0" cellspacing=3D"2" border=3D"0" =
+style=3D"background-color:#ffffff">
+      <tr>
+        <td align=3D"center" style=3D"padding:0 8px">
+          <table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" border=
+=3D"0" style=3D"max-width:650px;border:1px solid #ccc;padding:12px">
+           =20
+            <tr>
+              <td align=3D"center" style=3D"padding:5px">
+                <img src=3D"https://stlpartyhelpers.com/wp-content/uploads/=
+2025/08/stlph-logo-2.jpg" alt=3D"STL Party Helpers Logo">
+              </td>
+            </tr>
+            <tr>
+              <td align=3D"center" style=3D"font-size:20px;font-weight:bold=
+">Hi John Doe!</td>
+            </tr>
+            <tr>
+              <td align=3D"center" style=3D"padding-bottom:10px">
+                Thank you for reaching out!<br>
+                Below is your event quote, along with important details and=
+ next steps.
+              </td>
+            </tr>
+
+           =20
+            <tr>
+              <td style=3D"font-size:14px;font-weight:bold;padding-top:12px=
+">Our Rates &amp; Pricing</td>
+            </tr>
+            <tr>
+              <td>
+                <table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" b=
+order=3D"0" style=3D"background-color:#f9f9f9;margin-top:8px">
+                  <tr>
+                    <td style=3D"padding:6px 10px;font-weight:bold">Base Ra=
+te:</td>
+                    <td style=3D"padding:6px 10px">$275 / helper (first 4 h=
+ours)</td>
+                  </tr>
+                  <tr>
+                    <td style=3D"padding:6px 10px;font-weight:bold">Deposit=
+ Amount:</td>
+                    <td style=3D"padding:6px 10px">$400</td>
+                  </tr>
+                  <tr>
+                    <td style=3D"padding:6px 10px;font-weight:bold">Additio=
+nal Hours:</td>
+                    <td style=3D"padding:6px 10px">$50 per additional hour =
+per helper</td>
+                  </tr>
+                  <tr>
+                    <td style=3D"padding:6px 10px;font-weight:bold">Estimat=
+ed Total:</td>
+                    <td style=3D"padding:6px 10px">$1100</td>
+                  </tr>
+                </table>
+                <p style=3D"font-size:12px;color:#666;padding-top:4px">
+                  Final total may adjust based on our call. Gratuity is not=
+ included but always appreciated!
+                </p>
+              </td>
+            </tr>
+
+           =20
+            <tr>
+              <td style=3D"font-size:14px;font-weight:bold;padding-top:12px=
+">Event Details</td>
+            </tr>
+            <tr>
+              <td>
+                <table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" b=
+order=3D"0" style=3D"background-color:#f9f9f9;margin-top:8px">
+                  <tr>
+                    <td style=3D"padding:6px 10px;font-weight:bold">=F0=9F=
+=93=85 When:</td>
+                    <td style=3D"padding:6px 10px">$400 December 25, 2025</=
+td>
+                  </tr>
+                  <tr>
+                    <td style=3D"padding:6px 10px;font-weight:bold">=F0=9F=
+=93=8D Where:</td>
+                    <td style=3D"padding:6px 10px">6:00 PM</td>
+                  </tr>
+                  <tr>
+                    <td style=3D"padding:6px 10px;font-weight:bold">=F0=9F=
+=8C=90 Occasion:</td>
+                    <td style=3D"padding:6px 10px">123 Main St, St. Louis, =
+MO 63110</td>
+                  </tr>
+                  <tr>
+                    <td style=3D"padding:6px 10px;font-weight:bold">=F0=9F=
+=91=A5 Guest Count:</td>
+                    <td style=3D"padding:6px 10px">%!d(string=3DBirthday Pa=
+rty)</td>
+                  </tr>
+                  <tr>
+                    <td style=3D"padding:6px 10px;font-weight:bold">=F0=9F=
+=A7=91 Helpers Needed:</td>
+                    <td style=3D"padding:6px 10px">50</td>
+                  </tr>
+                  <tr>
+                    <td style=3D"padding:6px 10px;font-weight:bold">=E2=8F=
+=B0 For How Long:</td>
+                    <td style=3D"padding:6px 10px">%!s(int=3D2) Hours</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+           =20
+            <tr>
+              <td style=3D"font-size:14px;font-weight:bold;padding-top:12px=
+">Services Included</td>
+            </tr>
+            <tr>
+              <td style=3D"padding:6px 0">
+                <p style=3D"margin:4px 0"><strong>Setup &amp; Presentation<=
+/strong></p>
+                <ul style=3D"padding-left:20px;margin:4px 0">
+                  <li>Arranging tables, chairs, and decorations</li>
+                  <li>Buffet setup &amp; live buffet service</li>
+                  <li>Butler-passed appetizers &amp; cocktails</li>
+                </ul>
+                <p style=3D"margin:8px 0 4px 0"><strong>Dining &amp; Guest =
+Assistance</strong></p>
+                <ul style=3D"padding-left:20px;margin:4px 0">
+                  <li>Multi-course plated dinners</li>
+                  <li>General bussing (plates, silverware, glassware)</li>
+                  <li>Beverage service (water, wine, champagne, coffee, etc=
+.)</li>
+                  <li>Special services (cake cutting, dessert plating, etc.=
+)</li>
+                </ul>
+                <p style=3D"margin:8px 0 4px 0"><strong>Cleanup &amp; End-o=
+f-Event Support</strong></p>
+                <ul style=3D"padding-left:20px;margin:4px 0">
+                  <li>Washing dishes, managing trash, and keeping the event=
+ space tidy</li>
+                  <li>Kitchen cleanup &amp; end-of-event breakdown</li>
+                  <li>Assisting with food storage &amp; leftovers</li>
+                </ul>
+                <p style=3D"margin-top:8px">Need something specific? Let us=
+ know! We&#39;ll do our best to accommodate your request.</p>
+              </td>
+            </tr>
+
+           =20
+            <tr>
+              <td style=3D"font-size:14px;font-weight:bold;padding-top:12px=
+">Payment Options</td>
+            </tr>
+            <tr>
+              <td style=3D"background-color:#f9f9f9;padding:8px">
+                Check, Debit / Credit Cards (via Stripe), Venmo, Zelle
+              </td>
+            </tr>
+
+           =20
+            <tr>
+              <td style=3D"font-size:14px;font-weight:bold;padding-top:12px=
+">What Happens Next</td>
+            </tr>
+            <tr>
+              <td style=3D"padding:8px 0">
+                <p style=3D"margin:4px 0">You can <a href=3D"https://calend=
+ly.com/stlpartyhelpers/quote-intake" style=3D"color:#0047ab;text-decoration=
+:underline">book an appointment with us</a> to learn more, or respond to th=
+is email if you are ready to proceed.</p>
+                <p style=3D"margin:8px 0">If you already booked an appointm=
+ent, we will talk to you soon!</p>
+                <p style=3D"margin:8px 0">If you are ready to proceed, we w=
+ill send you a deposit link. Once the deposit is paid, your reservation is =
+confirmed and your date is secured.</p>
+              </td>
+            </tr>
+
+           =20
+            <tr>
+              <td style=3D"background-color:#f9f9f9;padding:10px;margin-top=
+:8px;border-left:3px solid #0047ab">
+                <p style=3D"margin:4px 0;font-size:13px"><strong>Secure You=
+r Date</strong></p>
+                <p style=3D"margin:6px 0;font-size:12px;color:#333">Paying =
+the deposit (4) locks in your event date and confirms your reservation. You=
+ can always cancel and receive a 100% full refund as long as it&#39;s done =
+at least 3 days prior to the start of your event.</p>
+              </td>
+            </tr>
+
+           =20
+            <tr>
+              <td align=3D"center" style=3D"font-size:12px;padding-top:12px=
+;color:#666">
+                4220 Duncan Ave., Ste. 201, St. Louis, MO 63110<br>
+                <a href=3D"tel:+13147145514" style=3D"display:inline-block;=
+background-color:#ffffff;color:#000000;padding:9px 10px;text-decoration:non=
+e;border-radius:4px;margin-top:12px;margin-bottom:12px;border:1px solid gra=
+y" target=3D"_blank">Tap to Call Us: (314) 714-5514</a><br>
+                <a href=3D"https://stlpartyhelpers.com" style=3D"color:#004=
+7ab;display:inline-block;margin-bottom:8px">stlpartyhelpers.com</a><br>
+                =C2=A9 2025 STL Party Helpers<br>
+                <span style=3D"font-size:0.55em">v1.1</span>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+
+--0000000000006dfda30646ac2a05--

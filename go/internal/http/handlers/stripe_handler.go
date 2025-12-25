@@ -69,8 +69,8 @@ func (h *StripeHandler) HandleDeposit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handle calculated deposit from estimate
-	if req.EstimatedTotal != nil {
-		estimateCents := util.DollarsToCents(*req.EstimatedTotal)
+	if req.Estimate != nil {
+		estimateCents := util.DollarsToCents(*req.Estimate)
 		deposit, err := h.invoiceService.CalculateDepositFromEstimate(r.Context(), estimateCents)
 		if err == nil {
 			response["deposit"] = map[string]interface{}{
@@ -170,11 +170,22 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Calculate estimate if event details provided
+	// Determine deposit from various sources (in priority order)
 	var estimateResult *pricing.EstimateResult
 	var depositCents int64
 
-	if req.EventDateTimeLocal != "" || req.EventDate != "" {
+	// Priority 1: Manual deposit value (highest priority - direct override)
+	if req.DepositValue != nil {
+		depositCents = util.DollarsToCents(*req.DepositValue)
+	} else if req.Estimate != nil {
+		// Priority 2: Estimate provided directly - use it without calculating from event details
+		deposit, err := h.invoiceService.CalculateDepositFromEstimate(
+			r.Context(), util.DollarsToCents(*req.Estimate))
+		if err == nil {
+			depositCents = deposit.AmountCents
+		}
+	} else if req.EventDateTimeLocal != "" || req.EventDate != "" {
+		// Priority 4: Calculate from event details only if no estimate was provided
 		eventDateStr := req.EventDateTimeLocal
 		if eventDateStr == "" {
 			eventDateStr = req.EventDate
@@ -197,25 +208,6 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 		if err == nil {
 			depositCents = deposit.AmountCents
 			estimateResult = result
-		}
-	}
-
-	// Determine deposit from various sources
-	if req.DepositValue != nil {
-		depositCents = util.DollarsToCents(*req.DepositValue)
-	} else if estimateResult != nil {
-		// Already calculated above
-	} else if req.Estimate != nil {
-		deposit, err := h.invoiceService.CalculateDepositFromEstimate(
-			r.Context(), util.DollarsToCents(*req.Estimate))
-		if err == nil {
-			depositCents = deposit.AmountCents
-		}
-	} else if req.EstimatedTotal != nil {
-		deposit, err := h.invoiceService.CalculateDepositFromEstimate(
-			r.Context(), util.DollarsToCents(*req.EstimatedTotal))
-		if err == nil {
-			depositCents = deposit.AmountCents
 		}
 	}
 
@@ -292,12 +284,23 @@ func (h *StripeHandler) HandleDepositWithEmail(w http.ResponseWriter, r *http.Re
 			"status": invoiceResult.Status,
 			"pdf":    invoiceResult.InvoicePDF,
 		},
-		"email": map[string]interface{}{
-			"sent":  emailSent,
-			"error": emailError,
-		},
+		"email": func() map[string]interface{} {
+			result := map[string]interface{}{
+				"error": emailError,
+			}
+			if saveEmailAsDraft {
+				result["sent"] = false
+				result["draft"] = emailSent
+			} else {
+				result["sent"] = emailSent
+				result["draft"] = false
+			}
+			return result
+		}(),
 	}
 
+	// Only include basedOnEstimate if it was calculated from event details
+	// (not when estimate was provided directly)
 	if estimateResult != nil {
 		response["basedOnEstimate"] = estimateResult
 	}
@@ -328,18 +331,18 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 		sendEmail = val
 	}
 
-	// Parse estimated total
-	estimatedTotal := 10.0
-	if val, err := ParseFloatFromMap(body, "estimatedTotal"); err == nil && val != nil {
-		estimatedTotal = *val
+	// Parse estimate
+	estimate := 10.0
+	if val, err := ParseFloatFromMap(body, "estimate"); err == nil && val != nil {
+		estimate = *val
 	} else if val, err := ParseFloatFromQuery(r, "estimate"); err == nil && val != nil {
-		estimatedTotal = *val
+		estimate = *val
 	}
 
 	// Convert to cents if needed
-	estimatedTotalCents := util.DollarsToCents(estimatedTotal)
-	if estimatedTotal < 10000 {
-		estimatedTotalCents = util.DollarsToCents(estimatedTotal)
+	estimateCents := util.DollarsToCents(estimate)
+	if estimate < 10000 {
+		estimateCents = util.DollarsToCents(estimate)
 	}
 
 	// Parse deposit value
@@ -376,7 +379,7 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create invoice request
-	amountCents := estimatedTotalCents
+	amountCents := estimateCents
 	if depositValueCents != nil {
 		amountCents = *depositValueCents
 	}
@@ -414,9 +417,9 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 			"amount": util.CentsToDollars(invoiceResult.AmountDue),
 		},
 		"demoData": map[string]interface{}{
-			"email":          customerEmail,
-			"name":           customerName,
-			"estimatedTotal": util.CentsToDollars(estimatedTotalCents),
+			"email":    customerEmail,
+			"name":     customerName,
+			"estimate": util.CentsToDollars(estimateCents),
 			"depositValue": func() interface{} {
 				if depositValueCents != nil {
 					return util.CentsToDollars(*depositValueCents)
@@ -440,14 +443,17 @@ func (h *StripeHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 
 // formatDateTimeForStripe formats a date-time string to AM/PM format with day of week for Stripe
 // Input: "2025-06-15 17:00" -> Output: "Fri, Jun 15, 2025 5:00 PM"
+// Input: "2025-12-20 06:00 PM" -> Output: "Fri, Dec 20, 2025 6:00 PM"
 func formatDateTimeForStripe(dateTimeStr string) string {
-	// Try multiple formats
+	// Try multiple formats (order matters - more specific first)
 	formats := []string{
-		"2006-01-02 15:04",
-		"2006-01-02 15:04:05",
-		"2006-01-02 3:04 PM",
-		"2006-01-02 3:04PM",
-		time.RFC3339,
+		"2006-01-02 03:04 PM", // "2025-12-20 06:00 PM" (with leading zero and space)
+		"2006-01-02 3:04 PM",  // "2025-12-20 6:00 PM" (no leading zero, with space)
+		"2006-01-02 03:04PM",  // "2025-12-20 06:00PM" (with leading zero, no space)
+		"2006-01-02 3:04PM",   // "2025-12-20 6:00PM" (no leading zero, no space)
+		"2006-01-02 15:04",    // "2025-06-15 17:00" (24-hour format)
+		"2006-01-02 15:04:05", // "2025-06-15 17:00:00" (24-hour with seconds)
+		time.RFC3339,          // ISO 8601 format
 	}
 
 	for _, format := range formats {
@@ -484,9 +490,13 @@ func extractCustomFieldsFromDepositRequest(req dto.DepositWithEmailRequest) []po
 
 	// Helpers Count
 	if req.HelpersCount != nil {
+		helpersText := fmt.Sprintf("%d Helper", *req.HelpersCount)
+		if *req.HelpersCount != 1 {
+			helpersText = fmt.Sprintf("%d Helpers", *req.HelpersCount)
+		}
 		customFields = append(customFields, ports.CustomField{
 			Name:  "Helpers Count",
-			Value: fmt.Sprintf("%d Helpers", *req.HelpersCount),
+			Value: helpersText,
 		})
 	}
 
@@ -611,17 +621,82 @@ func (h *StripeHandler) createFinalInvoiceCommon(ctx context.Context, req dto.Fi
 		}
 	}
 
+	// Determine total amount: use estimate if provided, otherwise use totalAmount
+	var totalAmountCentsPtr *int64
+	var totalAmount *float64
+	if req.Estimate != nil {
+		// If estimate is provided, use it as the original quote amount
+		totalAmountCents := util.DollarsToCents(*req.Estimate)
+		totalAmountCentsPtr = &totalAmountCents
+		totalAmount = req.Estimate
+	} else if req.TotalAmountCents != nil {
+		totalAmountCentsPtr = req.TotalAmountCents
+		if req.TotalAmount != nil {
+			totalAmount = req.TotalAmount
+		} else {
+			amt := util.CentsToDollars(*req.TotalAmountCents)
+			totalAmount = &amt
+		}
+	} else if req.TotalAmount != nil {
+		totalAmountCents := util.DollarsToCents(*req.TotalAmount)
+		totalAmountCentsPtr = &totalAmountCents
+		totalAmount = req.TotalAmount
+	} else {
+		return nil, fmt.Errorf("either estimate or totalAmount (or totalAmountCents) is required")
+	}
+
+	totalAmountCents := *totalAmountCentsPtr
+
+	// Ensure metadata includes estimate if provided
+	metadata := req.Metadata
+	if metadata == nil {
+		metadata = make(map[string]string)
+	}
+	if req.Estimate != nil {
+		metadata["estimate_cents"] = strconv.FormatInt(totalAmountCents, 10)
+		metadata["estimate_dollars"] = fmt.Sprintf("%.2f", *req.Estimate)
+	}
+	// Only add deposit_paid to metadata if it was actually provided and > 0
+	// If not provided, it won't be in metadata and the full estimate amount will be charged
+	if req.DepositPaidCents != nil && *req.DepositPaidCents > 0 {
+		metadata["deposit_paid_cents"] = strconv.FormatInt(*req.DepositPaidCents, 10)
+		if req.DepositPaid != nil {
+			metadata["deposit_paid_dollars"] = fmt.Sprintf("%.2f", *req.DepositPaid)
+		}
+	} else if req.DepositPaid != nil && *req.DepositPaid > 0 {
+		depositCents := util.DollarsToCents(*req.DepositPaid)
+		metadata["deposit_paid_cents"] = strconv.FormatInt(depositCents, 10)
+		metadata["deposit_paid_dollars"] = fmt.Sprintf("%.2f", *req.DepositPaid)
+	}
+	// If depositPaid is not provided or is 0, don't add it to metadata
+
+	// Determine deposit paid - use 0 if not provided (so full estimate is charged)
+	var depositPaidCentsPtr *int64
+	var depositPaidPtr *float64
+	if req.DepositPaidCents != nil {
+		depositPaidCentsPtr = req.DepositPaidCents
+		depositPaidPtr = req.DepositPaid
+	} else if req.DepositPaid != nil {
+		depositCents := util.DollarsToCents(*req.DepositPaid)
+		depositPaidCentsPtr = &depositCents
+		depositPaidPtr = req.DepositPaid
+	} else {
+		// Not provided - use 0 (will charge full estimate)
+		zero := int64(0)
+		depositPaidCentsPtr = &zero
+	}
+
 	// Invoices are always finalized (no draft option)
 	invoiceReq := &stripeService.CreateFinalInvoiceRequest{
 		CustomerEmail:    req.Email,
 		CustomerName:     req.Name,
-		TotalAmountCents: req.TotalAmountCents,
-		TotalAmount:      req.TotalAmount,
-		DepositPaidCents: req.DepositPaidCents,
-		DepositPaid:      req.DepositPaid,
+		TotalAmountCents: totalAmountCentsPtr,
+		TotalAmount:      totalAmount,
+		DepositPaidCents: depositPaidCentsPtr,
+		DepositPaid:      depositPaidPtr,
 		Currency:         req.Currency,
 		Description:      req.Description,
-		Metadata:         req.Metadata,
+		Metadata:         metadata,
 		CustomFields:     serviceCustomFields,
 		Memo:             memo,
 		Footer:           footer,
@@ -722,8 +797,12 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 	}
 
 	// Calculate amounts for email
+	// Use estimate if provided (original quote), otherwise use totalAmount
 	totalCents := int64(0)
-	if req.TotalAmountCents != nil {
+	if req.Estimate != nil {
+		// Estimate is the original quote amount
+		totalCents = util.DollarsToCents(*req.Estimate)
+	} else if req.TotalAmountCents != nil {
 		totalCents = *req.TotalAmountCents
 	} else if req.TotalAmount != nil {
 		totalCents = util.DollarsToCents(*req.TotalAmount)
@@ -737,8 +816,9 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 	}
 
 	remainingBalance := util.CentsToDollars(invoiceResult.AmountDue)
-	totalAmount := util.CentsToDollars(totalCents)
+	originalQuote := util.CentsToDollars(totalCents) // This is the estimate/original quote for email
 	depositPaid := util.CentsToDollars(depositPaidCents)
+	totalAmount := originalQuote // Alias for response (estimate if provided, otherwise totalAmount)
 
 	// Determine if email should be sent (default to true - save as draft)
 	saveEmailAsDraft := true
@@ -775,6 +855,12 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 			showGratuity = *req.ShowGratuity
 		}
 
+		// Get template name if provided
+		templateName := ""
+		if req.UseTemplate != nil {
+			templateName = *req.UseTemplate
+		}
+
 		emailSent, emailError = h.emailHandler.SendFinalInvoiceEmail(
 			r.Context(),
 			req.Name,
@@ -782,12 +868,13 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 			req.EventType,
 			eventDateFormatted,
 			req.HelpersCount,
-			totalAmount, // Original quote
+			originalQuote, // Original quote (estimate if provided, otherwise totalAmount)
 			depositPaid,
 			remainingBalance,
 			invoiceResult.HostedInvoiceURL,
 			showGratuity,
 			saveEmailAsDraft,
+			templateName,
 		)
 	} else {
 		emailError = "email handler is not configured"
@@ -809,10 +896,19 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 			"depositPaid":      depositPaid,
 			"remainingBalance": remainingBalance,
 		},
-		"email": map[string]interface{}{
-			"sent":  emailSent,
-			"error": emailError,
-		},
+		"email": func() map[string]interface{} {
+			result := map[string]interface{}{
+				"error": emailError,
+			}
+			if saveEmailAsDraft {
+				result["sent"] = false
+				result["draft"] = emailSent
+			} else {
+				result["sent"] = emailSent
+				result["draft"] = false
+			}
+			return result
+		}(),
 	}
 
 	util.WriteJSON(w, http.StatusOK, response)
@@ -831,16 +927,13 @@ func (h *StripeHandler) HandleGetDepositAmount(w http.ResponseWriter, r *http.Re
 	}
 
 	var estimateCents *int64
-	if req.EstimatedTotal != nil {
-		cents := util.DollarsToCents(*req.EstimatedTotal)
-		estimateCents = &cents
-	} else if req.Estimate != nil {
+	if req.Estimate != nil {
 		cents := util.DollarsToCents(*req.Estimate)
 		estimateCents = &cents
 	}
 
 	if estimateCents == nil {
-		util.WriteError(w, http.StatusBadRequest, "estimatedTotal or estimate is required")
+		util.WriteError(w, http.StatusBadRequest, "estimate is required")
 		return
 	}
 

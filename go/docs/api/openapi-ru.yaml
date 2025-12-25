@@ -24,7 +24,7 @@ info:
     name: BizOps360 Support
     url: https://github.com/bizops360/bizops360
   license:
-    name: Proprietary
+    name: Права принадлежат NorthStar360 Tech Solutions
 
 servers:
   - url: http://localhost:8080
@@ -408,6 +408,141 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/email/quote:
+    post:
+      tags:
+        - Email
+      summary: Отправка quote email с переменными
+      description: Отправка email с квотацией, используя переданные переменные
+      operationId: sendQuoteEmail
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteEmailRequest'
+      responses:
+        '200':
+          description: Quote email отправлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteEmailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/email/quote/preview:
+    post:
+      tags:
+        - Email
+      summary: Отправка quote email с тестовыми данными
+      description: Отправка quote email с предзаполненными тестовыми данными для предпросмотра
+      operationId: sendQuoteEmailPreview
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewEmailRequest'
+      responses:
+        '200':
+          description: Quote email preview отправлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewEmailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/email/deposit/preview:
+    post:
+      tags:
+        - Email
+      summary: Отправка deposit email с тестовыми данными
+      description: Отправка deposit email с предзаполненными тестовыми данными для предпросмотра
+      operationId: sendDepositEmailPreview
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewEmailRequest'
+      responses:
+        '200':
+          description: Deposit email preview отправлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewEmailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/email/final-invoice/preview:
+    post:
+      tags:
+        - Email
+      summary: Отправка final invoice email с тестовыми данными
+      description: Отправка final invoice email с предзаполненными тестовыми данными для предпросмотра
+      operationId: sendFinalInvoiceEmailPreview
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewEmailRequest'
+      responses:
+        '200':
+          description: Final invoice email preview отправлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewEmailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/email/review-request/preview:
+    post:
+      tags:
+        - Email
+      summary: Отправка review request email с тестовыми данными
+      description: Отправка review request email с предзаполненными тестовыми данными для предпросмотра
+      operationId: sendReviewRequestEmailPreview
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewEmailRequest'
+      responses:
+        '200':
+          description: Review request email preview отправлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewEmailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /api/calendar/create:
     post:
       tags:
@@ -603,10 +738,10 @@ components:
           type: string
           description: Имя клиента
           example: "John Doe"
-        estimatedTotal:
+        estimate:
           type: number
           format: float
-          description: Оценка общей стоимости
+          description: Оценка общей стоимости (если указано, используется для расчета депозита без расчета из деталей события)
           example: 1000.0
         depositValue:
           type: number
@@ -647,7 +782,7 @@ components:
       example:
         email: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
         name: "John Doe"
-        estimatedTotal: 1000.0
+        estimate: 1000.0
         depositValue: null
         deposit: null
         helpersCount: 2
@@ -732,10 +867,7 @@ components:
         estimate:
           type: number
           format: float
-          example: 1000.0
-        estimatedTotal:
-          type: number
-          format: float
+          description: Оценка общей стоимости (если указано, используется для расчета депозита без расчета из деталей события)
           example: 1000.0
         depositValue:
           type: number
@@ -765,7 +897,6 @@ components:
         hours: 4.0
         duration: 4.0
         estimate: 1000.0
-        estimatedTotal: 1000.0
         depositValue: null
         useTest: false
         dryRun: true
@@ -1183,10 +1314,10 @@ components:
         eventDate:
           type: string
           description: Дата мероприятия
-        estimatedTotal:
+        estimate:
           type: number
           format: float
-          description: Оценка общей стоимости
+          description: Оценка общей стоимости (если указано, используется для расчета депозита без расчета из деталей события)
         depositAmount:
           type: number
           format: float
@@ -1206,6 +1337,152 @@ components:
           type: string
           nullable: true
           description: Ошибка при отправке
+
+    QuoteEmailRequest:
+      type: object
+      required:
+        - to
+        - clientName
+      properties:
+        to:
+          type: string
+          format: email
+          description: Email получателя
+          example: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
+        clientName:
+          type: string
+          description: Имя клиента
+          example: "John Doe"
+        eventDate:
+          type: string
+          description: 'Дата мероприятия (формат: "January 2, 2025")'
+          example: "December 25, 2025"
+        eventTime:
+          type: string
+          description: 'Время мероприятия (формат: "4:00 PM")'
+          example: "6:00 PM"
+        eventLocation:
+          type: string
+          description: Место проведения мероприятия
+          example: "123 Main St, St. Louis, MO 63110"
+        occasion:
+          type: string
+          description: Тип мероприятия
+          example: "Birthday Party"
+        guestCount:
+          type: integer
+          description: Количество гостей
+          example: 50
+        helpers:
+          type: integer
+          description: Количество помощников
+          example: 2
+        hours:
+          type: number
+          format: float
+          description: Количество часов
+          example: 4.0
+        baseRate:
+          type: number
+          format: float
+          description: Базовая ставка за помощника
+          example: 275.0
+        hourlyRate:
+          type: number
+          format: float
+          description: Дополнительная ставка за час за помощника
+          example: 50.0
+        totalCost:
+          type: number
+          format: float
+          description: Общая стоимость
+          example: 1100.0
+        rateLabel:
+          type: string
+          description: Метка ставки
+          example: "Base Rate"
+        dryRun:
+          type: boolean
+          default: false
+          description: Тестовый запуск (добавляет префикс "Dry Run" к теме)
+          example: false
+        saveAsDraft:
+          type: boolean
+          default: false
+          description: Сохранить как черновик вместо отправки
+          example: false
+
+    QuoteEmailResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Успешность операции
+        message:
+          type: string
+          description: Сообщение о результате
+          example: "Quote email sent successfully"
+        email:
+          type: object
+          properties:
+            messageId:
+              type: string
+              nullable: true
+              description: ID сообщения
+            sent:
+              type: boolean
+              description: Отправлено ли письмо
+            draft:
+              type: boolean
+              description: Сохранено ли как черновик
+            error:
+              type: string
+              nullable: true
+              description: Ошибка при отправке
+
+    PreviewEmailRequest:
+      type: object
+      required:
+        - to
+      properties:
+        to:
+          type: string
+          format: email
+          description: Email получателя
+          example: "bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com"
+        saveAsDraft:
+          type: boolean
+          default: false
+          description: Сохранить как черновик вместо отправки
+          example: false
+
+    PreviewEmailResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Успешность операции
+        message:
+          type: string
+          description: Сообщение о результате
+          example: "Email preview sent successfully"
+        email:
+          type: object
+          properties:
+            messageId:
+              type: string
+              nullable: true
+              description: ID сообщения
+            sent:
+              type: boolean
+              description: Отправлено ли письмо
+            draft:
+              type: boolean
+              description: Сохранено ли как черновик
+            error:
+              type: string
+              nullable: true
+              description: Ошибка при отправке
 
     CalendarEventRequest:
       type: object

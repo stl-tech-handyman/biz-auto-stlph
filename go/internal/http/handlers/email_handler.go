@@ -10,8 +10,10 @@ import (
 	"time"
 
 	"github.com/bizops360/go-api/internal/infra/email"
+	"github.com/bizops360/go-api/internal/infra/stripe"
 	"github.com/bizops360/go-api/internal/ports"
 	emailService "github.com/bizops360/go-api/internal/services/email"
+	"github.com/bizops360/go-api/internal/services/pricing"
 	"github.com/bizops360/go-api/internal/util"
 )
 
@@ -308,7 +310,7 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 	templateService := emailService.NewTemplateService()
 	// For the standalone email endpoint, use defaults for missing fields
 	htmlBody, textBody, err := templateService.GenerateFinalInvoiceEmail(
-		body.Name, "Event", "", nil, body.TotalAmount, body.DepositPaid, body.RemainingBalance, body.InvoiceURL, true)
+		body.Name, "Event", "", nil, body.TotalAmount, body.DepositPaid, body.RemainingBalance, body.InvoiceURL, true, "")
 	if err != nil {
 		util.WriteError(w, http.StatusInternalServerError, "failed to generate email template: "+err.Error())
 		return
@@ -365,13 +367,13 @@ func (h *EmailHandler) HandleFinalInvoice(w http.ResponseWriter, r *http.Request
 
 // SendFinalInvoiceEmail is a helper method that can be called from other handlers
 // Returns (success bool, errorMessage string)
-func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, eventType, eventDate string, helpersCount *int, originalQuote, depositPaid, remainingBalance float64, invoiceURL string, showGratuity bool, saveAsDraft bool) (bool, string) {
+func (h *EmailHandler) SendFinalInvoiceEmail(ctx context.Context, name, email, eventType, eventDate string, helpersCount *int, originalQuote, depositPaid, remainingBalance float64, invoiceURL string, showGratuity bool, saveAsDraft bool, templateName string) (bool, string) {
 	if name == "" || email == "" || invoiceURL == "" {
 		return false, "name, email, and invoiceUrl are required"
 	}
 
 	templateService := emailService.NewTemplateService()
-	htmlBody, textBody, err := templateService.GenerateFinalInvoiceEmail(name, eventType, eventDate, helpersCount, originalQuote, depositPaid, remainingBalance, invoiceURL, showGratuity)
+	htmlBody, textBody, err := templateService.GenerateFinalInvoiceEmail(name, eventType, eventDate, helpersCount, originalQuote, depositPaid, remainingBalance, invoiceURL, showGratuity, templateName)
 	if err != nil {
 		return false, fmt.Sprintf("failed to generate email template: %v", err)
 	}
@@ -504,7 +506,7 @@ func (h *EmailHandler) SendDepositEmail(ctx context.Context, name, email string,
 
 	emailReq := &ports.SendEmailRequest{
 		To:       email,
-		Subject:  "Booking Deposit - STL Party Helpers",
+		Subject:  "Action needed to secure your reservation - STL Party Helpers",
 		HTMLBody: htmlBody,
 		TextBody: textBody,
 		FromName: "STL Party Helpers",
@@ -548,4 +550,593 @@ func (h *EmailHandler) SendDepositEmail(ctx context.Context, name, email string,
 
 	h.logger.Info("deposit email sent successfully", "messageId", emailResult.MessageID, "to", email)
 	return true, ""
+}
+
+// HandleQuoteEmail handles POST /api/email/quote
+func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	var body struct {
+		To            string  `json:"to"`
+		ClientName    string  `json:"clientName"`
+		EventDate     string  `json:"eventDate"` // Formatted date like "January 2, 2025"
+		EventTime     string  `json:"eventTime"` // Time like "4:00 PM"
+		EventLocation string  `json:"eventLocation"`
+		Occasion      string  `json:"occasion"`
+		GuestCount    int     `json:"guestCount"`
+		Helpers       int     `json:"helpers"`
+		Hours         float64 `json:"hours"`
+		BaseRate      float64 `json:"baseRate"`
+		HourlyRate    float64 `json:"hourlyRate"`
+		TotalCost     float64 `json:"totalCost"`
+		RateLabel     string  `json:"rateLabel"`
+		DryRun        bool    `json:"dryRun"`
+		SaveAsDraft   bool    `json:"saveAsDraft"`
+	}
+
+	if err := util.ReadJSON(r, &body); err != nil {
+		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
+		return
+	}
+
+	if body.To == "" {
+		util.WriteError(w, http.StatusBadRequest, "to (recipient email) is required")
+		return
+	}
+
+	// Parse event date to calculate correct rates for the year
+	eventDate, parseErr := parseEventDateFromFormatted(body.EventDate)
+	if parseErr != nil {
+		util.WriteError(w, http.StatusBadRequest, fmt.Sprintf("invalid eventDate format: %v. Expected format: 'January 2, 2025'", parseErr))
+		return
+	}
+
+	// Calculate estimate to get correct rates for the year
+	estimate, calcErr := pricing.CalculateEstimate(eventDate, body.Hours, body.Helpers)
+	if calcErr != nil {
+		util.WriteError(w, http.StatusBadRequest, fmt.Sprintf("failed to calculate estimate: %v", calcErr))
+		return
+	}
+
+	// Use totalCost from body if provided, otherwise use calculated estimate
+	totalCost := body.TotalCost
+	if totalCost == 0 {
+		totalCost = estimate.TotalCost
+	}
+
+	// Calculate deposit from total cost
+	estimateCents := util.DollarsToCents(totalCost)
+	depositCalc := stripe.CalculateDepositFromEstimate(estimateCents)
+	depositAmount := util.CentsToDollars(depositCalc.Value)
+
+	// Determine rate label
+	rateLabel := body.RateLabel
+	if rateLabel == "" {
+		rateLabel = "Base Rate"
+		if estimate.SpecialLabel != nil {
+			rateLabel = *estimate.SpecialLabel
+		}
+	}
+
+	// Generate quote email HTML using rates from estimate
+	emailData := util.QuoteEmailData{
+		ClientName:    body.ClientName,
+		EventDate:     body.EventDate,
+		EventTime:     body.EventTime,
+		EventLocation: body.EventLocation,
+		Occasion:      body.Occasion,
+		GuestCount:    body.GuestCount,
+		Helpers:       body.Helpers,
+		Hours:         body.Hours,
+		BaseRate:      estimate.BasePerHelper,
+		HourlyRate:    estimate.ExtraPerHourPerHelper,
+		TotalCost:     totalCost,
+		DepositAmount: depositAmount,
+		RateLabel:     rateLabel,
+	}
+
+	htmlBody := util.GenerateQuoteEmailHTML(emailData)
+	subject := fmt.Sprintf("Party Helpers for %s - %s - Estimate & Details for %s",
+		emailData.Occasion, emailData.EventDate, emailData.ClientName)
+
+	if body.DryRun {
+		subject = "Dry Run - " + subject
+	}
+
+	emailReq := &ports.SendEmailRequest{
+		To:       body.To,
+		Subject:  subject,
+		HTMLBody: htmlBody,
+		FromName: "STL Party Helpers Team",
+	}
+
+	var emailResult *ports.SendEmailResult
+	var emailErr error
+
+	if body.SaveAsDraft {
+		if h.gmailSender != nil {
+			emailResult, emailErr = h.gmailSender.SendEmailDraft(r.Context(), emailReq)
+		} else if h.emailClient != nil {
+			emailResult, emailErr = h.emailClient.SendEmailDraft(r.Context(), emailReq)
+		} else {
+			util.WriteError(w, http.StatusInternalServerError, "email service is not configured")
+			return
+		}
+	} else {
+		if h.gmailSender != nil {
+			emailResult, emailErr = h.gmailSender.SendEmail(r.Context(), emailReq)
+		} else if h.emailClient != nil {
+			emailResult, emailErr = h.emailClient.SendEmail(r.Context(), emailReq)
+		} else {
+			util.WriteError(w, http.StatusInternalServerError, "email service is not configured")
+			return
+		}
+	}
+
+	if emailErr != nil {
+		h.logger.Error("failed to send quote email", "error", emailErr)
+		util.WriteError(w, http.StatusInternalServerError, "failed to send quote email: "+emailErr.Error())
+		return
+	}
+
+	if emailResult == nil {
+		util.WriteError(w, http.StatusInternalServerError, "email service returned nil result")
+		return
+	}
+
+	if !emailResult.Success {
+		errorMsg := "unknown error"
+		if emailResult.Error != nil {
+			errorMsg = *emailResult.Error
+		}
+		h.logger.Error("quote email sending failed", "error", errorMsg)
+		util.WriteError(w, http.StatusInternalServerError, "quote email sending failed: "+errorMsg)
+		return
+	}
+
+	sent := !body.SaveAsDraft
+	draft := body.SaveAsDraft
+
+	h.logger.Info("quote email sent successfully", "messageId", emailResult.MessageID, "to", body.To, "draft", draft)
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"ok":      true,
+		"message": "Quote email sent successfully",
+		"email": map[string]interface{}{
+			"messageId": emailResult.MessageID,
+			"sent":      sent,
+			"draft":     draft,
+			"error":     "",
+		},
+	})
+}
+
+// parseEventDateFromFormatted parses a formatted date string like "January 2, 2025" to time.Time
+func parseEventDateFromFormatted(dateStr string) (time.Time, error) {
+	// Try common date formats
+	formats := []string{
+		"January 2, 2006",
+		"Jan 2, 2006",
+		"2006-01-02",
+		"01/02/2006",
+		"1/2/2006",
+	}
+
+	for _, format := range formats {
+		if t, err := time.Parse(format, dateStr); err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("unable to parse date: %s", dateStr)
+}
+
+// HandleQuoteEmailPreview handles POST /api/email/quote/preview - sends quote email with dummy data
+func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	var body struct {
+		To          string `json:"to"`
+		SaveAsDraft bool   `json:"saveAsDraft"`
+	}
+
+	if err := util.ReadJSON(r, &body); err != nil {
+		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
+		return
+	}
+
+	if body.To == "" {
+		util.WriteError(w, http.StatusBadRequest, "to (recipient email) is required")
+		return
+	}
+
+	// Use dummy data for preview - calculate estimate for June 15, 2026 (to get $50/hour rate)
+	previewDate, parseErr := time.Parse("January 2, 2006", "June 15, 2026")
+	if parseErr != nil {
+		util.WriteError(w, http.StatusInternalServerError, "failed to parse preview date")
+		return
+	}
+
+	// Calculate estimate to get correct rates for 2026
+	estimate, calcErr := pricing.CalculateEstimate(previewDate, 4.0, 2)
+	if calcErr != nil {
+		util.WriteError(w, http.StatusInternalServerError, fmt.Sprintf("failed to calculate estimate: %v", calcErr))
+		return
+	}
+
+	// Use fixed deposit amount of $400 for preview
+	depositAmount := 400.0
+
+	// Determine rate label
+	rateLabel := "Base Rate"
+	if estimate.SpecialLabel != nil {
+		rateLabel = *estimate.SpecialLabel
+	}
+
+	emailData := util.QuoteEmailData{
+		ClientName:    "John Doe",
+		EventDate:     "June 15, 2026",
+		EventTime:     "6:00 PM",
+		EventLocation: "123 Main St, St. Louis, MO 63110",
+		Occasion:      "Birthday Party",
+		GuestCount:    50,
+		Helpers:       2,
+		Hours:         4.0,
+		BaseRate:      estimate.BasePerHelper,
+		HourlyRate:    50.0, // Fixed $50/hour for preview
+		TotalCost:     estimate.TotalCost,
+		DepositAmount: depositAmount,
+		RateLabel:     rateLabel,
+	}
+
+	htmlBody := util.GenerateQuoteEmailHTML(emailData)
+	subject := fmt.Sprintf("Party Helpers for %s - %s - Estimate & Details for %s",
+		emailData.Occasion, emailData.EventDate, emailData.ClientName)
+
+	emailReq := &ports.SendEmailRequest{
+		To:       body.To,
+		Subject:  "[PREVIEW] " + subject,
+		HTMLBody: htmlBody,
+		FromName: "STL Party Helpers Team",
+	}
+
+	var emailResult *ports.SendEmailResult
+	var err error
+
+	if body.SaveAsDraft {
+		if h.gmailSender != nil {
+			emailResult, err = h.gmailSender.SendEmailDraft(r.Context(), emailReq)
+		} else if h.emailClient != nil {
+			emailResult, err = h.emailClient.SendEmailDraft(r.Context(), emailReq)
+		} else {
+			util.WriteError(w, http.StatusInternalServerError, "email service is not configured")
+			return
+		}
+	} else {
+		if h.gmailSender != nil {
+			emailResult, err = h.gmailSender.SendEmail(r.Context(), emailReq)
+		} else if h.emailClient != nil {
+			emailResult, err = h.emailClient.SendEmail(r.Context(), emailReq)
+		} else {
+			util.WriteError(w, http.StatusInternalServerError, "email service is not configured")
+			return
+		}
+	}
+
+	// #region agent log
+	if logFile, logErr := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		errorMsg := ""
+		messageID := ""
+		success := false
+		if err != nil {
+			errorMsg = err.Error()
+		}
+		if emailResult != nil {
+			messageID = emailResult.MessageID
+			success = emailResult.Success
+			if emailResult.Error != nil {
+				errorMsg = *emailResult.Error
+			}
+		}
+		json.NewEncoder(logFile).Encode(map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "A",
+			"location":     "email_handler.go:HandleQuoteEmailPreview",
+			"message":      "After sending/saving email",
+			"data": map[string]interface{}{
+				"saveAsDraft": body.SaveAsDraft,
+				"to":          body.To,
+				"error":       errorMsg,
+				"messageID":   messageID,
+				"success":     success,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		})
+		logFile.Close()
+	}
+	// #endregion
+
+	if err != nil {
+		h.logger.Error("failed to send quote email preview", "error", err)
+		util.WriteError(w, http.StatusInternalServerError, "failed to send quote email preview: "+err.Error())
+		return
+	}
+
+	if emailResult == nil {
+		util.WriteError(w, http.StatusInternalServerError, "email service returned nil result")
+		return
+	}
+
+	if !emailResult.Success {
+		errorMsg := "unknown error"
+		if emailResult.Error != nil {
+			errorMsg = *emailResult.Error
+		}
+		h.logger.Error("quote email preview sending failed", "error", errorMsg)
+		util.WriteError(w, http.StatusInternalServerError, "quote email preview sending failed: "+errorMsg)
+		return
+	}
+
+	sent := !body.SaveAsDraft
+	draft := body.SaveAsDraft
+
+	h.logger.Info("quote email preview sent successfully", "messageId", emailResult.MessageID, "to", body.To, "draft", draft)
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"ok":      true,
+		"message": "Quote email preview sent successfully",
+		"email": map[string]interface{}{
+			"messageId": emailResult.MessageID,
+			"sent":      sent,
+			"draft":     draft,
+			"error":     "",
+		},
+	})
+}
+
+// HandleDepositEmailPreview handles POST /api/email/deposit/preview - sends deposit email with dummy data
+func (h *EmailHandler) HandleDepositEmailPreview(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	var body struct {
+		To          string `json:"to"`
+		SaveAsDraft bool   `json:"saveAsDraft"`
+	}
+
+	if err := util.ReadJSON(r, &body); err != nil {
+		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
+		return
+	}
+
+	if body.To == "" {
+		util.WriteError(w, http.StatusBadRequest, "to (recipient email) is required")
+		return
+	}
+
+	// Use dummy data for preview
+	dummyName := "John Doe"
+	dummyDepositAmount := 50.0
+	dummyInvoiceURL := "https://invoice.stripe.com/i/acct_test/live_test?s=ap"
+
+	emailSent, emailError := h.SendDepositEmail(
+		r.Context(),
+		dummyName,
+		body.To,
+		dummyDepositAmount,
+		dummyInvoiceURL,
+		body.SaveAsDraft,
+	)
+
+	sent := !body.SaveAsDraft && emailSent
+	draft := body.SaveAsDraft
+
+	if emailError != "" {
+		h.logger.Error("deposit email preview sending failed", "error", emailError)
+		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"ok":      true,
+			"message": "Deposit email preview sent",
+			"email": map[string]interface{}{
+				"sent":  sent,
+				"draft": draft,
+				"error": emailError,
+			},
+		})
+		return
+	}
+
+	h.logger.Info("deposit email preview sent successfully", "to", body.To, "draft", draft)
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"ok":      true,
+		"message": "Deposit email preview sent successfully",
+		"email": map[string]interface{}{
+			"sent":  sent,
+			"draft": draft,
+			"error": "",
+		},
+	})
+}
+
+// HandleFinalInvoiceEmailPreview handles POST /api/email/final-invoice/preview - sends final invoice email with dummy data
+func (h *EmailHandler) HandleFinalInvoiceEmailPreview(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	var body struct {
+		To          string `json:"to"`
+		SaveAsDraft bool   `json:"saveAsDraft"`
+	}
+
+	if err := util.ReadJSON(r, &body); err != nil {
+		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
+		return
+	}
+
+	if body.To == "" {
+		util.WriteError(w, http.StatusBadRequest, "to (recipient email) is required")
+		return
+	}
+
+	// Use dummy data for preview
+	dummyName := "John Doe"
+	dummyEventType := "Birthday Party"
+	dummyEventDate := "Dec 25, 2025"
+	helpersCount := 2
+	dummyOriginalQuote := 1000.0
+	dummyDepositPaid := 50.0
+	dummyRemainingBalance := 950.0
+	dummyInvoiceURL := "https://invoice.stripe.com/i/acct_test/live_test?s=ap"
+	showGratuity := true
+
+	emailSent, emailError := h.SendFinalInvoiceEmail(
+		r.Context(),
+		dummyName,
+		body.To,
+		dummyEventType,
+		dummyEventDate,
+		&helpersCount,
+		dummyOriginalQuote,
+		dummyDepositPaid,
+		dummyRemainingBalance,
+		dummyInvoiceURL,
+		showGratuity,
+		body.SaveAsDraft,
+		"",
+	)
+
+	sent := !body.SaveAsDraft && emailSent
+	draft := body.SaveAsDraft
+
+	if emailError != "" {
+		h.logger.Error("final invoice email preview sending failed", "error", emailError)
+		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"ok":      true,
+			"message": "Final invoice email preview sent",
+			"email": map[string]interface{}{
+				"sent":  sent,
+				"draft": draft,
+				"error": emailError,
+			},
+		})
+		return
+	}
+
+	h.logger.Info("final invoice email preview sent successfully", "to", body.To, "draft", draft)
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"ok":      true,
+		"message": "Final invoice email preview sent successfully",
+		"email": map[string]interface{}{
+			"sent":  sent,
+			"draft": draft,
+			"error": "",
+		},
+	})
+}
+
+// HandleReviewRequestEmailPreview handles POST /api/email/review-request/preview - sends review request email with dummy data
+func (h *EmailHandler) HandleReviewRequestEmailPreview(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	var body struct {
+		To          string `json:"to"`
+		SaveAsDraft bool   `json:"saveAsDraft"`
+	}
+
+	if err := util.ReadJSON(r, &body); err != nil {
+		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
+		return
+	}
+
+	if body.To == "" {
+		util.WriteError(w, http.StatusBadRequest, "to (recipient email) is required")
+		return
+	}
+
+	// Use dummy data for preview
+	dummyName := "John Doe"
+	dummyReviewURL := "https://g.page/r/test/review"
+
+	templateService := emailService.NewTemplateService()
+	htmlBody, err := templateService.GenerateReviewRequestEmail(dummyName, dummyReviewURL)
+	if err != nil {
+		util.WriteError(w, http.StatusInternalServerError, "failed to generate review request email: "+err.Error())
+		return
+	}
+
+	emailReq := &ports.SendEmailRequest{
+		To:       body.To,
+		Subject:  "[PREVIEW] We'd Love Your Feedback - STL Party Helpers",
+		HTMLBody: htmlBody,
+		FromName: "STL Party Helpers Team",
+	}
+
+	var emailResult *ports.SendEmailResult
+
+	if body.SaveAsDraft {
+		if h.gmailSender != nil {
+			emailResult, err = h.gmailSender.SendEmailDraft(r.Context(), emailReq)
+		} else if h.emailClient != nil {
+			emailResult, err = h.emailClient.SendEmailDraft(r.Context(), emailReq)
+		} else {
+			util.WriteError(w, http.StatusInternalServerError, "email service is not configured")
+			return
+		}
+	} else {
+		if h.gmailSender != nil {
+			emailResult, err = h.gmailSender.SendEmail(r.Context(), emailReq)
+		} else if h.emailClient != nil {
+			emailResult, err = h.emailClient.SendEmail(r.Context(), emailReq)
+		} else {
+			util.WriteError(w, http.StatusInternalServerError, "email service is not configured")
+			return
+		}
+	}
+
+	if err != nil {
+		h.logger.Error("failed to send review request email preview", "error", err)
+		util.WriteError(w, http.StatusInternalServerError, "failed to send review request email preview: "+err.Error())
+		return
+	}
+
+	if emailResult == nil {
+		util.WriteError(w, http.StatusInternalServerError, "email service returned nil result")
+		return
+	}
+
+	if !emailResult.Success {
+		errorMsg := "unknown error"
+		if emailResult.Error != nil {
+			errorMsg = *emailResult.Error
+		}
+		h.logger.Error("review request email preview sending failed", "error", errorMsg)
+		util.WriteError(w, http.StatusInternalServerError, "review request email preview sending failed: "+errorMsg)
+		return
+	}
+
+	sent := !body.SaveAsDraft
+	draft := body.SaveAsDraft
+
+	h.logger.Info("review request email preview sent successfully", "messageId", emailResult.MessageID, "to", body.To, "draft", draft)
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"ok":      true,
+		"message": "Review request email preview sent successfully",
+		"email": map[string]interface{}{
+			"messageId": emailResult.MessageID,
+			"sent":      sent,
+			"draft":     draft,
+			"error":     "",
+		},
+	})
 }

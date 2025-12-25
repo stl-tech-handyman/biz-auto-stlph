@@ -13,6 +13,7 @@ import (
 	"github.com/bizops360/go-api/internal/infra/calendar"
 	"github.com/bizops360/go-api/internal/infra/email"
 	"github.com/bizops360/go-api/internal/infra/geo"
+	"github.com/bizops360/go-api/internal/infra/stripe"
 	"github.com/bizops360/go-api/internal/ports"
 	"github.com/bizops360/go-api/internal/services/pricing"
 	"github.com/bizops360/go-api/internal/util"
@@ -192,6 +193,11 @@ func (h *ZapierHandler) HandleProcessLead(w http.ResponseWriter, r *http.Request
 			rateLabel = *estimate.SpecialLabel
 		}
 
+		// Calculate deposit from total cost
+		estimateCents := util.DollarsToCents(estimate.TotalCost)
+		depositCalc := stripe.CalculateDepositFromEstimate(estimateCents)
+		depositAmount := util.CentsToDollars(depositCalc.Value)
+
 		// Generate email HTML
 		emailData := util.QuoteEmailData{
 			ClientName:    clientName,
@@ -205,6 +211,7 @@ func (h *ZapierHandler) HandleProcessLead(w http.ResponseWriter, r *http.Request
 			BaseRate:      estimate.BasePerHelper,
 			HourlyRate:    estimate.ExtraPerHourPerHelper,
 			TotalCost:     estimate.TotalCost,
+			DepositAmount: depositAmount,
 			RateLabel:     rateLabel,
 		}
 
