@@ -8,19 +8,21 @@ import (
 // TestQuoteEmailTemplateCompatibility tests email template for cross-client compatibility
 func TestQuoteEmailTemplateCompatibility(t *testing.T) {
 	data := QuoteEmailData{
-		ClientName:    "John Doe",
-		EventDate:     "December 25, 2025",
-		EventTime:     "6:00 PM",
-		EventLocation: "123 Main St, St. Louis, MO 63110",
-		Occasion:      "Birthday Party",
-		GuestCount:      50,
-		Helpers:       2,
-		Hours:         4.0,
-		BaseRate:      275.0,
-		HourlyRate:    50.0,
-		TotalCost:     1100.0,
-		DepositAmount: 400.0,
-		RateLabel:     "Base Rate",
+		ClientName:     "John Doe",
+		EventDate:      "December 25, 2025",
+		EventTime:      "6:00 PM",
+		EventLocation:  "123 Main St, St. Louis, MO 63110",
+		Occasion:       "Birthday Party",
+		GuestCount:     50,
+		Helpers:        2,
+		Hours:          4.0,
+		BaseRate:       275.0,
+		HourlyRate:     50.0,
+		TotalCost:      1100.0,
+		DepositAmount:  400.0,
+		RateLabel:      "Base Rate",
+		ExpirationDate: "December 28, 2025 at 6:00 PM",
+		DepositLink:    "https://invoice.stripe.com/i/test",
 	}
 
 	html := GenerateQuoteEmailHTML(data)
@@ -29,11 +31,12 @@ func TestQuoteEmailTemplateCompatibility(t *testing.T) {
 	requiredContent := []string{
 		"Hi John Doe!",
 		"Event Details",
-		"Services Included",
+		"EVENT QUOTE",
+		"This quote expires in 72 hours",
 		"Our Rates & Pricing",
 		"Secure Your Date",
-		"Payment Options",
 		"What Happens Next",
+		"Services Included",
 		"December 25, 2025",
 		"6:00 PM",
 		"123 Main St, St. Louis, MO 63110",
@@ -228,4 +231,3 @@ func TestQuoteEmailTemplateDataIntegrity(t *testing.T) {
 		t.Error("Template contains format errors - check parameter order and types")
 	}
 }
-

@@ -3,23 +3,26 @@ package util
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // QuoteEmailData contains all data needed for quote email
 type QuoteEmailData struct {
-	ClientName    string
-	EventDate     string
-	EventTime     string
-	EventLocation string
-	Occasion      string
-	GuestCount    int
-	Helpers       int
-	Hours         float64
-	BaseRate      float64
-	HourlyRate    float64
-	TotalCost     float64
-	DepositAmount float64 // Deposit amount in dollars
-	RateLabel     string
+	ClientName     string
+	EventDate      string
+	EventTime      string
+	EventLocation  string
+	Occasion       string
+	GuestCount     int
+	Helpers        int
+	Hours          float64
+	BaseRate       float64
+	HourlyRate     float64
+	TotalCost      float64
+	DepositAmount  float64 // Deposit amount in dollars
+	RateLabel      string
+	ExpirationDate string // Expiration date formatted (e.g., "June 18, 2026 at 6:00 PM")
+	DepositLink    string // Stripe payment link for deposit
 }
 
 // GenerateQuoteEmailHTML generates the HTML email template for quotes
@@ -44,6 +47,24 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
 		hoursFormatted = fmt.Sprintf("%.1f", data.Hours)
 	}
 
+	// Format expiration date as "Dec 27" (short format)
+	expirationDateShort := data.ExpirationDate
+	if data.ExpirationDate != "" {
+		// Try to parse and format as "Jan 2" or "Dec 27"
+		formats := []string{
+			"January 2, 2006 at 3:04 PM",
+			"Jan 2, 2006 at 3:04 PM",
+			"January 2, 2006",
+			"Jan 2, 2006",
+		}
+		for _, format := range formats {
+			if t, err := time.Parse(format, data.ExpirationDate); err == nil {
+				expirationDateShort = t.Format("Jan 2")
+				break
+			}
+		}
+	}
+
 	html := fmt.Sprintf(`<!DOCTYPE html>
 <html>
   <head>
@@ -56,6 +77,25 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
       <tr>
         <td align="center" style="padding: 8px;">
           <table width="100%%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; border: 1px solid #cccccc; padding: 12px; background-color: #ffffff;">
+            <!-- QUOTE Header - Make it clear this is a QUOTE, not a reservation -->
+            <tr>
+              <td align="center" style="padding: 6px; margin-bottom: 10px;">
+                <p style="margin: 0; font-size: 16px; font-weight: bold; color: rgb(38, 37, 120);">%s Quote</p>
+                <p style="margin: 3px 0 0 0; font-size: 12px; color: rgb(38, 37, 120);">This is a quote, not a confirmed reservation. Your reservation is confirmed only after deposit payment.</p>
+              </td>
+            </tr>
+            
+            <!-- Expiration Notice -->
+            <tr>
+              <td align="center" style="background-color: #e8e8f5; padding: 6px; border-left: 3px solid rgb(60, 58, 180); margin-bottom: 6px;">
+                <p style="margin: 0; font-size: 13px; font-weight: bold; color: rgb(60, 58, 180);">This quote expires in 72 hours / 3 days</p>
+                <p style="margin: 2px 0 0 0; font-size: 11px; color: rgb(60, 58, 180);">Valid until: %s</p>
+                <p style="margin: 3px 0 0 0; font-size: 11px; color: rgb(60, 58, 180);">
+                  <a href="%s" style="color: rgb(60, 58, 180); text-decoration: underline;">You can pay deposit (%s) until %s to secure your reservation.</a>
+                </p>
+              </td>
+            </tr>
+
             <!-- Header -->
             <tr>
               <td align="center" style="font-size: 16px; font-weight: bold; padding: 8px 0;">Hi %s!</td>
@@ -69,14 +109,20 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
 
             <!-- Event Details - AIDA: Interest (build excitement about the event) -->
             <tr>
-              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0;">Event Details</td>
+              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0; text-align: center;">Event Details</td>
             </tr>
             <tr>
               <td>
                 <table width="100%%" cellpadding="5" cellspacing="0" border="0" style="background-color: #f9f9f9; width: 100%%;">
                   <tr>
-                    <td style="font-size: 12px; padding: 5px; width: 50%%;"><span style="font-weight: bold;">When:</span> %s %s</td>
-                    <td style="font-size: 12px; padding: 5px; width: 50%%;"><span style="font-weight: bold;">Where:</span> %s</td>
+                    <td style="font-size: 12px; padding: 5px; width: 50%%; vertical-align: top;">
+                      <span style="font-weight: bold;">When:</span><br />
+                      %s %s
+                    </td>
+                    <td style="font-size: 12px; padding: 5px; width: 50%%; vertical-align: top;">
+                      <span style="font-weight: bold;">Where:</span><br />
+                      %s
+                    </td>
                   </tr>
                   <tr>
                     <td style="font-size: 12px; padding: 5px; width: 50%%;"><span style="font-weight: bold;">Occasion:</span> %s</td>
@@ -90,9 +136,73 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
               </td>
             </tr>
 
-            <!-- Services Included - AIDA: Desire (show value before price) -->
+            <!-- Rates & Pricing - AIDA: Action (price after value feels fair) -->
             <tr>
-              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0;">Services Included</td>
+              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0; text-align: center;">Our Rates & Pricing</td>
+            </tr>
+            <tr>
+              <td style="padding-top: 4px;">
+                <table width="100%%" cellpadding="5" cellspacing="0" border="0" style="background-color: #f9f9f9; width: 100%%;">
+                  <tr>
+                    <td style="font-weight: bold; font-size: 12px; padding: 5px; width: 50%%;">Base Rate:</td>
+                    <td style="font-size: 12px; padding: 5px; width: 50%%;">%s / helper (first 4 hours)</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: bold; font-size: 12px; padding: 5px; width: 50%%;">Additional Hours:</td>
+                    <td style="font-size: 12px; padding: 5px; width: 50%%;">%s per hour per helper</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: bold; font-size: 12px; padding: 5px; width: 50%%;">Deposit Amount:</td>
+                    <td style="font-size: 12px; padding: 5px; width: 50%%;">%s</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: bold; font-size: 12px; padding: 5px; width: 50%%;">Estimated Total:</td>
+                    <td style="font-size: 12px; padding: 5px; width: 50%%;">%s</td>
+                  </tr>
+                </table>
+                <p style="font-size: 11px; color: #666666; padding-top: 8px; padding-bottom: 0; margin: 0; text-align: center;">
+                  Final total may adjust based on our call. Gratuity is not included but always appreciated!
+                </p>
+              </td>
+            </tr>
+
+            <!-- Spacing between pricing and Secure Your Date -->
+            <tr>
+              <td style="padding-top: 8px;"></td>
+            </tr>
+
+            <!-- Secure Your Date - AIDA: Action (CTA right after pricing, capitalize on the moment) -->
+            <tr>
+              <td style="background-color: #f0f0f7; padding: 10px; margin-top: 8px; border-left: 5px solid rgb(38, 37, 120); border-top: 1px solid #e0e0e0; text-align: center;">
+                <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; color: rgb(38, 37, 120);">Secure Your Date</p>
+                <p style="margin: 0 0 6px 0; font-size: 12px; color: #333333; line-height: 1.6;">Ready to make a deposit and secure your spot?</p>
+                <p style="margin: 0 0 6px 0; text-align: center;">
+                  <a href="%s" style="display: inline-block; background-color: rgb(38, 37, 120); color: #ffffff; padding: 6px 12px; text-decoration: none; font-weight: bold; font-size: 13px; border-radius: 4px;">Pay Deposit (%s) via Stripe</a>
+                </p>
+                <p style="margin: 8px 0 0 0; font-size: 11px; color: #666666;">100%% refund if cancelled 3+ days before event.</p>
+              </td>
+            </tr>
+
+            <!-- Next Steps - AIDA: Action (clear path forward) -->
+            <tr>
+              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0; text-align: center;">Would You Like to Schedule an Appointment with Us?</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0 5px 0; font-size: 12px; line-height: 1.5;">
+                <p style="margin: 0;">If you want to speak with us, <a href="https://calendly.com/stlpartyhelpers/quote-intake" style="color: rgb(38, 37, 120); text-decoration: underline; font-weight: bold;">book an appointment</a> (unless you already booked one).</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0 5px 0; font-size: 12px; line-height: 1.5; text-align: center;">
+                <p style="margin: 0;">Need something specific?</p>
+                <p style="margin: 0;">Let us know!</p>
+                <p style="margin: 0;">We'll do our best to accommodate your request.</p>
+              </td>
+            </tr>
+
+            <!-- Services Included -->
+            <tr>
+              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0; text-align: center;">Services Included</td>
             </tr>
             <tr>
               <td style="padding: 4px 0 5px 0; font-size: 12px; line-height: 1.5;">
@@ -115,72 +225,6 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
                   <li style="margin: 3px 0;">Kitchen cleanup & end-of-event breakdown</li>
                   <li style="margin: 3px 0;">Assisting with food storage & leftovers</li>
                 </ul>
-                <p style="margin-top: 6px; font-size: 12px;">Need something specific? Let us know! We'll do our best to accommodate your request.</p>
-              </td>
-            </tr>
-
-            <!-- Rates & Pricing - AIDA: Action (price after value feels fair) -->
-            <tr>
-              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0;">Our Rates & Pricing</td>
-            </tr>
-            <tr>
-              <td style="padding-top: 4px;">
-                <table width="100%%" cellpadding="5" cellspacing="0" border="0" style="background-color: #f9f9f9; width: 100%%;">
-                  <tr>
-                    <td style="font-weight: bold; font-size: 12px; padding: 5px; width: 50%%;">Base Rate:</td>
-                    <td style="font-size: 12px; padding: 5px; width: 50%%;">%s / helper (first 4 hours)</td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight: bold; font-size: 12px; padding: 5px; width: 50%%;">Additional Hours:</td>
-                    <td style="font-size: 12px; padding: 5px; width: 50%%;">%s per hour per helper</td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight: bold; font-size: 12px; padding: 5px; width: 50%%;">Deposit Amount:</td>
-                    <td style="font-size: 12px; padding: 5px; width: 50%%;">%s</td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight: bold; font-size: 12px; padding: 5px; width: 50%%;">Estimated Total:</td>
-                    <td style="font-size: 12px; padding: 5px; width: 50%%;">%s</td>
-                  </tr>
-                </table>
-                <p style="font-size: 11px; color: #666666; padding-top: 8px; padding-bottom: 0; margin: 0;">
-                  Final total may adjust based on our call. Gratuity is not included but always appreciated!
-                </p>
-              </td>
-            </tr>
-
-            <!-- Spacing between pricing and Secure Your Date -->
-            <tr>
-              <td style="padding-top: 8px;"></td>
-            </tr>
-
-            <!-- Secure Your Date - AIDA: Action (CTA right after pricing, capitalize on the moment) -->
-            <tr>
-              <td style="background-color: #f0f7ff; padding: 10px; margin-top: 8px; border-left: 5px solid #0047ab; border-top: 1px solid #e0e0e0;">
-                <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: bold; color: #0047ab;">Secure Your Date</p>
-                <p style="margin: 0; font-size: 12px; color: #333333; line-height: 1.6;">Paying the deposit (%s) locks in your event date and confirms your reservation. You can always cancel and receive a 100%% full refund as long as it's done at least 3 days prior to the start of your event.</p>
-              </td>
-            </tr>
-
-            <!-- Payment Options - AIDA: Action (reduce friction, show it's easy) -->
-            <tr>
-              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0;">Payment Options</td>
-            </tr>
-            <tr>
-              <td style="background-color: #f9f9f9; padding: 8px; font-size: 12px; margin-top: 4px;">
-                Check, Debit / Credit Cards (via Stripe), Venmo, Zelle
-              </td>
-            </tr>
-
-            <!-- Next Steps - AIDA: Action (clear path forward) -->
-            <tr>
-              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0;">What Happens Next</td>
-            </tr>
-            <tr>
-              <td style="padding: 4px 0 5px 0; font-size: 12px; line-height: 1.5;">
-                <p style="margin: 0 0 5px 0;">You can <a href="https://calendly.com/stlpartyhelpers/quote-intake" style="color: #0047ab; text-decoration: underline; font-weight: bold;">book an appointment with us</a> to learn more, or respond to this email if you are ready to proceed.</p>
-                <p style="margin: 0 0 5px 0;">If you already booked an appointment, we will talk to you soon!</p>
-                <p style="margin: 0;">If you are ready to proceed, we will send you a deposit link. Once the deposit is paid, your reservation is confirmed and your date is secured.</p>
               </td>
             </tr>
 
@@ -190,7 +234,7 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
                 <img src="https://stlpartyhelpers.com/wp-content/uploads/2025/08/stlph-logo-2.jpg" alt="STL Party Helpers - Professional Event Staffing Services in St. Louis" style="max-width: 150px; height: auto; margin-bottom: 8px;" /><br />
                 4220 Duncan Ave., Ste. 201, St. Louis, MO 63110<br />
                 <a href="tel:+13147145514" style="color: #000000; text-decoration: underline; display: inline-block; margin: 5px 0;">Tap to Call Us: (314) 714-5514</a><br />
-                <a href="https://stlpartyhelpers.com" style="color: #0047ab; text-decoration: underline; display: inline-block; margin: 3px 0;">stlpartyhelpers.com</a><br />
+                <a href="https://stlpartyhelpers.com" style="color: rgb(38, 37, 120); text-decoration: underline; display: inline-block; margin: 3px 0;">stlpartyhelpers.com</a><br />
                 &copy; 2025 STL Party Helpers<br />
                 <span style="font-size: 10px;">v1.1</span>
               </td>
@@ -201,19 +245,25 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
     </table>
   </body>
 </html>`,
-		data.ClientName,
-		data.EventDate,
-		data.EventTime,
-		data.EventLocation,
-		data.Occasion,
-		data.GuestCount,
-		data.Helpers,
-		hoursFormatted,
-		baseRateFormatted,
-		hourlyRateFormatted,
-		depositFormatted,
-		totalFormatted,
-		depositFormatted, // For "Secure Your Date" section (right after pricing)
+		data.Occasion,       // EVENT QUOTE - %s Quote
+		data.ExpirationDate, // Expiration notice - Valid until
+		data.DepositLink,    // Expiration notice - deposit link
+		depositFormatted,    // Expiration notice - deposit amount
+		expirationDateShort, // Expiration notice - short date format
+		data.ClientName,     // Hi %s!
+		data.EventDate,      // When: %s
+		data.EventTime,      // When: %s (second)
+		data.EventLocation, // Where: %s
+		data.Occasion,       // Occasion: %s
+		data.GuestCount,     // Guest Count: %d
+		data.Helpers,        // Helpers: %d
+		hoursFormatted,      // For How Long: %s Hours
+		baseRateFormatted,   // Base Rate: %s
+		hourlyRateFormatted, // Additional Hours: %s
+		depositFormatted,    // Deposit Amount: %s
+		totalFormatted,      // Estimated Total: %s
+		data.DepositLink,    // Pay Deposit button link
+		depositFormatted,    // Pay Deposit button text
 	)
 
 	return html
