@@ -779,6 +779,18 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 		return
 	}
 
+	// Fail fast if email service is not configured - this is an orchestrated endpoint that requires email
+	if h.emailHandler == nil {
+		util.WriteError(w, http.StatusServiceUnavailable, "email service is not configured. This endpoint requires email functionality. Please configure GMAIL_CREDENTIALS_JSON or EMAIL_SERVICE_URL")
+		return
+	}
+
+	// Check if email handler has a working email service
+	if !h.emailHandler.IsEmailServiceAvailable() {
+		util.WriteError(w, http.StatusServiceUnavailable, "email service is not available. Please configure GMAIL_CREDENTIALS_JSON or EMAIL_SERVICE_URL")
+		return
+	}
+
 	var req dto.FinalInvoiceRequest
 	if err := util.ReadJSON(r, &req); err != nil {
 		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
@@ -876,8 +888,16 @@ func (h *StripeHandler) HandleFinalInvoiceWithEmail(w http.ResponseWriter, r *ht
 			saveEmailAsDraft,
 			templateName,
 		)
+		
+		// If email sending failed, fail the entire orchestration
+		if !emailSent && emailError != "" {
+			util.WriteError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to send email: %s. Invoice was created but email could not be sent.", emailError))
+			return
+		}
 	} else {
-		emailError = "email handler is not configured"
+		// This should never happen due to the check at the beginning, but keep for safety
+		util.WriteError(w, http.StatusServiceUnavailable, "email handler is not configured")
+		return
 	}
 
 	response := map[string]interface{}{
