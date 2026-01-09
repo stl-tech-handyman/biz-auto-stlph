@@ -12,19 +12,35 @@
         
         <p>As agreed, here is your final invoice for staffing services.</p>
         
-        <div style="margin: 5px 0;">
-            <p><strong>Event:</strong> {{.EventType}}</p>
-            <p><strong>Date:</strong> {{.EventDate}}</p>
-        </div>
-        
-        <div style="margin: 5px 0;">
-            {{if .HelpersText}}<p><strong>Staffing:</strong> {{.HelpersText}}</p>{{end}}
-            {{if .DepositPaid}}<p><strong>Deposit Paid:</strong> ${{printf "%.2f" .DepositPaid}}</p>{{end}}
-            <p><strong>Balance Due:</strong> ${{printf "%.2f" .RemainingBalance}}</p>
-        </div>
+        <table style="width: 100%; margin: 15px 0; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 8px 10px 8px 0; vertical-align: top; width: 50%;"><strong>Event:</strong></td>
+                <td style="padding: 8px 0; vertical-align: top; width: 50%;">{{.EventType}}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 10px 8px 0; vertical-align: top;"><strong>Date:</strong></td>
+                <td style="padding: 8px 0; vertical-align: top;">{{.EventDate}}</td>
+            </tr>
+            {{if .HelpersText}}
+            <tr>
+                <td style="padding: 8px 10px 8px 0; vertical-align: top;"><strong>Staffing:</strong></td>
+                <td style="padding: 8px 0; vertical-align: top;">{{.HelpersText}}</td>
+            </tr>
+            {{end}}
+            {{if .DepositPaid}}
+            <tr>
+                <td style="padding: 8px 10px 8px 0; vertical-align: top;"><strong>Deposit Paid:</strong></td>
+                <td style="padding: 8px 0; vertical-align: top;">${{printf "%.2f" .DepositPaid}}</td>
+            </tr>
+            {{end}}
+            <tr>
+                <td style="padding: 8px 10px 8px 0; vertical-align: top;"><strong>Balance Due:</strong></td>
+                <td style="padding: 8px 0; vertical-align: top;">${{printf "%.2f" .RemainingBalance}}</td>
+            </tr>
+        </table>
         
         <p style="margin: 8px 0;">
-            👉 <a href="{{.InvoiceURL}}" style="color: #0047ab; text-decoration: underline;">Click, to Pay Balance Now</a>
+            👉 <a href="{{.InvoiceURL}}" style="color: #0047ab; text-decoration: underline;">Pay Your Remaining Balance Securely via Stripe</a>
         </p>
         
         <p>We truly appreciate your trust in STL Party Helpers to support your event.</p>
@@ -43,11 +59,10 @@
         <p>Thank you again for choosing STL Party Helpers — your support means the world to us!<br>
         We hope to work with you again soon.</p>
         
-        <p>Anna</p>
+        <p>Sincerely,</p>
         
-        <p style="font-size: 0.9em; color: #000;">
-            <strong>Administrative Assistant</strong><br>
-            STL Party Helpers Team<br><br>
+        <p>
+            STL Party Helpers Team<br>
             Phone: 314.714.5514<br>
             Email: team@stlpartyhelpers.com<br>
             Website: stlpartyhelpers.com

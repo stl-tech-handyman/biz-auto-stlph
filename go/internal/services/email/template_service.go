@@ -9,6 +9,20 @@ import (
 	"strings"
 )
 
+// getFirstName extracts the first name from a full name string
+// Handles cases like "John", "John Doe", "John Michael Doe", etc.
+func getFirstName(fullName string) string {
+	fullName = strings.TrimSpace(fullName)
+	if fullName == "" {
+		return ""
+	}
+	parts := strings.Fields(fullName)
+	if len(parts) > 0 {
+		return parts[0]
+	}
+	return fullName
+}
+
 // TemplateService handles email template generation
 type TemplateService struct {
 	templates map[string]*template.Template
@@ -139,7 +153,7 @@ func (s *TemplateService) GenerateFinalInvoiceEmail(name, eventType, eventDate s
 	}
 	
 	data := FinalInvoiceData{
-		Name:             name,
+		Name:             getFirstName(name),
 		EventType:        eventType,
 		EventDate:        eventDate,
 		HelpersText:      helpersText,
@@ -170,7 +184,10 @@ func (s *TemplateService) GenerateFinalInvoiceEmail(name, eventType, eventDate s
 func (s *TemplateService) generateFinalInvoiceEmailInline(data FinalInvoiceData) string {
 	depositSection := ""
 	if data.DepositPaid > 0 {
-		depositSection = fmt.Sprintf(`<p><strong>Deposit Paid:</strong> $%.2f</p>`, data.DepositPaid)
+		depositSection = fmt.Sprintf(`<tr>
+                <td style="padding: 8px 10px 8px 0; vertical-align: top;"><strong>Deposit Paid:</strong></td>
+                <td style="padding: 8px 0; vertical-align: top;">$%.2f</td>
+            </tr>`, data.DepositPaid)
 	}
 	
 	gratuitySection := ""
@@ -187,7 +204,10 @@ func (s *TemplateService) generateFinalInvoiceEmailInline(data FinalInvoiceData)
 	
 	helpersSection := ""
 	if data.HelpersText != "" {
-		helpersSection = fmt.Sprintf(`<p><strong>Staffing:</strong> %s</p>`, data.HelpersText)
+		helpersSection = fmt.Sprintf(`<tr>
+                <td style="padding: 8px 10px 8px 0; vertical-align: top;"><strong>Staffing:</strong></td>
+                <td style="padding: 8px 0; vertical-align: top;">%s</td>
+            </tr>`, data.HelpersText)
 	}
 	
 	return fmt.Sprintf(`<!DOCTYPE html>
@@ -204,19 +224,25 @@ func (s *TemplateService) generateFinalInvoiceEmailInline(data FinalInvoiceData)
         
         <p>As agreed, here is your final invoice for staffing services.</p>
         
-        <div style="margin: 5px 0;">
-            <p><strong>Event:</strong> %s</p>
-            <p><strong>Date:</strong> %s</p>
-        </div>
-        
-        <div style="margin: 5px 0;">
+        <table style="width: 100%%; margin: 15px 0; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 8px 10px 8px 0; vertical-align: top; width: 50%%;"><strong>Event:</strong></td>
+                <td style="padding: 8px 0; vertical-align: top; width: 50%%;">%s</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 10px 8px 0; vertical-align: top;"><strong>Date:</strong></td>
+                <td style="padding: 8px 0; vertical-align: top;">%s</td>
+            </tr>
             %s
             %s
-            <p><strong>Balance Due:</strong> $%.2f</p>
-        </div>
+            <tr>
+                <td style="padding: 8px 10px 8px 0; vertical-align: top;"><strong>Balance Due:</strong></td>
+                <td style="padding: 8px 0; vertical-align: top;">$%.2f</td>
+            </tr>
+        </table>
         
         <p style="margin: 8px 0;">
-            👉 <a href="%s" style="color: #0047ab; text-decoration: underline;">Click, to Pay Balance Now</a>
+            👉 <a href="%s" style="color: #0047ab; text-decoration: underline;">Pay Your Remaining Balance Securely via Stripe</a>
         </p>
         
         <p>We truly appreciate your trust in STL Party Helpers to support your event.</p>
@@ -226,11 +252,10 @@ func (s *TemplateService) generateFinalInvoiceEmailInline(data FinalInvoiceData)
         <p>Thank you again for choosing STL Party Helpers — your support means the world to us!<br>
         We hope to work with you again soon.</p>
         
-        <p>Anna</p>
+        <p>Sincerely,</p>
         
-        <p style="font-size: 0.9em; color: #000;">
-            <strong>Administrative Assistant</strong><br>
-            STL Party Helpers Team<br><br>
+        <p>
+            STL Party Helpers Team<br>
             Phone: 314.714.5514<br>
             Email: team@stlpartyhelpers.com<br>
             Website: stlpartyhelpers.com
@@ -260,7 +285,7 @@ func (s *TemplateService) generateFinalInvoiceEmailText(data FinalInvoiceData) s
 	}
 	
 	text.WriteString(fmt.Sprintf("Balance Due: $%.2f\n\n", data.RemainingBalance))
-	text.WriteString(fmt.Sprintf("Pay Balance Now: %s\n\n", data.InvoiceURL))
+	text.WriteString(fmt.Sprintf("Pay Your Remaining Balance Securely via Stripe: %s\n\n", data.InvoiceURL))
 	
 	text.WriteString("We truly appreciate your trust in STL Party Helpers to support your event.\n\n")
 	
@@ -273,9 +298,8 @@ func (s *TemplateService) generateFinalInvoiceEmailText(data FinalInvoiceData) s
 	
 	text.WriteString("Thank you again for choosing STL Party Helpers — your support means the world to us!\n")
 	text.WriteString("We hope to work with you again soon.\n\n")
-	text.WriteString("Anna\n\n")
-	text.WriteString("Administrative Assistant\n")
-	text.WriteString("STL Party Helpers Team\n\n")
+	text.WriteString("Sincerely,\n\n")
+	text.WriteString("STL Party Helpers Team\n")
 	text.WriteString("Phone: 314.714.5514\n")
 	text.WriteString("Email: team@stlpartyhelpers.com\n")
 	text.WriteString("Website: stlpartyhelpers.com\n")
@@ -294,7 +318,7 @@ type DepositData struct {
 // Returns (htmlBody, textBody, error)
 func (s *TemplateService) GenerateDepositEmail(name string, depositAmount float64, invoiceURL string) (string, string, error) {
 	data := DepositData{
-		Name:          name,
+		Name:          getFirstName(name),
 		DepositAmount: depositAmount,
 		InvoiceURL:    invoiceURL,
 	}
@@ -329,7 +353,7 @@ func (s *TemplateService) generateDepositEmailInline(data DepositData) string {
         <p>Thanks for choosing STL Party Helpers!</p>
         
         <p><strong>Action needed to secure your reservation</strong></p>
-        <p>To lock in your date, please pay the $%.2f deposit using the link below.</p>
+        <p>To lock in your date, please pay the $%.2f deposit using the stripe link below.</p>
         <p>Your reservation isn't confirmed until the deposit is received.</p>
         
         <p style="margin: 8px 0;">
@@ -344,7 +368,7 @@ func (s *TemplateService) generateDepositEmailInline(data DepositData) string {
         <p>Sincerely,</p>
         
         <p>
-            <strong>STL Party Helpers Team</strong><br>
+            STL Party Helpers Team<br>
             Phone: 314.714.5514<br>
             Email: team@stlpartyhelpers.com<br>
             Website: stlpartyhelpers.com
@@ -361,7 +385,7 @@ func (s *TemplateService) generateDepositEmailText(data DepositData) string {
 	text.WriteString(fmt.Sprintf("Hello %s,\n\n", data.Name))
 	text.WriteString("Thanks for choosing STL Party Helpers!\n\n")
 	text.WriteString("Action needed to secure your reservation\n")
-	text.WriteString(fmt.Sprintf("To lock in your date, please pay the $%.2f deposit using the link below.\n", data.DepositAmount))
+	text.WriteString(fmt.Sprintf("To lock in your date, please pay the $%.2f deposit using the stripe link below.\n", data.DepositAmount))
 	text.WriteString("Your reservation isn't confirmed until the deposit is received.\n\n")
 	text.WriteString(fmt.Sprintf("👉 Pay Deposit via Stripe: %s\n\n", data.InvoiceURL))
 	text.WriteString("Deposit Refund Policy\n")
@@ -385,7 +409,7 @@ type ReviewRequestData struct {
 // GenerateReviewRequestEmail generates HTML for review request email using template
 func (s *TemplateService) GenerateReviewRequestEmail(name, reviewURL string) (string, error) {
 	data := ReviewRequestData{
-		Name:      name,
+		Name:      getFirstName(name),
 		ReviewURL: reviewURL,
 	}
 	
@@ -423,11 +447,10 @@ func (s *TemplateService) generateReviewRequestEmailInline(data ReviewRequestDat
         
         <p>Thank you again for choosing STL Party Helpers — we truly appreciate your support!</p>
         
-        <p>Anna</p>
+        <p>Sincerely,</p>
         
-        <p style="font-size: 0.9em; color: #000;">
-            <strong>Administrative Assistant</strong><br>
-            STL Party Helpers Team<br><br>
+        <p>
+            STL Party Helpers Team<br>
             Phone: 314.714.5514<br>
             Email: team@stlpartyhelpers.com<br>
             Website: stlpartyhelpers.com
