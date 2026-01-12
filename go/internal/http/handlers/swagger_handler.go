@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -24,6 +25,9 @@ func min(a, b int) int {
 //go:embed swagger-ui.html
 var swaggerUIHTML embed.FS
 
+// serverStartTime tracks when the server was started (set when handler is created)
+var serverStartTime = time.Now()
+
 // SwaggerHandler handles Swagger UI endpoint
 type SwaggerHandler struct {
 	openAPIPath string
@@ -31,6 +35,8 @@ type SwaggerHandler struct {
 
 // NewSwaggerHandler creates a new Swagger handler
 func NewSwaggerHandler(openAPIPath string) *SwaggerHandler {
+	// Update server start time when handler is created (server startup)
+	serverStartTime = time.Now()
 	return &SwaggerHandler{
 		openAPIPath: openAPIPath,
 	}
@@ -75,9 +81,13 @@ func (h *SwaggerHandler) HandleSwaggerUI(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	
+	// Inject server start timestamp into HTML template
+	restartTimeStr := serverStartTime.Format("2006-01-02 15:04:05 MST")
+	tmplContent = bytes.ReplaceAll(tmplContent, []byte("{{SERVER_START_TIME}}"), []byte(restartTimeStr))
+	
 	// #region agent log
 	if logFile, err2 := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err2 == nil {
-		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C", "location": "swagger_handler.go:66", "message": "Writing Swagger UI HTML to response", "data": map[string]interface{}{"contentLength": len(tmplContent), "firstChars": string(tmplContent[:min(100, len(tmplContent))]), "timestamp": time.Now().UnixMilli()}})
+		json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C", "location": "swagger_handler.go:66", "message": "Writing Swagger UI HTML to response", "data": map[string]interface{}{"contentLength": len(tmplContent), "firstChars": string(tmplContent[:min(100, len(tmplContent))]), "restartTime": restartTimeStr, "timestamp": time.Now().UnixMilli()}})
 		logFile.Close()
 	}
 	// #endregion

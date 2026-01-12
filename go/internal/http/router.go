@@ -27,6 +27,7 @@ type Router struct {
 	businessLeadHandler  *handlers.BusinessLeadHandler
 	zapierHandler        *handlers.ZapierHandler
 	healthHandler        *handlers.HealthHandler
+	commitsHandler       *handlers.CommitsHandler
 	rootHandler          *handlers.RootHandler
 	logger               *slog.Logger
 	environment          string
@@ -59,6 +60,7 @@ func NewRouter(
 		businessLeadHandler:  handlers.NewBusinessLeadHandler(businessLoader, logger),
 		zapierHandler:        handlers.NewZapierHandler(logger),
 		healthHandler:        handlers.NewHealthHandler(),
+		commitsHandler:       handlers.NewCommitsHandler(),
 		rootHandler:          handlers.NewRootHandler(environment),
 		logger:               logger,
 		environment:          environment,
@@ -180,6 +182,9 @@ func (r *Router) Handler() http.Handler {
 	mux.HandleFunc("/api/health/ready", r.healthHandler.HandleReady)
 	mux.HandleFunc("/api/health/live", r.healthHandler.HandleLive)
 	mux.HandleFunc("/api/health", r.healthHandler.HandleHealth)
+
+	// Commits endpoint - no auth required
+	mux.HandleFunc("/api/commits", r.commitsHandler.HandleCommits)
 
 	// Root endpoint - MUST be last to catch all other routes (catch-all)
 	// This must be registered AFTER all specific routes
