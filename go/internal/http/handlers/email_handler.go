@@ -946,8 +946,6 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 		ExpirationDate:     expirationFormatted,
 		DepositLink:        depositLink,
 		ConfirmationNumber: confirmationNumber,
-		IsSpecialDate:      estimate.IsSpecialDate,
-		SpecialLabel:       estimate.SpecialLabel,
 	}
 
 	htmlBody := util.GenerateQuoteEmailHTML(emailData)
