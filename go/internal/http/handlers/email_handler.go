@@ -1022,6 +1022,7 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 			"htmlBody":  htmlBody, // Include HTML body for preview
 			"htmlBody":  htmlBody, // Include HTML body for preview
 			"htmlBody":  htmlBody, // Include HTML body for preview
+			"htmlBody":  htmlBody, // Include HTML body for preview
 ADD HERE
 			"htmlBody":  htmlBody, // Include HTML body for preview
 t		"htmlBody":  htmlBody, // Include HTML body for preview
