@@ -879,8 +879,8 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Calculate deposit amount (typically 20% of total, minimum $100)
-	depositAmount := estimate.TotalCost * 0.2
+		// Calculate deposit amount (typically 17% of total, minimum $100)
+		depositAmount := estimate.TotalCost * 0.17
 	if depositAmount < 100.0 {
 		depositAmount = 100.0
 	}
