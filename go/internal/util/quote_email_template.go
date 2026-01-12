@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 )
@@ -19,10 +20,35 @@ type QuoteEmailData struct {
 	BaseRate       float64
 	HourlyRate     float64
 	TotalCost      float64
-	DepositAmount  float64 // Deposit amount in dollars
-	RateLabel      string
-	ExpirationDate string // Expiration date formatted (e.g., "June 18, 2026 at 6:00 PM")
-	DepositLink    string // Stripe payment link for deposit
+	DepositAmount      float64 // Deposit amount in dollars
+	RateLabel          string
+	ExpirationDate     string // Expiration date formatted (e.g., "June 18, 2026 at 6:00 PM")
+	DepositLink        string // Stripe payment link for deposit
+	ConfirmationNumber string // 4-character unique confirmation number
+}
+
+// GetBookAppointmentURL returns the book appointment URL from environment variable
+// Defaults to https://stlpartyhelpers.com/book-appointment if not set
+func GetBookAppointmentURL() string {
+	url := os.Getenv("BOOK_APPOINTMENT_URL")
+	if url == "" {
+		return "https://stlpartyhelpers.com/book-appointment"
+	}
+	return url
+}
+
+// GetFirstName extracts the first name from a full name string
+// Handles cases like "John", "John Doe", "John Michael Doe", etc.
+func GetFirstName(fullName string) string {
+	fullName = strings.TrimSpace(fullName)
+	if fullName == "" {
+		return ""
+	}
+	parts := strings.Fields(fullName)
+	if len(parts) > 0 {
+		return parts[0]
+	}
+	return fullName
 }
 
 // GenerateQuoteEmailHTML generates the HTML email template for quotes
@@ -81,17 +107,19 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
             <tr>
               <td align="center" style="padding: 6px; margin-bottom: 10px;">
                 <p style="margin: 0; font-size: 16px; font-weight: bold; color: rgb(38, 37, 120);">%s Quote</p>
-                <p style="margin: 3px 0 0 0; font-size: 12px; color: rgb(38, 37, 120);">This is a quote, not a confirmed reservation. Your reservation is confirmed only after deposit payment.</p>
+                <p style="margin: 3px 0 0 0; font-size: 13px; font-weight: bold; color: rgb(38, 37, 120);">Quote ID: %s</p>
+                <p style="margin: 3px 0 0 0; font-size: 12px; color: rgb(38, 37, 120);">This is a quote, not a confirmed reservation.</p>
+                <p style="margin: 3px 0 0 0; font-size: 12px; color: rgb(38, 37, 120);">Your reservation is confirmed only after deposit payment.</p>
               </td>
             </tr>
             
             <!-- Expiration Notice -->
             <tr>
-              <td align="center" style="background-color: #e8e8f5; padding: 6px; border-left: 3px solid rgb(60, 58, 180); margin-bottom: 6px;">
-                <p style="margin: 0; font-size: 13px; font-weight: bold; color: rgb(60, 58, 180);">This quote expires in 72 hours / 3 days</p>
-                <p style="margin: 2px 0 0 0; font-size: 11px; color: rgb(60, 58, 180);">Valid until: %s</p>
-                <p style="margin: 3px 0 0 0; font-size: 11px; color: rgb(60, 58, 180);">
-                  <a href="%s" style="color: rgb(60, 58, 180); text-decoration: underline;">You can pay deposit (%s) until %s to secure your reservation.</a>
+              <td align="center" style="background-color: #fff5e6; padding: 10px 6px; border-left: 3px solid #d97706; margin-bottom: 6px;">
+                <p style="margin: 0; font-size: 13px; font-weight: bold; color: #d97706;">This quote expires in 72 hours / 3 days</p>
+                <p style="margin: 2px 0 0 0; font-size: 11px; color: #d97706;">Valid until: %s</p>
+                <p style="margin: 3px 0 0 0; font-size: 11px; color: #d97706;">
+                  <a href="%s" style="color: #d97706; text-decoration: underline;">You can pay deposit (%s) until %s to secure your reservation.</a>
                 </p>
               </td>
             </tr>
@@ -103,7 +131,8 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
             <tr>
               <td align="center" style="padding-bottom: 8px; font-size: 12px; line-height: 1.5;">
                 Thank you for reaching out!<br />
-                Below is your event quote, along with important details and next steps.
+                Below is your event quote, along with important details and next steps.<br />
+                <span style="font-size: 11px; color: #666666; font-style: italic;">A PDF copy of this quote is attached for your records.</span>
               </td>
             </tr>
 
@@ -174,22 +203,22 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
             <!-- Secure Your Date - AIDA: Action (CTA right after pricing, capitalize on the moment) -->
             <tr>
               <td style="background-color: #f0f0f7; padding: 10px; margin-top: 8px; border-left: 5px solid rgb(38, 37, 120); border-top: 1px solid #e0e0e0; text-align: center;">
-                <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; color: rgb(38, 37, 120);">Secure Your Date</p>
-                <p style="margin: 0 0 6px 0; font-size: 12px; color: #333333; line-height: 1.6;">Ready to make a deposit and secure your spot?</p>
+                <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; color: rgb(38, 37, 120);">Ready to Secure Your Event?</p>
+                <p style="margin: 0 0 6px 0; font-size: 12px; color: #333333; line-height: 1.6;">Make a deposit to confirm your reservation and lock in your date.</p>
                 <p style="margin: 0 0 6px 0; text-align: center;">
                   <a href="%s" style="display: inline-block; background-color: rgb(38, 37, 120); color: #ffffff; padding: 6px 12px; text-decoration: none; font-weight: bold; font-size: 13px; border-radius: 4px;">Pay Deposit (%s) via Stripe</a>
                 </p>
-                <p style="margin: 8px 0 0 0; font-size: 11px; color: #666666;">100%% refund if cancelled 3+ days before event.</p>
+                <p style="margin: 8px 0 0 0; font-size: 11px; color: #666666;">100%% refund if cancelled 3+ days before the event.</p>
               </td>
             </tr>
 
             <!-- Next Steps - AIDA: Action (clear path forward) -->
             <tr>
-              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0; text-align: center;">Would You Like to Schedule an Appointment with Us?</td>
+              <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0; text-align: center;">Schedule an Appointment</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0 5px 0; font-size: 12px; line-height: 1.5;">
-                <p style="margin: 0;">If you want to speak with us, <a href="https://calendly.com/stlpartyhelpers/quote-intake" style="color: rgb(38, 37, 120); text-decoration: underline; font-weight: bold;">book an appointment</a> (unless you already booked one).</p>
+              <td style="padding: 4px 0 5px 0; font-size: 12px; line-height: 1.5; text-align: center;">
+                <p style="margin: 0;">If you want to speak with us, <a href="%s" style="color: rgb(38, 37, 120); text-decoration: underline; font-weight: bold;">book an appointment</a> <span style="font-size: 10px;">(unless you already booked one)</span>.</p>
               </td>
             </tr>
             <tr>
@@ -245,12 +274,13 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
     </table>
   </body>
 </html>`,
-		data.Occasion,       // EVENT QUOTE - %s Quote
-		data.ExpirationDate, // Expiration notice - Valid until
+		data.Occasion,           // EVENT QUOTE - %s Quote
+		data.ConfirmationNumber, // Quote ID: %s
+		data.ExpirationDate,     // Expiration notice - Valid until
 		data.DepositLink,    // Expiration notice - deposit link
 		depositFormatted,    // Expiration notice - deposit amount
 		expirationDateShort, // Expiration notice - short date format
-		data.ClientName,     // Hi %s!
+		GetFirstName(data.ClientName),     // Hi %s!
 		data.EventDate,      // When: %s
 		data.EventTime,      // When: %s (second)
 		data.EventLocation, // Where: %s
@@ -264,6 +294,7 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
 		totalFormatted,      // Estimated Total: %s
 		data.DepositLink,    // Pay Deposit button link
 		depositFormatted,    // Pay Deposit button text
+		GetBookAppointmentURL(), // Book appointment link
 	)
 
 	return html

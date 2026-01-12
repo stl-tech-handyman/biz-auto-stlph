@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quote Email Preview - STL Party Helpers</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #262578;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        select, input[type="text"], input[type="email"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        button {
+            background-color: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #5568d3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            display: none;
+        }
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .info-box {
+            background-color: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .info-box p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Quote Email Preview</h1>
+        
+        <div class="info-box">
+            <p><strong>Preview quote emails with real pricing logic</strong></p>
+            <p>Select a quote type or enter a specific date to see how the email will look with real pricing calculations, including holiday/surge pricing.</p>
+        </div>
+
+        <form id="previewForm">
+            <div class="form-group">
+                <label for="quoteType">Quote Type:</label>
+                <select id="quoteType" name="quoteType">
+                    <option value="regular">Regular (Standard Pricing)</option>
+                    <option value="new-year">New Year's Day</option>
+                    <option value="thanksgiving">Thanksgiving</option>
+                    <option value="christmas-eve">Christmas Eve</option>
+                    <option value="christmas">Christmas Day</option>
+                    <option value="new-year-eve">New Year's Eve</option>
+                    <option value="surge">Surge Pricing</option>
+                    <option value="custom">Custom Date</option>
+                </select>
+                <div class="help-text">Select a holiday/event type or "Custom Date" to enter a specific date</div>
+            </div>
+
+            <div class="form-group" id="customDateGroup" style="display: none;">
+                <label for="eventDate">Event Date:</label>
+                <input type="date" id="eventDate" name="eventDate" value="2026-12-25">
+                <div class="help-text">Enter a specific date (format: YYYY-MM-DD). If using a quote type above, this will be auto-filled.</div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="helpers">Number of Helpers:</label>
+                    <input type="number" id="helpers" name="helpers" value="2" min="1" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="hours">Event Duration (hours):</label>
+                    <input type="number" id="hours" name="hours" value="4" min="1" max="12" step="0.5">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="occasion">Occasion:</label>
+                <input type="text" id="occasion" name="occasion" value="Birthday Party">
+            </div>
+
+            <div class="form-group">
+                <label for="to">Recipient Email:</label>
+                <input type="email" id="to" name="to" placeholder="your-email@example.com" required>
+                <div class="help-text">The email address where the preview will be sent</div>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="saveAsDraft" name="saveAsDraft">
+                    Save as Draft (instead of sending)
+                </label>
+            </div>
+
+            <button type="submit" id="submitBtn">Generate & Send Preview</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Generating preview...</p>
+        </div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const quoteTypeSelect = document.getElementById('quoteType');
+        const customDateGroup = document.getElementById('customDateGroup');
+        const eventDateInput = document.getElementById('eventDate');
+        const previewForm = document.getElementById('previewForm');
+        const loadingDiv = document.getElementById('loading');
+        const resultDiv = document.getElementById('result');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Show/hide custom date input based on selection
+        quoteTypeSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDateGroup.style.display = 'block';
+            } else {
+                customDateGroup.style.display = 'none';
+                // Auto-fill date based on quote type
+                const year = new Date().getFullYear();
+                let date = '';
+                switch(this.value) {
+                    case 'new-year':
+                        date = year + '-01-01';
+                        break;
+                    case 'thanksgiving':
+                        // Thanksgiving is 4th Thursday of November
+                        const nov1 = new Date(year, 10, 1);
+                        const dayOfWeek = nov1.getDay();
+                        const daysToAdd = (4 - dayOfWeek + 7) % 7 + 21;
+                        const thanksgivingDate = new Date(year, 10, 1 + daysToAdd);
+                        date = thanksgivingDate.toISOString().split('T')[0];
+                        break;
+                    case 'christmas-eve':
+                        date = year + '-12-24';
+                        break;
+                    case 'christmas':
+                        date = year + '-12-25';
+                        break;
+                    case 'new-year-eve':
+                        date = year + '-12-31';
+                        break;
+                    case 'surge':
+                    case 'regular':
+                        date = year + '-06-15';
+                        break;
+                }
+                if (date) {
+                    eventDateInput.value = date;
+                }
+            }
+        });
+
+        // Initialize with default date
+        quoteTypeSelect.dispatchEvent(new Event('change'));
+
+        previewForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(previewForm);
+            const quoteType = formData.get('quoteType');
+            const eventDate = formData.get('eventDate');
+            const helpers = parseInt(formData.get('helpers'));
+            const hours = parseFloat(formData.get('hours'));
+            const occasion = formData.get('occasion');
+            const to = formData.get('to');
+            const saveAsDraft = formData.get('saveAsDraft') === 'on';
+
+            // Build request body
+            const requestBody = {
+                to: to,
+                saveAsDraft: saveAsDraft,
+                helpers: helpers,
+                hours: hours,
+                occasion: occasion
+            };
+
+            // Add quoteType and eventDate based on selection
+            if (quoteType === 'custom') {
+                requestBody.eventDate = eventDate;
+            } else {
+                requestBody.quoteType = quoteType;
+                // Also include eventDate for clarity
+                requestBody.eventDate = eventDate;
+            }
+
+            // Show loading, hide result
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/email/quote/preview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Api-Key': localStorage.getItem('api_key') || 'test-api-key-12345'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+
+                if (response.ok && data.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Preview Sent Successfully!</h3>
+                        <p><strong>Message ID:</strong> ${data.email.messageId || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${data.email.draft ? 'Saved as Draft' : 'Sent'}</p>
+                        <p><strong>Recipient:</strong> ${to}</p>
+                        <p>Check your email inbox (or drafts folder) to see the preview.</p>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ Error</h3>
+                        <p><strong>Message:</strong> ${data.message || data.error || 'Unknown error'}</p>
+                        ${data.email && data.email.error ? `<p><strong>Email Error:</strong> ${data.email.error}</p>` : ''}
+                    `;
+                }
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Make sure the API server is running and you have a valid API key.</p>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

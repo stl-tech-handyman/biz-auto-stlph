@@ -128,6 +128,13 @@ func (r *Router) Handler() http.Handler {
 		}
 		http.ServeFile(w, r, "./test-final-invoice.html")
 	})
+	mux.HandleFunc("/quote-preview.html", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		http.ServeFile(w, r, "./quote-preview.html")
+	})
 
 	// API v1 routes (new pipeline-based) - no auth required
 	mux.Handle("/v1/form-events", r.formEventsHandler)
