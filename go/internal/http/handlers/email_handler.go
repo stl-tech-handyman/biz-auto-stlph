@@ -1019,7 +1019,6 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 			"draft":     draft,
 1020: 			"error":     "",
 			"htmlBody":  htmlBody, // Include HTML body for preview
-			"htmlBody":  htmlBody, // Include HTML body for preview
 		},
 	})
 }
