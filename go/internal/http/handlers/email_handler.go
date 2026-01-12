@@ -1009,6 +1009,25 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 	draft := body.SaveAsDraft
 
 	h.logger.Info("quote email preview sent successfully", "messageId", emailResult.MessageID, "to", body.To, "draft", draft)
+	
+	// Try to fetch the sent email from Gmail to confirm it was sent
+	var fetchedHTMLBody string
+	if !body.SaveAsDraft && h.gmailSender != nil && emailResult.MessageID != "" {
+		// Small delay to ensure message is available in Gmail
+		time.Sleep(1 * time.Second)
+		fetched, err := h.gmailSender.GetMessage(r.Context(), emailResult.MessageID)
+		if err != nil {
+			h.logger.Warn("failed to fetch sent email from Gmail", "error", err, "messageId", emailResult.MessageID)
+			// Fall back to generated HTML body
+			fetchedHTMLBody = htmlBody
+		} else {
+			fetchedHTMLBody = fetched
+		}
+	} else {
+		// Use generated HTML body for drafts or if Gmail sender not available
+		fetchedHTMLBody = htmlBody
+	}
+	
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"ok":      true,
 		"message": "Quote email preview sent successfully",
@@ -1017,6 +1036,7 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 			"sent":      sent,
 			"draft":     draft,
 			"error":     "",
+			"htmlBody":  fetchedHTMLBody, // Include HTML body fetched from Gmail (or generated)
 		},
 	})
 }
