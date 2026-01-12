@@ -267,33 +267,6 @@
         // Initialize with default date
         quoteTypeSelect.dispatchEvent(new Event('change'));
 
-        async function fetchEmailContent(messageId, isDraft, htmlBody) {
-            // If HTML body is already in the response, use it directly
-            if (htmlBody) {
-                return htmlBody;
-            }
-            
-            // Otherwise, try to fetch from server (future enhancement)
-            try {
-                const endpoint = isDraft ? `/api/email/draft/${messageId}` : `/api/email/message/${messageId}`;
-                const response = await fetch(endpoint, {
-                    headers: {
-                        'X-Api-Key': localStorage.getItem('api_key') || 'test-api-key-12345'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch email');
-                }
-                
-                const data = await response.json();
-                return data.htmlBody || data.body || '';
-            } catch (error) {
-                console.error('Error fetching email:', error);
-                return null;
-            }
-        }
-
         previewForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -346,45 +319,20 @@
 
                 if (response.ok && data.ok) {
                     resultDiv.innerHTML = `
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-top: 30px;">
                             <h5><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">check_circle</i>Preview Sent Successfully!</h5>
                             <p class="mb-1"><strong>Message ID:</strong> ${data.email.messageId || 'N/A'}</p>
                             <p class="mb-1"><strong>Status:</strong> ${data.email.draft ? 'Saved as Draft' : 'Sent'}</p>
-                            <p class="mb-2"><strong>Recipient:</strong> ${to}</p>
-                            ${data.email.htmlBody ? `
-                                <button type="button" class="btn btn-sm btn-outline-primary" id="viewEmailBtn" data-message-id="${data.email.messageId || ''}" data-is-draft="${data.email.draft}" data-html-body="${encodeURIComponent(data.email.htmlBody)}">
-                                    <i class="material-icons" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">visibility</i>View Email
-                                </button>
-                            ` : ''}
+                            <p class="mb-0"><strong>Recipient:</strong> ${to}</p>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     `;
                     
-                    // Add click handler for view email button
-                    const viewEmailBtn = document.getElementById('viewEmailBtn');
-                    if (viewEmailBtn) {
-                        viewEmailBtn.addEventListener('click', async function() {
-                            const messageId = this.getAttribute('data-message-id');
-                            const isDraft = this.getAttribute('data-is-draft') === 'true';
-                            const htmlBodyAttr = this.getAttribute('data-html-body');
-                            const htmlBody = htmlBodyAttr ? decodeURIComponent(htmlBodyAttr) : null;
-                            
-                            viewEmailBtn.disabled = true;
-                            viewEmailBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Loading...';
-                            
-                            const htmlContent = await fetchEmailContent(messageId, isDraft, htmlBody);
-                            
-                            if (htmlContent) {
-                                emailPreview.innerHTML = htmlContent;
-                                emailPreviewContainer.style.display = 'block';
-                                emailPreviewContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            } else {
-                                alert('Failed to fetch email content. The email may still be processing.');
-                            }
-                            
-                            viewEmailBtn.disabled = false;
-                            viewEmailBtn.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">visibility</i>View Email';
-                        });
+                    // Automatically display email preview if htmlBody is available
+                    if (data.email && data.email.htmlBody) {
+                        emailPreview.innerHTML = data.email.htmlBody;
+                        emailPreviewContainer.style.display = 'block';
+                        emailPreviewContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 } else {
                     resultDiv.innerHTML = `
