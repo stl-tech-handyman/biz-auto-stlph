@@ -812,8 +812,16 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 	}
 
 	var body struct {
-		To          string `json:"to"`
-		SaveAsDraft bool   `json:"saveAsDraft"`
+		To          string  `json:"to"`
+		SaveAsDraft bool    `json:"saveAsDraft"`
+		QuoteType   string  `json:"quoteType"` // e.g., "regular", "new_year", "thanksgiving", "surge"
+		EventDate   string  `json:"eventDate"` // e.g., "2026-12-24" (YYYY-MM-DD format)
+		EventTime   string  `json:"eventTime"` // e.g., "18:00" (HH:MM format)
+		Helpers     int     `json:"helpers"`
+		Hours       float64 `json:"hours"`
+		Occasion    string  `json:"occasion"`
+		GuestCount  int     `json:"guestCount"`
+		ClientName  string  `json:"clientName"`
 	}
 
 	if err := util.ReadJSON(r, &body); err != nil {
