@@ -237,8 +237,8 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
               <td style="padding: 4px 0 5px 0;">
                 <table width="100%%" cellpadding="0" cellspacing="0" border="0" style="width: 100%%;">
                   <tr>
-                    <td width="25%%" style="width: 25%%;"></td>
-                    <td width="50%%" style="width: 50%%; font-size: 12px; line-height: 1.5;">
+                    <td width="10%%" style="width: 10%%;"></td>
+                    <td width="80%%" style="width: 80%%; font-size: 12px; line-height: 1.5;">
                       <p style="margin: 5px 0; font-weight: bold; font-size: 12px;">Setup & Presentation</p>
                       <ul style="margin: 4px 0; padding-left: 25px;">
                         <li style="margin: 3px 0;">Arranging tables, chairs, and decorations</li>
@@ -259,7 +259,7 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
                         <li style="margin: 3px 0;">Assisting with food storage & leftovers</li>
                       </ul>
                     </td>
-                    <td width="25%%" style="width: 25%%;"></td>
+                    <td width="10%%" style="width: 10%%;"></td>
                   </tr>
                 </table>
               </td>
