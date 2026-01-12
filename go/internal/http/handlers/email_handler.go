@@ -767,7 +767,6 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 			"sent":      sent,
 			"draft":     draft,
 			"error":     "",
-			"htmlBody":  htmlBody, // Include HTML body for preview
 		},
 	})
 }
@@ -1018,7 +1017,6 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 			"sent":      sent,
 			"draft":     draft,
 			"error":     "",
-			"htmlBody":  htmlBody, // Include HTML body for preview
 		},
 	})
 }
@@ -1085,7 +1083,6 @@ func (h *EmailHandler) HandleDepositEmailPreview(w http.ResponseWriter, r *http.
 			"draft": draft,
 			"error": "",
 		},
-			"htmlBody":  htmlBody, // Include HTML body for preview
 	})
 }
 
@@ -1164,7 +1161,6 @@ func (h *EmailHandler) HandleFinalInvoiceEmailPreview(w http.ResponseWriter, r *
 			"draft": draft,
 			"error": "",
 		},
-			"htmlBody":  htmlBody, // Include HTML body for preview
 	})
 }
 
@@ -1263,7 +1259,6 @@ func (h *EmailHandler) HandleReviewRequestEmailPreview(w http.ResponseWriter, r 
 			"sent":      sent,
 			"draft":     draft,
 			"error":     "",
-			"htmlBody":  htmlBody, // Include HTML body for preview
 		},
 	})
 }
