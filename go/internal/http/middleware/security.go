@@ -41,8 +41,5 @@ func isPreviewRoute(path string) bool {
 }
 
 // isPreviewRoute checks if the path is a preview/test page route
-func isPreviewRoute(path string) bool {
-	return path == "/quote-preview.html" || path == "/test-final-invoice.html"
-}
 
 
