@@ -141,8 +141,8 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
               <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0; text-align: center;">Event Details</td>
             </tr>
             <tr>
-              <td>
-                <table width="100%%" cellpadding="5" cellspacing="0" border="0" style="background-color: #f9f9f9; width: 100%%;">
+              <td align="center" style="padding: 4px 0 5px 0;">
+                <table width="540" cellpadding="5" cellspacing="0" border="0" style="background-color: #f9f9f9; width: 540px;">
                   <tr>
                     <td style="font-size: 12px; padding: 5px; width: 50%%; vertical-align: top;">
                       <span style="font-weight: bold;">When:</span><br />
@@ -170,8 +170,8 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
               <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0; text-align: center;">Our Rates & Pricing</td>
             </tr>
             <tr>
-              <td style="padding-top: 4px;">
-                <table width="100%%" cellpadding="5" cellspacing="0" border="0" style="background-color: #f9f9f9; width: 100%%;">
+              <td align="center" style="padding-top: 4px;">
+                <table width="540" cellpadding="5" cellspacing="0" border="0" style="background-color: #f9f9f9; width: 540px;">
                   <tr>
                     <td style="font-weight: bold; font-size: 12px; padding: 5px; width: 50%%;">Base Rate:</td>
                     <td style="font-size: 12px; padding: 5px; width: 50%%;">%s / helper (first 4 hours)</td>
