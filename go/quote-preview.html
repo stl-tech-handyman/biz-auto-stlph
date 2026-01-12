@@ -224,42 +224,78 @@
         const emailPreviewContainer = document.getElementById('emailPreviewContainer');
         const emailPreview = document.getElementById('emailPreview');
 
-        // Auto-fill date and time based on quote type
+        // Auto-fill date and time based on quote type (smart date selection based on today's date)
         quoteTypeSelect.addEventListener('change', function() {
-            // Auto-fill date and time based on quote type
-            const year = new Date().getFullYear();
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const currentMonth = today.getMonth(); // 0-11
+            const currentDay = today.getDate();
+            
             let date = '';
             let time = '18:00'; // Default 6:00 PM
             
             switch(this.value) {
                 case 'new-year':
-                    date = year + '-01-01';
+                    // New Year's Day: If we're past Jan 1 of current year, use next year's Jan 1
+                    const newYearDate = new Date(currentYear, 0, 1); // Jan 1 of current year
+                    if (today > newYearDate) {
+                        // This year's New Year's Day already passed, use next year
+                        date = (currentYear + 1) + '-01-01';
+                    } else {
+                        date = currentYear + '-01-01';
+                    }
                     time = '20:00'; // 8:00 PM for New Year's
                     break;
                 case 'thanksgiving':
-                    // Thanksgiving is 4th Thursday of November
-                    const nov1 = new Date(year, 10, 1);
+                    // Thanksgiving is 4th Thursday of November - use this year if before Nov, next year if after
+                    let thanksgivingYear = currentYear;
+                    if (currentMonth > 10 || (currentMonth === 10 && currentDay > 28)) {
+                        // Past November or past 4th Thursday, use next year
+                        thanksgivingYear = currentYear + 1;
+                    }
+                    const nov1 = new Date(thanksgivingYear, 10, 1);
                     const dayOfWeek = nov1.getDay();
                     const daysToAdd = (4 - dayOfWeek + 7) % 7 + 21;
-                    const thanksgivingDate = new Date(year, 10, 1 + daysToAdd);
+                    const thanksgivingDate = new Date(thanksgivingYear, 10, 1 + daysToAdd);
                     date = thanksgivingDate.toISOString().split('T')[0];
                     time = '14:00'; // 2:00 PM for Thanksgiving
                     break;
                 case 'christmas-eve':
-                    date = year + '-12-24';
+                    // Christmas Eve: If we're past Dec 24 of current year, use next year's Dec 24
+                    const christmasEveDate = new Date(currentYear, 11, 24); // Dec 24 of current year
+                    if (today > christmasEveDate) {
+                        date = (currentYear + 1) + '-12-24';
+                    } else {
+                        date = currentYear + '-12-24';
+                    }
                     time = '17:00'; // 5:00 PM for Christmas Eve
                     break;
                 case 'christmas':
-                    date = year + '-12-25';
+                    // Christmas Day: If we're past Dec 25 of current year, use next year's Dec 25
+                    const christmasDate = new Date(currentYear, 11, 25); // Dec 25 of current year
+                    if (today > christmasDate) {
+                        date = (currentYear + 1) + '-12-25';
+                    } else {
+                        date = currentYear + '-12-25';
+                    }
                     time = '12:00'; // 12:00 PM for Christmas Day
                     break;
                 case 'new-year-eve':
-                    date = year + '-12-31';
+                    // New Year's Eve: Use Dec 31 of current year (if before Dec 31) or next year (if after)
+                    const newYearEveDate = new Date(currentYear, 11, 31); // Dec 31 of current year
+                    if (today > newYearEveDate) {
+                        date = (currentYear + 1) + '-12-31';
+                    } else {
+                        date = currentYear + '-12-31';
+                    }
                     time = '20:00'; // 8:00 PM for New Year's Eve
                     break;
                 case 'surge':
                 case 'regular':
-                    date = year + '-06-15';
+                    // For regular/surge, use a date a few months in the future
+                    const futureDate = new Date(today);
+                    futureDate.setMonth(futureDate.getMonth() + 3);
+                    date = futureDate.toISOString().split('T')[0];
                     time = '18:00'; // 6:00 PM default
                     break;
                 case 'custom':
