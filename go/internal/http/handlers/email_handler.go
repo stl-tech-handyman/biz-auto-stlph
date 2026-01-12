@@ -1013,8 +1013,8 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 	// Try to fetch the sent email from Gmail to confirm it was sent
 	var fetchedHTMLBody string
 	if !body.SaveAsDraft && h.gmailSender != nil && emailResult.MessageID != "" {
-		// Small delay to ensure message is available in Gmail
-		time.Sleep(1 * time.Second)
+		// Wait 2 seconds to ensure message is available in Gmail
+		time.Sleep(2 * time.Second)
 		fetched, err := h.gmailSender.GetMessage(r.Context(), emailResult.MessageID)
 		if err != nil {
 			h.logger.Warn("failed to fetch sent email from Gmail", "error", err, "messageId", emailResult.MessageID)
