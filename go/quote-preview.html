@@ -325,10 +325,15 @@
                     `;
                     
                     // Automatically display email preview if htmlBody is available
+                    console.log('Response data:', data);
+                    console.log('htmlBody exists:', data.email && data.email.htmlBody);
                     if (data.email && data.email.htmlBody) {
+                        console.log('Setting email preview HTML');
                         emailPreview.innerHTML = data.email.htmlBody;
                         emailPreviewContainer.style.display = 'block';
                         emailPreviewContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        console.log('No htmlBody in response:', data);
                     }
                 } else {
                     resultDiv.innerHTML = `
