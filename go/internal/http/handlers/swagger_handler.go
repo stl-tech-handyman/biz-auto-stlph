@@ -240,6 +240,19 @@ func (h *SwaggerHandler) HandleOpenAPISpec(w http.ResponseWriter, r *http.Reques
 }
 
 
+// HandleServerStartTime serves the server start timestamp
+func (h *SwaggerHandler) HandleServerStartTime(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"startTime": serverStartTime.Format(time.RFC3339),
+		"timestamp": serverStartTime.Unix(),
+	})
+}
+
 // GetOpenAPIPath tries to find the OpenAPI spec file
 func GetOpenAPIPath() string {
 	// Try common locations - check from current working directory

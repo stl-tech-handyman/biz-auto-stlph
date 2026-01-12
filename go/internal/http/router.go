@@ -186,6 +186,9 @@ func (r *Router) Handler() http.Handler {
 	// Commits endpoint - no auth required
 	mux.HandleFunc("/api/commits", r.commitsHandler.HandleCommits)
 
+	// Server start time endpoint - no auth required (for hot reload)
+	mux.HandleFunc("/api/server-start-time", swaggerHandler.HandleServerStartTime)
+
 	// Root endpoint - MUST be last to catch all other routes (catch-all)
 	// This must be registered AFTER all specific routes
 	mux.HandleFunc("/", r.rootHandler.HandleRoot)

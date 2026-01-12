@@ -324,7 +324,37 @@
             }
         });
         
+        // Hot reload: Check server restart and reload page if server restarted
+        let lastKnownStartTime = null;
+        
+        function checkServerRestart() {
+            fetch('/api/server-start-time')
+                .then(response => response.json())
+                .then(data => {
+                    const currentStartTime = data.startTime || data.timestamp;
+                    if (lastKnownStartTime === null) {
+                        // First check - just store the timestamp
+                        lastKnownStartTime = currentStartTime;
+                    } else if (lastKnownStartTime !== currentStartTime) {
+                        // Server restarted - reload the page
+                        console.log('Server restarted - reloading page...');
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    // Silently fail - server might be restarting
+                    console.debug('Hot reload check failed:', error);
+                });
+        }
+        
+        // Start hot reload checking after page loads
+        // Check every 3 seconds
+        setInterval(checkServerRestart, 3000);
+        
         window.onload = function() {
+            // Initial check after a short delay to let server start
+            setTimeout(checkServerRestart, 1000);
+            
             // Get base URL - use current origin
             const baseUrl = window.location.origin;
             const specUrl = baseUrl + '/api/openapi.json';
