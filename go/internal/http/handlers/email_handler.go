@@ -826,22 +826,56 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Use dummy data for preview - calculate estimate for June 15, 2026 (to get $50/hour rate)
-	previewDate, parseErr := time.Parse("January 2, 2006", "June 15, 2026")
-	if parseErr != nil {
-		util.WriteError(w, http.StatusInternalServerError, "failed to parse preview date")
-		return
+	// Parse event date from YYYY-MM-DD format
+	var parsedEventDate time.Time
+	var parseErr error
+	if body.EventDate != "" {
+		parsedEventDate, parseErr = parseEventDateFromFormatted(body.EventDate)
+		if parseErr != nil {
+			util.WriteError(w, http.StatusBadRequest, fmt.Sprintf("invalid eventDate format: %v. Expected format: 'YYYY-MM-DD' or 'January 2, 2006'", parseErr))
+			return
+		}
+	} else {
+		// Default to current year if not provided
+		parsedEventDate = time.Now()
 	}
 
-	// Calculate estimate to get correct rates for 2026
-	estimate, calcErr := pricing.CalculateEstimate(previewDate, 4.0, 2)
+	// Use defaults if not provided
+	helpers := body.Helpers
+	if helpers == 0 {
+		helpers = 2
+	}
+	hours := body.Hours
+	if hours == 0 {
+		hours = 4.0
+	}
+	occasion := body.Occasion
+	if occasion == "" {
+		occasion = "Birthday Party"
+	}
+	clientName := body.ClientName
+	if clientName == "" {
+		clientName = "John Doe"
+	}
+	guestCount := body.GuestCount
+	if guestCount == 0 {
+		guestCount = 50
+	}
+
+	// Calculate estimate using REAL pricing logic with the provided date
+	estimate, calcErr := pricing.CalculateEstimate(parsedEventDate, hours, helpers)
 	if calcErr != nil {
 		util.WriteError(w, http.StatusInternalServerError, fmt.Sprintf("failed to calculate estimate: %v", calcErr))
 		return
 	}
 
-	// Use fixed deposit amount of $100 for preview
-	depositAmount := 100.0
+	// Calculate deposit amount (typically 20% of total, minimum $100)
+	depositAmount := estimate.TotalCost * 0.2
+	if depositAmount < 100.0 {
+		depositAmount = 100.0
+	}
+	// Round to 2 decimal places
+	depositAmount = float64(int(depositAmount*100)) / 100
 
 	// Calculate expiration date (72 hours from now)
 	expirationDate := time.Now().Add(72 * time.Hour)
@@ -858,25 +892,54 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 	depositLink := "https://invoice.stripe.com/i/acct_placeholder/preview_placeholder"
 
 	// Generate confirmation number for preview
-	confirmationNumber := util.GenerateConfirmationNumber(body.To, "Birthday Party", previewDate)
+	confirmationNumber := util.GenerateConfirmationNumber(body.To, occasion, parsedEventDate)
+
+	// Format event date for display
+	eventDateFormatted := parsedEventDate.Format("January 2, 2006")
+
+	// Parse event time from HH:MM format to readable format (e.g., "18:00" -> "6:00 PM")
+	eventTimeFormatted := "6:00 PM" // Default
+	if body.EventTime != "" {
+		// Parse time from "HH:MM" format
+		timeParts := strings.Split(body.EventTime, ":")
+		if len(timeParts) == 2 {
+			hoursInt, err := strconv.Atoi(timeParts[0])
+			if err == nil {
+				minutes := timeParts[1]
+				ampm := "AM"
+				if hoursInt >= 12 {
+					ampm = "PM"
+					if hoursInt > 12 {
+						hoursInt -= 12
+					}
+				}
+				if hoursInt == 0 {
+					hoursInt = 12
+				}
+				eventTimeFormatted = fmt.Sprintf("%d:%s %s", hoursInt, minutes, ampm)
+			}
+		}
+	}
 
 	emailData := util.QuoteEmailData{
-		ClientName:         "John Doe",
-		EventDate:          "June 15, 2026",
-		EventTime:          "6:00 PM",
-		EventLocation:      "123 Main St, St. Louis, MO 63110",
-		Occasion:           "Birthday Party",
-		GuestCount:         50,
-		Helpers:            2,
-		Hours:              4.0,
+		ClientName:         clientName,
+		EventDate:          eventDateFormatted,
+		EventTime:          eventTimeFormatted,
+		EventLocation:      "123 Main St, St. Louis, MO 63110", // Default for preview
+		Occasion:           occasion,
+		GuestCount:         guestCount,
+		Helpers:            helpers,
+		Hours:              hours,
 		BaseRate:           estimate.BasePerHelper,
-		HourlyRate:         50.0, // Fixed $50/hour for preview
+		HourlyRate:         estimate.ExtraPerHourPerHelper,
 		TotalCost:          estimate.TotalCost,
 		DepositAmount:      depositAmount,
 		RateLabel:          rateLabel,
 		ExpirationDate:     expirationFormatted,
 		DepositLink:        depositLink,
 		ConfirmationNumber: confirmationNumber,
+		IsSpecialDate:      estimate.IsSpecialDate,
+		SpecialLabel:       estimate.SpecialLabel,
 	}
 
 	htmlBody := util.GenerateQuoteEmailHTML(emailData)
