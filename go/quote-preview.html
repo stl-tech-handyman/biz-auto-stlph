@@ -138,10 +138,15 @@
                             </select>
                             <small class="form-text text-muted">Select a holiday/event type or "Custom Date" to enter a specific date</small>
                         </div>
-                        <div class="col-md-6" id="customDateGroup" style="display: none;">
+                        <div class="col-md-3">
                             <label for="eventDate" class="form-label">Event Date</label>
                             <input type="date" class="form-control" id="eventDate" name="eventDate" value="2026-12-25">
-                            <small class="form-text text-muted">Enter a specific date (format: YYYY-MM-DD)</small>
+                            <small class="form-text text-muted">Event date (auto-filled based on quote type)</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="eventTime" class="form-label">Starting Time</label>
+                            <input type="time" class="form-control" id="eventTime" name="eventTime" value="18:00">
+                            <small class="form-text text-muted">Event start time (auto-filled based on quote type)</small>
                         </div>
                     </div>
 
@@ -210,7 +215,6 @@
 
     <script>
         const quoteTypeSelect = document.getElementById('quoteType');
-        const customDateGroup = document.getElementById('customDateGroup');
         const eventDateInput = document.getElementById('eventDate');
         const eventTimeInput = document.getElementById('eventTime');
         const previewForm = document.getElementById('previewForm');
@@ -220,44 +224,53 @@
         const emailPreviewContainer = document.getElementById('emailPreviewContainer');
         const emailPreview = document.getElementById('emailPreview');
 
-        // Show/hide custom date input based on selection
+        // Auto-fill date and time based on quote type
         quoteTypeSelect.addEventListener('change', function() {
-            if (this.value === 'custom') {
-                customDateGroup.style.display = 'block';
-            } else {
-                customDateGroup.style.display = 'none';
-                // Auto-fill date based on quote type
-                const year = new Date().getFullYear();
-                let date = '';
-                switch(this.value) {
-                    case 'new-year':
-                        date = year + '-01-01';
-                        break;
-                    case 'thanksgiving':
-                        // Thanksgiving is 4th Thursday of November
-                        const nov1 = new Date(year, 10, 1);
-                        const dayOfWeek = nov1.getDay();
-                        const daysToAdd = (4 - dayOfWeek + 7) % 7 + 21;
-                        const thanksgivingDate = new Date(year, 10, 1 + daysToAdd);
-                        date = thanksgivingDate.toISOString().split('T')[0];
-                        break;
-                    case 'christmas-eve':
-                        date = year + '-12-24';
-                        break;
-                    case 'christmas':
-                        date = year + '-12-25';
-                        break;
-                    case 'new-year-eve':
-                        date = year + '-12-31';
-                        break;
-                    case 'surge':
-                    case 'regular':
-                        date = year + '-06-15';
-                        break;
-                }
-                if (date) {
-                    eventDateInput.value = date;
-                }
+            // Auto-fill date and time based on quote type
+            const year = new Date().getFullYear();
+            let date = '';
+            let time = '18:00'; // Default 6:00 PM
+            
+            switch(this.value) {
+                case 'new-year':
+                    date = year + '-01-01';
+                    time = '20:00'; // 8:00 PM for New Year's
+                    break;
+                case 'thanksgiving':
+                    // Thanksgiving is 4th Thursday of November
+                    const nov1 = new Date(year, 10, 1);
+                    const dayOfWeek = nov1.getDay();
+                    const daysToAdd = (4 - dayOfWeek + 7) % 7 + 21;
+                    const thanksgivingDate = new Date(year, 10, 1 + daysToAdd);
+                    date = thanksgivingDate.toISOString().split('T')[0];
+                    time = '14:00'; // 2:00 PM for Thanksgiving
+                    break;
+                case 'christmas-eve':
+                    date = year + '-12-24';
+                    time = '17:00'; // 5:00 PM for Christmas Eve
+                    break;
+                case 'christmas':
+                    date = year + '-12-25';
+                    time = '12:00'; // 12:00 PM for Christmas Day
+                    break;
+                case 'new-year-eve':
+                    date = year + '-12-31';
+                    time = '20:00'; // 8:00 PM for New Year's Eve
+                    break;
+                case 'surge':
+                case 'regular':
+                    date = year + '-06-15';
+                    time = '18:00'; // 6:00 PM default
+                    break;
+                case 'custom':
+                    // Don't change values for custom
+                    break;
+            }
+            if (date) {
+                eventDateInput.value = date;
+            }
+            if (time) {
+                eventTimeInput.value = time;
             }
         });
 
@@ -270,6 +283,7 @@
             const formData = new FormData(previewForm);
             const quoteType = formData.get('quoteType');
             const eventDate = formData.get('eventDate');
+            const eventTime = formData.get('eventTime');
             const helpers = parseInt(formData.get('helpers'));
             const hours = parseFloat(formData.get('hours'));
             const occasion = formData.get('occasion');
@@ -282,15 +296,14 @@
                 saveAsDraft: saveAsDraft,
                 helpers: helpers,
                 hours: hours,
-                occasion: occasion
+                occasion: occasion,
+                eventDate: eventDate,
+                eventTime: eventTime
             };
 
-            // Add quoteType and eventDate based on selection
-            if (quoteType === 'custom') {
-                requestBody.eventDate = eventDate;
-            } else {
+            // Add quoteType based on selection
+            if (quoteType !== 'custom') {
                 requestBody.quoteType = quoteType;
-                requestBody.eventDate = eventDate;
             }
 
             // Show loading, hide result and preview
