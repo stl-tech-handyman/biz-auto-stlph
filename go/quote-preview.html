@@ -4,193 +4,204 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quote Email Preview - STL Party Helpers</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Material Design Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Material Design Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css" rel="stylesheet">
+    
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
-            background-color: #f5f5f5;
         }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #262578;
-            margin-top: 0;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-        select, input[type="text"], input[type="email"], input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        select:focus, input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        .help-text {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-        button {
-            background-color: #667eea;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #5568d3;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        .result {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-            display: none;
-        }
-        .result.success {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-        }
-        .result.error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            display: none;
-        }
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
+        .main-container {
+            max-width: 1200px;
             margin: 0 auto;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .card {
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: none;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px 16px 0 0 !important;
+            padding: 20px;
+            border: none;
+        }
+        .card-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a91 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            padding: 10px 15px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
         .info-box {
-            background-color: #e7f3ff;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
             border-left: 4px solid #667eea;
+            border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
-            border-radius: 4px;
         }
-        .info-box p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #333;
+        .email-preview-container {
+            margin-top: 30px;
+            display: none;
+        }
+        .email-preview {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .email-preview iframe {
+            width: 100%;
+            border: none;
+            min-height: 600px;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 0.3em;
+        }
+        .alert {
+            border-radius: 8px;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📧 Quote Email Preview</h1>
-        
-        <div class="info-box">
-            <p><strong>Preview quote emails with real pricing logic</strong></p>
-            <p>Select a quote type or enter a specific date to see how the email will look with real pricing calculations, including holiday/surge pricing.</p>
-        </div>
-
-        <form id="previewForm">
-            <div class="form-group">
-                <label for="quoteType">Quote Type:</label>
-                <select id="quoteType" name="quoteType">
-                    <option value="regular">Regular (Standard Pricing)</option>
-                    <option value="new-year">New Year's Day</option>
-                    <option value="thanksgiving">Thanksgiving</option>
-                    <option value="christmas-eve">Christmas Eve</option>
-                    <option value="christmas">Christmas Day</option>
-                    <option value="new-year-eve">New Year's Eve</option>
-                    <option value="surge">Surge Pricing</option>
-                    <option value="custom">Custom Date</option>
-                </select>
-                <div class="help-text">Select a holiday/event type or "Custom Date" to enter a specific date</div>
+    <div class="main-container">
+        <div class="card">
+            <div class="card-header">
+                <h1><i class="material-icons" style="vertical-align: middle; margin-right: 10px;">email</i>Quote Email Preview</h1>
             </div>
-
-            <div class="form-group" id="customDateGroup" style="display: none;">
-                <label for="eventDate">Event Date:</label>
-                <input type="date" id="eventDate" name="eventDate" value="2026-12-25">
-                <div class="help-text">Enter a specific date (format: YYYY-MM-DD). If using a quote type above, this will be auto-filled.</div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="helpers">Number of Helpers:</label>
-                    <input type="number" id="helpers" name="helpers" value="2" min="1" max="10">
+            <div class="card-body p-4">
+                <div class="info-box">
+                    <p class="mb-1"><strong>Preview quote emails with real pricing logic</strong></p>
+                    <p class="mb-0">Select a quote type or enter a specific date to see how the email will look with real pricing calculations, including holiday/surge pricing.</p>
                 </div>
-                <div class="form-group">
-                    <label for="hours">Event Duration (hours):</label>
-                    <input type="number" id="hours" name="hours" value="4" min="1" max="12" step="0.5">
+
+                <form id="previewForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="quoteType" class="form-label">Quote Type</label>
+                            <select class="form-select" id="quoteType" name="quoteType">
+                                <option value="regular">Regular (Standard Pricing)</option>
+                                <option value="new-year">New Year's Day</option>
+                                <option value="thanksgiving">Thanksgiving</option>
+                                <option value="christmas-eve">Christmas Eve</option>
+                                <option value="christmas">Christmas Day</option>
+                                <option value="new-year-eve">New Year's Eve</option>
+                                <option value="surge">Surge Pricing</option>
+                                <option value="custom">Custom Date</option>
+                            </select>
+                            <small class="form-text text-muted">Select a holiday/event type or "Custom Date" to enter a specific date</small>
+                        </div>
+                        <div class="col-md-6" id="customDateGroup" style="display: none;">
+                            <label for="eventDate" class="form-label">Event Date</label>
+                            <input type="date" class="form-control" id="eventDate" name="eventDate" value="2026-12-25">
+                            <small class="form-text text-muted">Enter a specific date (format: YYYY-MM-DD)</small>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="helpers" class="form-label">Number of Helpers</label>
+                            <input type="number" class="form-control" id="helpers" name="helpers" value="2" min="1" max="10">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="hours" class="form-label">Event Duration (hours)</label>
+                            <input type="number" class="form-control" id="hours" name="hours" value="4" min="1" max="12" step="0.5">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="occasion" class="form-label">Occasion</label>
+                            <input type="text" class="form-control" id="occasion" name="occasion" value="Birthday Party">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="to" class="form-label">Recipient Email</label>
+                        <input type="email" class="form-control" id="to" name="to" value="bizops-dev-alexey-at-shevelyov-dot-com@shevelyov.com" required>
+                        <small class="form-text text-muted">The email address where the preview will be sent</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="saveAsDraft" name="saveAsDraft">
+                            <label class="form-check-label" for="saveAsDraft">
+                                Save as Draft (instead of sending)
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                        <i class="material-icons" style="vertical-align: middle; margin-right: 8px;">send</i>Generate & Send Preview
+                    </button>
+                </form>
+
+                <div class="text-center mt-4" id="loading" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Generating preview...</p>
+                </div>
+
+                <div id="result"></div>
+                
+                <div class="email-preview-container" id="emailPreviewContainer">
+                    <div class="card">
+                        <div class="card-header bg-success">
+                            <h5 class="mb-0 text-white">
+                                <i class="material-icons" style="vertical-align: middle; margin-right: 8px;">visibility</i>Email Preview
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="email-preview" id="emailPreview"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label for="occasion">Occasion:</label>
-                <input type="text" id="occasion" name="occasion" value="Birthday Party">
-            </div>
-
-            <div class="form-group">
-                <label for="to">Recipient Email:</label>
-                <input type="email" id="to" name="to" placeholder="your-email@example.com" required>
-                <div class="help-text">The email address where the preview will be sent</div>
-            </div>
-
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="saveAsDraft" name="saveAsDraft">
-                    Save as Draft (instead of sending)
-                </label>
-            </div>
-
-            <button type="submit" id="submitBtn">Generate & Send Preview</button>
-        </form>
-
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Generating preview...</p>
         </div>
-
-        <div class="result" id="result"></div>
     </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Material Design Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js"></script>
 
     <script>
         const quoteTypeSelect = document.getElementById('quoteType');
@@ -200,6 +211,8 @@
         const loadingDiv = document.getElementById('loading');
         const resultDiv = document.getElementById('result');
         const submitBtn = document.getElementById('submitBtn');
+        const emailPreviewContainer = document.getElementById('emailPreviewContainer');
+        const emailPreview = document.getElementById('emailPreview');
 
         // Show/hide custom date input based on selection
         quoteTypeSelect.addEventListener('change', function() {
@@ -245,6 +258,33 @@
         // Initialize with default date
         quoteTypeSelect.dispatchEvent(new Event('change'));
 
+        async function fetchEmailContent(messageId, isDraft, htmlBody) {
+            // If HTML body is already in the response, use it directly
+            if (htmlBody) {
+                return htmlBody;
+            }
+            
+            // Otherwise, try to fetch from server (future enhancement)
+            try {
+                const endpoint = isDraft ? `/api/email/draft/${messageId}` : `/api/email/message/${messageId}`;
+                const response = await fetch(endpoint, {
+                    headers: {
+                        'X-Api-Key': localStorage.getItem('api_key') || 'test-api-key-12345'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch email');
+                }
+                
+                const data = await response.json();
+                return data.htmlBody || data.body || '';
+            } catch (error) {
+                console.error('Error fetching email:', error);
+                return null;
+            }
+        }
+
         previewForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -271,13 +311,13 @@
                 requestBody.eventDate = eventDate;
             } else {
                 requestBody.quoteType = quoteType;
-                // Also include eventDate for clarity
                 requestBody.eventDate = eventDate;
             }
 
-            // Show loading, hide result
+            // Show loading, hide result and preview
             loadingDiv.style.display = 'block';
-            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+            emailPreviewContainer.style.display = 'none';
             submitBtn.disabled = true;
 
             try {
@@ -293,36 +333,71 @@
                 const data = await response.json();
 
                 loadingDiv.style.display = 'none';
-                resultDiv.style.display = 'block';
+                submitBtn.disabled = false;
 
                 if (response.ok && data.ok) {
-                    resultDiv.className = 'result success';
                     resultDiv.innerHTML = `
-                        <h3>✅ Preview Sent Successfully!</h3>
-                        <p><strong>Message ID:</strong> ${data.email.messageId || 'N/A'}</p>
-                        <p><strong>Status:</strong> ${data.email.draft ? 'Saved as Draft' : 'Sent'}</p>
-                        <p><strong>Recipient:</strong> ${to}</p>
-                        <p>Check your email inbox (or drafts folder) to see the preview.</p>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <h5><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">check_circle</i>Preview Sent Successfully!</h5>
+                            <p class="mb-1"><strong>Message ID:</strong> ${data.email.messageId || 'N/A'}</p>
+                            <p class="mb-1"><strong>Status:</strong> ${data.email.draft ? 'Saved as Draft' : 'Sent'}</p>
+                            <p class="mb-2"><strong>Recipient:</strong> ${to}</p>
+                            ${data.email.htmlBody ? `
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="viewEmailBtn" data-message-id="${data.email.messageId || ''}" data-is-draft="${data.email.draft}" data-html-body="${encodeURIComponent(data.email.htmlBody)}">
+                                    <i class="material-icons" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">visibility</i>View Email
+                                </button>
+                            ` : ''}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
                     `;
+                    
+                    // Add click handler for view email button
+                    const viewEmailBtn = document.getElementById('viewEmailBtn');
+                    if (viewEmailBtn) {
+                        viewEmailBtn.addEventListener('click', async function() {
+                            const messageId = this.getAttribute('data-message-id');
+                            const isDraft = this.getAttribute('data-is-draft') === 'true';
+                            const htmlBodyAttr = this.getAttribute('data-html-body');
+                            const htmlBody = htmlBodyAttr ? decodeURIComponent(htmlBodyAttr) : null;
+                            
+                            viewEmailBtn.disabled = true;
+                            viewEmailBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Loading...';
+                            
+                            const htmlContent = await fetchEmailContent(messageId, isDraft, htmlBody);
+                            
+                            if (htmlContent) {
+                                emailPreview.innerHTML = htmlContent;
+                                emailPreviewContainer.style.display = 'block';
+                                emailPreviewContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            } else {
+                                alert('Failed to fetch email content. The email may still be processing.');
+                            }
+                            
+                            viewEmailBtn.disabled = false;
+                            viewEmailBtn.innerHTML = '<i class="material-icons" style="vertical-align: middle; font-size: 16px; margin-right: 4px;">visibility</i>View Email';
+                        });
+                    }
                 } else {
-                    resultDiv.className = 'result error';
                     resultDiv.innerHTML = `
-                        <h3>❌ Error</h3>
-                        <p><strong>Message:</strong> ${data.message || data.error || 'Unknown error'}</p>
-                        ${data.email && data.email.error ? `<p><strong>Email Error:</strong> ${data.email.error}</p>` : ''}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h5><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">error</i>Error</h5>
+                            <p class="mb-1"><strong>Message:</strong> ${data.message || data.error || 'Unknown error'}</p>
+                            ${data.email && data.email.error ? `<p class="mb-0"><strong>Email Error:</strong> ${data.email.error}</p>` : ''}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
                     `;
                 }
             } catch (error) {
                 loadingDiv.style.display = 'none';
-                resultDiv.style.display = 'block';
-                resultDiv.className = 'result error';
-                resultDiv.innerHTML = `
-                    <h3>❌ Error</h3>
-                    <p><strong>Error:</strong> ${error.message}</p>
-                    <p>Make sure the API server is running and you have a valid API key.</p>
-                `;
-            } finally {
                 submitBtn.disabled = false;
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <h5><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">error</i>Error</h5>
+                        <p class="mb-1"><strong>Error:</strong> ${error.message}</p>
+                        <p class="mb-0">Make sure the API server is running and you have a valid API key.</p>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
             }
         });
     </script>
