@@ -234,26 +234,32 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
               <td style="font-size: 14px; font-weight: bold; padding-top: 10px; padding-bottom: 6px; border-top: 1px solid #e0e0e0; text-align: center;">Services Included</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0 5px 0; font-size: 12px; line-height: 1.5;">
-                <p style="margin: 5px 0; font-weight: bold; font-size: 12px;">Setup & Presentation</p>
-                <ul style="margin: 4px 0; padding-left: 25px;">
-                  <li style="margin: 3px 0;">Arranging tables, chairs, and decorations</li>
-                  <li style="margin: 3px 0;">Buffet setup & live buffet service</li>
-                  <li style="margin: 3px 0;">Butler-passed appetizers & cocktails</li>
-                </ul>
-                <p style="margin: 6px 0 4px 0; font-weight: bold; font-size: 12px;">Dining & Guest Assistance</p>
-                <ul style="margin: 4px 0; padding-left: 25px;">
-                  <li style="margin: 3px 0;">Multi-course plated dinners</li>
-                  <li style="margin: 3px 0;">General bussing (plates, silverware, glassware)</li>
-                  <li style="margin: 3px 0;">Beverage service (water, wine, champagne, coffee, etc.)</li>
-                  <li style="margin: 3px 0;">Special services (cake cutting, dessert plating, etc.)</li>
-                </ul>
-                <p style="margin: 6px 0 4px 0; font-weight: bold; font-size: 12px;">Cleanup & End-of-Event Support</p>
-                <ul style="margin: 4px 0; padding-left: 25px;">
-                  <li style="margin: 3px 0;">Washing dishes, managing trash, and keeping the event space tidy</li>
-                  <li style="margin: 3px 0;">Kitchen cleanup & end-of-event breakdown</li>
-                  <li style="margin: 3px 0;">Assisting with food storage & leftovers</li>
-                </ul>
+              <td align="center" style="padding: 4px 0 5px 0;">
+                <table width="50%%" cellpadding="0" cellspacing="0" border="0" style="width: 50%%; margin: 0 auto;">
+                  <tr>
+                    <td style="font-size: 12px; line-height: 1.5; text-align: left;">
+                      <p style="margin: 5px 0; font-weight: bold; font-size: 12px;">Setup & Presentation</p>
+                      <ul style="margin: 4px 0; padding-left: 25px;">
+                        <li style="margin: 3px 0;">Arranging tables, chairs, and decorations</li>
+                        <li style="margin: 3px 0;">Buffet setup & live buffet service</li>
+                        <li style="margin: 3px 0;">Butler-passed appetizers & cocktails</li>
+                      </ul>
+                      <p style="margin: 6px 0 4px 0; font-weight: bold; font-size: 12px;">Dining & Guest Assistance</p>
+                      <ul style="margin: 4px 0; padding-left: 25px;">
+                        <li style="margin: 3px 0;">Multi-course plated dinners</li>
+                        <li style="margin: 3px 0;">General bussing (plates, silverware, glassware)</li>
+                        <li style="margin: 3px 0;">Beverage service (water, wine, champagne, coffee, etc.)</li>
+                        <li style="margin: 3px 0;">Special services (cake cutting, dessert plating, etc.)</li>
+                      </ul>
+                      <p style="margin: 6px 0 4px 0; font-weight: bold; font-size: 12px;">Cleanup & End-of-Event Support</p>
+                      <ul style="margin: 4px 0; padding-left: 25px;">
+                        <li style="margin: 3px 0;">Washing dishes, managing trash, and keeping the event space tidy</li>
+                        <li style="margin: 3px 0;">Kitchen cleanup & end-of-event breakdown</li>
+                        <li style="margin: 3px 0;">Assisting with food storage & leftovers</li>
+                      </ul>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
 
