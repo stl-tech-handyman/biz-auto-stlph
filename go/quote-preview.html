@@ -327,6 +327,7 @@
             const helpers = parseInt(formData.get('helpers'));
             const hours = parseFloat(formData.get('hours'));
             const occasion = formData.get('occasion');
+            const guestCount = parseInt(formData.get('guestCount'));
             const to = formData.get('to');
             const saveAsDraft = formData.get('saveAsDraft') === 'on';
 
@@ -337,14 +338,11 @@
                 helpers: helpers,
                 hours: hours,
                 occasion: occasion,
+                guestCount: guestCount,
                 eventDate: eventDate,
-                eventTime: eventTime
+                eventTime: eventTime,
+                quoteType: quoteType
             };
-
-            // Add quoteType based on selection
-            if (quoteType !== 'custom') {
-                requestBody.quoteType = quoteType;
-            }
 
             // Show loading, hide result and preview
             loadingDiv.style.display = 'block';
