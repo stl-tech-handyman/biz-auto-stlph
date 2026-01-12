@@ -13,9 +13,9 @@ func SecurityHeadersMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 		
-		// Skip CSP for Swagger UI (it needs external resources)
-		// The Swagger handler will set its own CSP header
-		if !isSwaggerRoute(r.URL.Path) {
+		// Skip CSP for Swagger UI and quote-preview (they need external resources)
+		// The handlers will set their own CSP headers
+		if !isSwaggerRoute(r.URL.Path) && !isPreviewRoute(r.URL.Path) {
 			w.Header().Set("Content-Security-Policy", "default-src 'self'")
 		}
 		
@@ -33,6 +33,11 @@ func isSwaggerRoute(path string) bool {
 	return path == "/swagger" || path == "/swagger-ui" || 
 		   path == "/swagger/" || path == "/swagger.html" || 
 		   path == "/swagger-simple"
+}
+
+// isPreviewRoute checks if the path is a preview/test page route
+func isPreviewRoute(path string) bool {
+	return path == "/quote-preview.html" || path == "/test-final-invoice.html"
 }
 
 
