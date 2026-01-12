@@ -370,6 +370,7 @@ func (s *TemplateService) generateDepositEmailInline(data DepositData) string {
         <p>Sincerely,</p>
         
         <p>
+            Anna<br>
             STL Party Helpers Team<br>
             Phone: 314.714.5514<br>
             Email: team@stlpartyhelpers.com<br>
