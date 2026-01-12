@@ -982,7 +982,7 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 
 	emailReq := &ports.SendEmailRequest{
 		To:       body.To,
-		Subject:  "[PREVIEW] " + subject,
+		Subject:  "[TEST] " + subject,
 		HTMLBody: htmlBody,
 		FromName: "STL Party Helpers Team",
 	}
@@ -1290,7 +1290,7 @@ func (h *EmailHandler) HandleReviewRequestEmailPreview(w http.ResponseWriter, r 
 
 	emailReq := &ports.SendEmailRequest{
 		To:       body.To,
-		Subject:  "[PREVIEW] We'd Love Your Feedback - STL Party Helpers",
+		Subject:  "[TEST] We'd Love Your Feedback - STL Party Helpers",
 		HTMLBody: htmlBody,
 		FromName: "STL Party Helpers Team",
 	}
