@@ -255,6 +255,7 @@ func (s *TemplateService) generateFinalInvoiceEmailInline(data FinalInvoiceData)
         <p>Sincerely,</p>
         
         <p>
+            Anna<br>
             STL Party Helpers Team<br>
             Phone: 314.714.5514<br>
             Email: team@stlpartyhelpers.com<br>
@@ -299,6 +300,7 @@ func (s *TemplateService) generateFinalInvoiceEmailText(data FinalInvoiceData) s
 	text.WriteString("Thank you again for choosing STL Party Helpers — your support means the world to us!\n")
 	text.WriteString("We hope to work with you again soon.\n\n")
 	text.WriteString("Sincerely,\n\n")
+	text.WriteString("Anna\n")
 	text.WriteString("STL Party Helpers Team\n")
 	text.WriteString("Phone: 314.714.5514\n")
 	text.WriteString("Email: team@stlpartyhelpers.com\n")
@@ -392,6 +394,7 @@ func (s *TemplateService) generateDepositEmailText(data DepositData) string {
 	text.WriteString("Deposits are fully refundable if you cancel at least 3 days before your event.\n\n")
 	text.WriteString("Questions? Reply to this email or call us at 314.714.5514.\n\n")
 	text.WriteString("Sincerely,\n\n")
+	text.WriteString("Anna\n")
 	text.WriteString("STL Party Helpers Team\n")
 	text.WriteString("Phone: 314.714.5514\n")
 	text.WriteString("Email: team@stlpartyhelpers.com\n")
@@ -450,6 +453,7 @@ func (s *TemplateService) generateReviewRequestEmailInline(data ReviewRequestDat
         <p>Sincerely,</p>
         
         <p>
+            Anna<br>
             STL Party Helpers Team<br>
             Phone: 314.714.5514<br>
             Email: team@stlpartyhelpers.com<br>
