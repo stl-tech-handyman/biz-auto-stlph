@@ -879,13 +879,10 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-		// Calculate deposit amount (typically 17% of total, minimum $100)
-		depositAmount := estimate.TotalCost * 0.17
-	if depositAmount < 100.0 {
-		depositAmount = 100.0
-	}
-	// Round to 2 decimal places
-	depositAmount = float64(int(depositAmount*100)) / 100
+	// Calculate deposit from total cost using proper Stripe deposit calculator
+	estimateCents := util.DollarsToCents(estimate.TotalCost)
+	depositCalc := stripe.CalculateDepositFromEstimate(estimateCents)
+	depositAmount := util.CentsToDollars(depositCalc.Value)
 
 	// Calculate expiration date (72 hours from now)
 	expirationDate := time.Now().Add(72 * time.Hour)

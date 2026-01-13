@@ -121,8 +121,7 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
               <td align="center" style="padding: 6px; margin-bottom: 10px;">
                 <p style="margin: 0; font-size: 18px; font-weight: bold; color: rgb(38, 37, 120);">%s Quote</p>
                 <p style="margin: 3px 0 0 0; font-size: 14.5px; font-weight: bold; color: rgb(38, 37, 120);">Quote ID: %s</p>
-                <p style="margin: 3px 0 0 0; font-size: 13.5px; color: rgb(38, 37, 120);">This is a quote to hold your details.</p>
-                <p style="margin: 3px 0 0 0; font-size: 13.5px; color: rgb(38, 37, 120);">Your reservation is confirmed once the deposit is received.</p>
+                <p style="margin: 3px 0 0 0; font-size: 13.5px; color: rgb(38, 37, 120);">This is a quote to hold your details. Your reservation is confirmed once the deposit is received.</p>
               </td>
             </tr>
             
@@ -131,7 +130,10 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
               <td align="center" style="background-color: #f0f0f7; padding: 10px 6px; border-left: 3px solid rgb(38, 37, 120); margin-bottom: 6px;">
                 <p style="margin: 0; font-size: 15px; font-weight: bold; color: rgb(38, 37, 120);">This quote is held for 3 days.</p>
                 <p style="margin: 3px 0 0 0; font-size: 13px; color: rgb(38, 37, 120);">
-                  <a href="%s" style="color: rgb(38, 37, 120); text-decoration: underline; font-weight: bold;">A <strong>%s</strong> deposit secures your date until %s.</a>
+                  <a href="%s" style="color: rgb(38, 37, 120); text-decoration: underline; font-weight: bold;">Pay a <strong>%s</strong> deposit by %s to secure your event date.</a>
+                </p>
+                <p style="margin: 6px 0 0 0; font-size: 12px; color: rgb(38, 37, 120); line-height: 1.4; font-style: italic;">
+                  Peace of mind: When you book us, we'll be there. Secure your date now and relax — we've got everything covered.
                 </p>
               </td>
             </tr>
@@ -252,7 +254,6 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
             <tr>
               <td style="background-color: #f0f0f7; padding: 10px; margin-top: 8px; border-left: 5px solid rgb(38, 37, 120); border-top: 1px solid #e0e0e0; text-align: center;">
                 <p style="margin: 0 0 8px 0; font-size: 19px; font-weight: bold; color: rgb(38, 37, 120);">Ready to Secure Your Event?</p>
-                <p style="margin: 0 0 6px 0; font-size: 13.5px; color: #333333; line-height: 1.6;">Make a deposit to confirm your reservation and lock in your date.</p>
                 <p style="margin: 0 0 6px 0; text-align: center;">
                   <a href="%s" style="display: inline-block; background-color: rgb(38, 37, 120); color: #ffffff; padding: 6px 12px; text-decoration: none; font-weight: bold; font-size: 14.5px; border-radius: 4px;">Pay Deposit Securely (%s) via Stripe</a>
                 </p>
