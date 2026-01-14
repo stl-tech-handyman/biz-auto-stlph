@@ -1,0 +1,369 @@
+{
+  "results": [
+    {
+      "name": "February Surge (2026-02-05)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2026-02-05",
+        "dateFormatted": "Thu, Feb 5, 2026",
+        "dateMMDDYYYY": "02/05/2026",
+        "dayOfWeek": "Thu",
+        "label": "February Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2026
+      }
+    },
+    {
+      "name": "May Surge (2026-05-17)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2026-05-17",
+        "dateFormatted": "Sun, May 17, 2026",
+        "dateMMDDYYYY": "05/17/2026",
+        "dayOfWeek": "Sun",
+        "label": "May Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2026
+      }
+    },
+    {
+      "name": "August Surge (2026-08-19)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2026-08-19",
+        "dateFormatted": "Wed, Aug 19, 2026",
+        "dateMMDDYYYY": "08/19/2026",
+        "dayOfWeek": "Wed",
+        "label": "August Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Pre Thanksgiving (2026-11-25)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2026-11-25",
+        "dateFormatted": "Wed, Nov 25, 2026",
+        "dateMMDDYYYY": "11/25/2026",
+        "dayOfWeek": "Wed",
+        "label": "Pre Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Past Thanksgiving (2026-11-27)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2026-11-27",
+        "dateFormatted": "Fri, Nov 27, 2026",
+        "dateMMDDYYYY": "11/27/2026",
+        "dayOfWeek": "Fri",
+        "label": "Past Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2026
+      }
+    },
+    {
+      "name": "December Surge (2026-12-27)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2026-12-27",
+        "dateFormatted": "Sun, Dec 27, 2026",
+        "dateMMDDYYYY": "12/27/2026",
+        "dayOfWeek": "Sun",
+        "label": "December Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Pre New Year's Eve (2026-12-30)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2026-12-30",
+        "dateFormatted": "Wed, Dec 30, 2026",
+        "dateMMDDYYYY": "12/30/2026",
+        "dayOfWeek": "Wed",
+        "label": "Pre New Year's Eve",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2026
+      }
+    },
+    {
+      "name": "February Surge (2027-02-05)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2027-02-05",
+        "dateFormatted": "Fri, Feb 5, 2027",
+        "dateMMDDYYYY": "02/05/2027",
+        "dayOfWeek": "Fri",
+        "label": "February Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2027
+      }
+    },
+    {
+      "name": "May Surge (2027-05-17)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2027-05-17",
+        "dateFormatted": "Mon, May 17, 2027",
+        "dateMMDDYYYY": "05/17/2027",
+        "dayOfWeek": "Mon",
+        "label": "May Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2027
+      }
+    },
+    {
+      "name": "August Surge (2027-08-19)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2027-08-19",
+        "dateFormatted": "Thu, Aug 19, 2027",
+        "dateMMDDYYYY": "08/19/2027",
+        "dayOfWeek": "Thu",
+        "label": "August Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Pre Thanksgiving (2027-11-24)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2027-11-24",
+        "dateFormatted": "Wed, Nov 24, 2027",
+        "dateMMDDYYYY": "11/24/2027",
+        "dayOfWeek": "Wed",
+        "label": "Pre Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Past Thanksgiving (2027-11-26)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2027-11-26",
+        "dateFormatted": "Fri, Nov 26, 2027",
+        "dateMMDDYYYY": "11/26/2027",
+        "dayOfWeek": "Fri",
+        "label": "Past Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2027
+      }
+    },
+    {
+      "name": "December Surge (2027-12-27)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2027-12-27",
+        "dateFormatted": "Mon, Dec 27, 2027",
+        "dateMMDDYYYY": "12/27/2027",
+        "dayOfWeek": "Mon",
+        "label": "December Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Pre New Year's Eve (2027-12-30)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2027-12-30",
+        "dateFormatted": "Thu, Dec 30, 2027",
+        "dateMMDDYYYY": "12/30/2027",
+        "dayOfWeek": "Thu",
+        "label": "Pre New Year's Eve",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2027
+      }
+    },
+    {
+      "name": "February Surge (2028-02-05)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2028-02-05",
+        "dateFormatted": "Sat, Feb 5, 2028",
+        "dateMMDDYYYY": "02/05/2028",
+        "dayOfWeek": "Sat",
+        "label": "February Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2028
+      }
+    },
+    {
+      "name": "May Surge (2028-05-17)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2028-05-17",
+        "dateFormatted": "Wed, May 17, 2028",
+        "dateMMDDYYYY": "05/17/2028",
+        "dayOfWeek": "Wed",
+        "label": "May Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2028
+      }
+    },
+    {
+      "name": "August Surge (2028-08-19)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2028-08-19",
+        "dateFormatted": "Sat, Aug 19, 2028",
+        "dateMMDDYYYY": "08/19/2028",
+        "dayOfWeek": "Sat",
+        "label": "August Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Pre Thanksgiving (2028-11-22)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2028-11-22",
+        "dateFormatted": "Wed, Nov 22, 2028",
+        "dateMMDDYYYY": "11/22/2028",
+        "dayOfWeek": "Wed",
+        "label": "Pre Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Past Thanksgiving (2028-11-24)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2028-11-24",
+        "dateFormatted": "Fri, Nov 24, 2028",
+        "dateMMDDYYYY": "11/24/2028",
+        "dayOfWeek": "Fri",
+        "label": "Past Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2028
+      }
+    },
+    {
+      "name": "December Surge (2028-12-27)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2028-12-27",
+        "dateFormatted": "Wed, Dec 27, 2028",
+        "dateMMDDYYYY": "12/27/2028",
+        "dayOfWeek": "Wed",
+        "label": "December Surge",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Pre New Year's Eve (2028-12-30)",
+      "status": "pass",
+      "expected": "1.25-3.0x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eSurge dates are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003esurgeDateRules\u003c/code\u003e map.\u003cbr\u003eTo add new surge dates, add entries with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}\u003c/code\u003e\u003c/pre\u003e\u003csmall style=\"font-size: 0.85rem;\"\u003eMultiplier must be between 1.25 and 3.0. Server restart required after changes.\u003c/small\u003e",
+        "date": "2028-12-30",
+        "dateFormatted": "Sat, Dec 30, 2028",
+        "dateMMDDYYYY": "12/30/2028",
+        "dayOfWeek": "Sat",
+        "label": "Pre New Year's Eve",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2028
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 21,
+    "total": 21,
+    "warnings": 0
+  },
+  "testName": "surge-dates",
+  "timestamp": "2026-01-14T10:21:23-06:00"
+}

@@ -10,7 +10,7 @@ import (
 
 // BaseRate holds base and extra rates for a year
 type BaseRate struct {
-	BasePerHelper        float64
+	BasePerHelper         float64
 	ExtraPerHourPerHelper float64
 }
 
@@ -57,7 +57,7 @@ var surgeDateRules = map[string]SpecialDateRule{
 	"2030-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
 	"2031-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
 	"2032-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
-	
+
 	// Recurring surge dates - February 5th
 	"2025-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
 	"2026-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
@@ -67,7 +67,7 @@ var surgeDateRules = map[string]SpecialDateRule{
 	"2030-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
 	"2031-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
 	"2032-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
-	
+
 	// Recurring surge dates - May 17th
 	"2025-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
 	"2026-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
@@ -77,7 +77,7 @@ var surgeDateRules = map[string]SpecialDateRule{
 	"2030-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
 	"2031-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
 	"2032-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
-	
+
 	// Recurring surge dates - August 19th
 	"2025-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
 	"2026-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
@@ -87,7 +87,7 @@ var surgeDateRules = map[string]SpecialDateRule{
 	"2030-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
 	"2031-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
 	"2032-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
-	
+
 	// Recurring surge dates - December 27th
 	"2025-12-27": {Multiplier: floatPtr(1.5), Label: "December Surge", Type: "surge"},
 	"2026-12-27": {Multiplier: floatPtr(1.5), Label: "December Surge", Type: "surge"},
@@ -126,14 +126,59 @@ func GetThanksgivingDay(year int) int {
 func GetHolidayDatesForYear(year int) map[string]SpecialDateRule {
 	holidays := make(map[string]SpecialDateRule)
 	thanksgivingDay := GetThanksgivingDay(year)
-	
+
 	holidays[fmt.Sprintf("%d-01-01", year)] = SpecialDateRule{Multiplier: floatPtr(2), Label: "New Year's Day", Type: "holiday"}
 	holidays[fmt.Sprintf("%d-11-%02d", year, thanksgivingDay)] = SpecialDateRule{Multiplier: floatPtr(2), Label: "Thanksgiving", Type: "holiday"}
 	holidays[fmt.Sprintf("%d-12-24", year)] = SpecialDateRule{Multiplier: floatPtr(2), Label: "Christmas Eve", Type: "holiday"}
 	holidays[fmt.Sprintf("%d-12-25", year)] = SpecialDateRule{Multiplier: floatPtr(2), Label: "Christmas Day", Type: "holiday"}
 	holidays[fmt.Sprintf("%d-12-31", year)] = SpecialDateRule{Multiplier: floatPtr(2), Label: "New Year's Eve", Type: "holiday"}
-	
+
 	return holidays
+}
+
+// GetThanksgivingAdjacentDates returns the day before and day after Thanksgiving for a year
+// These dates get a 1.5x multiplier as surge dates
+func GetThanksgivingAdjacentDates(year int) map[string]SpecialDateRule {
+	adjacentDates := make(map[string]SpecialDateRule)
+	thanksgivingDay := GetThanksgivingDay(year)
+
+	// Day before Thanksgiving
+	dayBefore := thanksgivingDay - 1
+	if dayBefore > 0 {
+		adjacentDates[fmt.Sprintf("%d-11-%02d", year, dayBefore)] = SpecialDateRule{
+			Multiplier: floatPtr(1.5),
+			Label:      "Pre Thanksgiving",
+			Type:       "surge",
+		}
+	}
+
+	// Day after Thanksgiving
+	dayAfter := thanksgivingDay + 1
+	// November has 30 days, so check if dayAfter is valid
+	if dayAfter <= 30 {
+		adjacentDates[fmt.Sprintf("%d-11-%02d", year, dayAfter)] = SpecialDateRule{
+			Multiplier: floatPtr(1.5),
+			Label:      "Past Thanksgiving",
+			Type:       "surge",
+		}
+	}
+
+	return adjacentDates
+}
+
+// GetNewYearsEveAdjacentDates returns the day before New Year's Eve for a year
+// This date gets a 1.5x multiplier as a surge date
+func GetNewYearsEveAdjacentDates(year int) map[string]SpecialDateRule {
+	adjacentDates := make(map[string]SpecialDateRule)
+
+	// Day before New Year's Eve (December 30)
+	adjacentDates[fmt.Sprintf("%d-12-30", year)] = SpecialDateRule{
+		Multiplier: floatPtr(1.5),
+		Label:      "Pre New Year's Eve",
+		Type:       "surge",
+	}
+
+	return adjacentDates
 }
 
 // ValidateSurgeMultiplier validates surge multiplier (1.25-3.0)
@@ -148,25 +193,25 @@ func ToDateKey(eventDate time.Time) string {
 
 // EstimateResult represents the result of an estimate calculation
 type EstimateResult struct {
-	Year                      int     `json:"year"`
-	EventDate                 string  `json:"eventDate"`
-	DateKey                   string  `json:"dateKey"`
-	NumHelpers               int     `json:"numHelpers"`
-	DurationHours            float64 `json:"durationHours"`
-	BasePerHelper            float64 `json:"basePerHelper"`
-	ExtraPerHourPerHelper    float64 `json:"extraPerHourPerHelper"`
-	BaseSubtotal             float64 `json:"baseSubtotal"`
-	ExtraSubtotal            float64 `json:"extraSubtotal"`
-	SubtotalBeforeAdjustments float64 `json:"subtotalBeforeAdjustments"`
-	IsSpecialDate            bool    `json:"isSpecialDate"`
-	SpecialLabel             *string `json:"specialLabel,omitempty"`
-	RateType                 *string `json:"rateType,omitempty"`
-	SpecialDateMultiplier    *float64 `json:"specialDateMultiplier,omitempty"`
-	SpecialDateFlatIncrease  *float64 `json:"specialDateFlatIncrease,omitempty"`
-	TotalCost                float64 `json:"totalCost"`
-	Currency                 string  `json:"currency"`
-	Breakdown                map[string]interface{} `json:"breakdown"`
-	CalculationSummary       string  `json:"calculationSummary"`
+	Year                      int                    `json:"year"`
+	EventDate                 string                 `json:"eventDate"`
+	DateKey                   string                 `json:"dateKey"`
+	NumHelpers                int                    `json:"numHelpers"`
+	DurationHours             float64                `json:"durationHours"`
+	BasePerHelper             float64                `json:"basePerHelper"`
+	ExtraPerHourPerHelper     float64                `json:"extraPerHourPerHelper"`
+	BaseSubtotal              float64                `json:"baseSubtotal"`
+	ExtraSubtotal             float64                `json:"extraSubtotal"`
+	SubtotalBeforeAdjustments float64                `json:"subtotalBeforeAdjustments"`
+	IsSpecialDate             bool                   `json:"isSpecialDate"`
+	SpecialLabel              *string                `json:"specialLabel,omitempty"`
+	RateType                  *string                `json:"rateType,omitempty"`
+	SpecialDateMultiplier     *float64               `json:"specialDateMultiplier,omitempty"`
+	SpecialDateFlatIncrease   *float64               `json:"specialDateFlatIncrease,omitempty"`
+	TotalCost                 float64                `json:"totalCost"`
+	Currency                  string                 `json:"currency"`
+	Breakdown                 map[string]interface{} `json:"breakdown"`
+	CalculationSummary        string                 `json:"calculationSummary"`
 }
 
 // CalculateEstimate calculates event estimate
@@ -207,7 +252,20 @@ func CalculateEstimate(eventDate time.Time, durationHours float64, numHelpers in
 	var surgeRule SpecialDateRule
 	var isSurge bool
 	if !isHoliday {
+		// Check static surge dates
 		surgeRule, isSurge = surgeDateRules[dateKey]
+
+		// If not found in static, check dynamic Thanksgiving adjacent dates
+		if !isSurge {
+			thanksgivingAdjacent := GetThanksgivingAdjacentDates(year)
+			surgeRule, isSurge = thanksgivingAdjacent[dateKey]
+		}
+
+		// If still not found, check dynamic New Year's Eve adjacent dates
+		if !isSurge {
+			newYearsEveAdjacent := GetNewYearsEveAdjacentDates(year)
+			surgeRule, isSurge = newYearsEveAdjacent[dateKey]
+		}
 	}
 
 	// Check legacy rules
@@ -307,22 +365,22 @@ func CalculateEstimate(eventDate time.Time, durationHours float64, numHelpers in
 		Year:                      year,
 		EventDate:                 eventDate.Format(time.RFC3339),
 		DateKey:                   dateKey,
-		NumHelpers:               numHelpers,
-		DurationHours:            durationHours,
-		BasePerHelper:            rates.BasePerHelper,
-		ExtraPerHourPerHelper:    rates.ExtraPerHourPerHelper,
-		BaseSubtotal:             baseSubtotal,
-		ExtraSubtotal:            extraSubtotal,
+		NumHelpers:                numHelpers,
+		DurationHours:             durationHours,
+		BasePerHelper:             rates.BasePerHelper,
+		ExtraPerHourPerHelper:     rates.ExtraPerHourPerHelper,
+		BaseSubtotal:              baseSubtotal,
+		ExtraSubtotal:             extraSubtotal,
 		SubtotalBeforeAdjustments: subtotalBeforeAdjustments,
-		IsSpecialDate:            isSpecialDate,
-		SpecialLabel:             specialLabel,
-		RateType:                 rateType,
-		SpecialDateMultiplier:    specialRule.Multiplier,
-		SpecialDateFlatIncrease:  specialRule.FlatIncrease,
-		TotalCost:                totalCost,
-		Currency:                 "USD",
-		Breakdown:                breakdown,
-		CalculationSummary:       summary,
+		IsSpecialDate:             isSpecialDate,
+		SpecialLabel:              specialLabel,
+		RateType:                  rateType,
+		SpecialDateMultiplier:     specialRule.Multiplier,
+		SpecialDateFlatIncrease:   specialRule.FlatIncrease,
+		TotalCost:                 totalCost,
+		Currency:                  "USD",
+		Breakdown:                 breakdown,
+		CalculationSummary:        summary,
 	}
 
 	return result, nil
@@ -330,19 +388,19 @@ func CalculateEstimate(eventDate time.Time, durationHours float64, numHelpers in
 
 // SpecialDate represents a special date
 type SpecialDate struct {
-	Date       string   `json:"date"`
-	Multiplier *float64 `json:"multiplier,omitempty"`
+	Date         string   `json:"date"`
+	Multiplier   *float64 `json:"multiplier,omitempty"`
 	FlatIncrease *float64 `json:"flatIncrease,omitempty"`
-	Label      string   `json:"label"`
-	Type       string   `json:"type"`
+	Label        string   `json:"label"`
+	Type         string   `json:"type"`
 }
 
 // YearSpecialDates represents special dates for a year
 type YearSpecialDates struct {
-	Holidays   []SpecialDate `json:"holidays"`
-	SurgeDates []SpecialDate `json:"surgeDates"`
+	Holidays    []SpecialDate `json:"holidays"`
+	SurgeDates  []SpecialDate `json:"surgeDates"`
 	LegacyDates []SpecialDate `json:"legacyDates"`
-	AllDates   []SpecialDate `json:"allDates"`
+	AllDates    []SpecialDate `json:"allDates"`
 }
 
 // GetAllSpecialDates gets all special dates for the next N years
@@ -362,30 +420,66 @@ func GetAllSpecialDates(yearsAhead int, startYear *int) map[int]YearSpecialDates
 		holidayList := make([]SpecialDate, 0)
 		for dateKey, rule := range holidays {
 			holidayList = append(holidayList, SpecialDate{
-				Date:       dateKey,
-				Multiplier: rule.Multiplier,
+				Date:         dateKey,
+				Multiplier:   rule.Multiplier,
 				FlatIncrease: rule.FlatIncrease,
-				Label:      rule.Label,
-				Type:       rule.Type,
+				Label:        rule.Label,
+				Type:         rule.Type,
 			})
 		}
 		sort.Slice(holidayList, func(i, j int) bool {
 			return holidayList[i].Date < holidayList[j].Date
 		})
 
-		// Get surge dates for this year
+		// Get surge dates for this year (static + dynamic Thanksgiving adjacent dates)
 		surgeList := make([]SpecialDate, 0)
+
+		// Add static surge dates
 		for dateKey, rule := range surgeDateRules {
 			if len(dateKey) >= 4 && dateKey[:4] == strconv.Itoa(year) {
+				// Only add if not already a holiday
+				if _, isHoliday := holidays[dateKey]; !isHoliday {
+					surgeList = append(surgeList, SpecialDate{
+						Date:         dateKey,
+						Multiplier:   rule.Multiplier,
+						FlatIncrease: rule.FlatIncrease,
+						Label:        rule.Label,
+						Type:         rule.Type,
+					})
+				}
+			}
+		}
+
+		// Add dynamic Thanksgiving adjacent dates (day before and day after)
+		thanksgivingAdjacent := GetThanksgivingAdjacentDates(year)
+		for dateKey, rule := range thanksgivingAdjacent {
+			// Only add if not already a holiday
+			if _, isHoliday := holidays[dateKey]; !isHoliday {
 				surgeList = append(surgeList, SpecialDate{
-					Date:       dateKey,
-					Multiplier: rule.Multiplier,
+					Date:         dateKey,
+					Multiplier:   rule.Multiplier,
 					FlatIncrease: rule.FlatIncrease,
-					Label:      rule.Label,
-					Type:       rule.Type,
+					Label:        rule.Label,
+					Type:         rule.Type,
 				})
 			}
 		}
+
+		// Add dynamic New Year's Eve adjacent dates (day before)
+		newYearsEveAdjacent := GetNewYearsEveAdjacentDates(year)
+		for dateKey, rule := range newYearsEveAdjacent {
+			// Only add if not already a holiday
+			if _, isHoliday := holidays[dateKey]; !isHoliday {
+				surgeList = append(surgeList, SpecialDate{
+					Date:         dateKey,
+					Multiplier:   rule.Multiplier,
+					FlatIncrease: rule.FlatIncrease,
+					Label:        rule.Label,
+					Type:         rule.Type,
+				})
+			}
+		}
+
 		sort.Slice(surgeList, func(i, j int) bool {
 			return surgeList[i].Date < surgeList[j].Date
 		})
@@ -397,11 +491,11 @@ func GetAllSpecialDates(yearsAhead int, startYear *int) map[int]YearSpecialDates
 				// Only include if not already a holiday
 				if _, isHoliday := holidays[dateKey]; !isHoliday {
 					legacyList = append(legacyList, SpecialDate{
-						Date:       dateKey,
-						Multiplier: rule.Multiplier,
+						Date:         dateKey,
+						Multiplier:   rule.Multiplier,
 						FlatIncrease: rule.FlatIncrease,
-						Label:      rule.Label,
-						Type:       rule.Type,
+						Label:        rule.Label,
+						Type:         rule.Type,
 					})
 				}
 			}
@@ -420,16 +514,15 @@ func GetAllSpecialDates(yearsAhead int, startYear *int) map[int]YearSpecialDates
 		})
 
 		result[year] = YearSpecialDates{
-			Holidays:   holidayList,
-			SurgeDates: surgeList,
+			Holidays:    holidayList,
+			SurgeDates:  surgeList,
 			LegacyDates: legacyList,
-			AllDates:   allDates,
+			AllDates:    allDates,
 		}
 	}
 
 	return result
 }
-
 
 // TravelFeeResult contains travel fee calculation details
 type TravelFeeResult struct {
@@ -470,7 +563,7 @@ func CalculateTravelFee(distanceMiles float64, numHelpers int) *TravelFeeResult 
 	// For every 10 miles beyond 15, add $10
 	// Formula: $40 base + ($10 per 10 miles over 15)
 	milesOverServiceArea := distanceMiles - 15.0
-	
+
 	// Calculate base fee per helper: $40 minimum
 	// Add $10 for each 10-mile increment beyond 15 miles
 	// Round up to nearest 10-mile increment
@@ -482,7 +575,7 @@ func CalculateTravelFee(distanceMiles float64, numHelpers int) *TravelFeeResult 
 		increments := math.Ceil(milesBeyondFirst10 / 10.0)
 		feePerHelper = 40.0 + (increments * 10.0)
 	}
-	
+
 	// Round to nearest dollar (no cents)
 	feePerHelper = math.Round(feePerHelper)
 

@@ -1,0 +1,1308 @@
+{
+  "results": [
+    {
+      "name": "2026-01-14",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-01-14",
+        "dateFormatted": "Wed, Jan 14, 2026",
+        "day": 14,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "January",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-01-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-01-15",
+        "dateFormatted": "Thu, Jan 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "January",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-02-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-02-01",
+        "dateFormatted": "Sun, Feb 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "February",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-02-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-02-15",
+        "dateFormatted": "Sun, Feb 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "February",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-03-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-03-01",
+        "dateFormatted": "Sun, Mar 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "March",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-03-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-03-15",
+        "dateFormatted": "Sun, Mar 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "March",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-04-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-04-01",
+        "dateFormatted": "Wed, Apr 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "April",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-04-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-04-15",
+        "dateFormatted": "Wed, Apr 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "April",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-05-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-05-01",
+        "dateFormatted": "Fri, May 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "May",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-05-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-05-15",
+        "dateFormatted": "Fri, May 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "May",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-06-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-06-01",
+        "dateFormatted": "Mon, Jun 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "June",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-06-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-06-15",
+        "dateFormatted": "Mon, Jun 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "June",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-07-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-07-01",
+        "dateFormatted": "Wed, Jul 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "July",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-07-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-07-15",
+        "dateFormatted": "Wed, Jul 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "July",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-08-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-08-01",
+        "dateFormatted": "Sat, Aug 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "August",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-08-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-08-15",
+        "dateFormatted": "Sat, Aug 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "August",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-09-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-09-01",
+        "dateFormatted": "Tue, Sep 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "September",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-09-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-09-15",
+        "dateFormatted": "Tue, Sep 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "September",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-10-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-10-01",
+        "dateFormatted": "Thu, Oct 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "October",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-10-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-10-15",
+        "dateFormatted": "Thu, Oct 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "October",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-11-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-11-01",
+        "dateFormatted": "Sun, Nov 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "November",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-11-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-11-15",
+        "dateFormatted": "Sun, Nov 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "November",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-12-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-12-01",
+        "dateFormatted": "Tue, Dec 1, 2026",
+        "day": 1,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "December",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2026-12-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "date": "2026-12-15",
+        "dateFormatted": "Tue, Dec 15, 2026",
+        "day": 15,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "month": "December",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 600,
+        "year": 2026
+      }
+    },
+    {
+      "name": "2027-01-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-01-01",
+        "dateFormatted": "Fri, Jan 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": true,
+        "month": "January",
+        "rateType": "holiday",
+        "specialLabel": "New Year's Day",
+        "specialMultiplier": 2,
+        "totalCost": 1300,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-01-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-01-15",
+        "dateFormatted": "Fri, Jan 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "January",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-02-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-02-01",
+        "dateFormatted": "Mon, Feb 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "February",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-02-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-02-15",
+        "dateFormatted": "Mon, Feb 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "February",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-03-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-03-01",
+        "dateFormatted": "Mon, Mar 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "March",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-03-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-03-15",
+        "dateFormatted": "Mon, Mar 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "March",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-04-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-04-01",
+        "dateFormatted": "Thu, Apr 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "April",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-04-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-04-15",
+        "dateFormatted": "Thu, Apr 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "April",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-05-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-05-01",
+        "dateFormatted": "Sat, May 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "May",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-05-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-05-15",
+        "dateFormatted": "Sat, May 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "May",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-06-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-06-01",
+        "dateFormatted": "Tue, Jun 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "June",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-06-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-06-15",
+        "dateFormatted": "Tue, Jun 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "June",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-07-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-07-01",
+        "dateFormatted": "Thu, Jul 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "July",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-07-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-07-15",
+        "dateFormatted": "Thu, Jul 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "July",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-08-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-08-01",
+        "dateFormatted": "Sun, Aug 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "August",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-08-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-08-15",
+        "dateFormatted": "Sun, Aug 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "August",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-09-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-09-01",
+        "dateFormatted": "Wed, Sep 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "September",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-09-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-09-15",
+        "dateFormatted": "Wed, Sep 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "September",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-10-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-10-01",
+        "dateFormatted": "Fri, Oct 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "October",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-10-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-10-15",
+        "dateFormatted": "Fri, Oct 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "October",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-11-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-11-01",
+        "dateFormatted": "Mon, Nov 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "November",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-11-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-11-15",
+        "dateFormatted": "Mon, Nov 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "November",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-12-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-12-01",
+        "dateFormatted": "Wed, Dec 1, 2027",
+        "day": 1,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "December",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2027-12-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 325,
+        "date": "2027-12-15",
+        "dateFormatted": "Wed, Dec 15, 2027",
+        "day": 15,
+        "hourlyRate": 55,
+        "isSpecialDate": false,
+        "month": "December",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 650,
+        "year": 2027
+      }
+    },
+    {
+      "name": "2028-01-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-01-01",
+        "dateFormatted": "Sat, Jan 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": true,
+        "month": "January",
+        "rateType": "holiday",
+        "specialLabel": "New Year's Day",
+        "specialMultiplier": 2,
+        "totalCost": 1600,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-01-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-01-15",
+        "dateFormatted": "Sat, Jan 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "January",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-02-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-02-01",
+        "dateFormatted": "Tue, Feb 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "February",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-02-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-02-15",
+        "dateFormatted": "Tue, Feb 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "February",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-03-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-03-01",
+        "dateFormatted": "Wed, Mar 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "March",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-03-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-03-15",
+        "dateFormatted": "Wed, Mar 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "March",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-04-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-04-01",
+        "dateFormatted": "Sat, Apr 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "April",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-04-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-04-15",
+        "dateFormatted": "Sat, Apr 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "April",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-05-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-05-01",
+        "dateFormatted": "Mon, May 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "May",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-05-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-05-15",
+        "dateFormatted": "Mon, May 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "May",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-06-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-06-01",
+        "dateFormatted": "Thu, Jun 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "June",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-06-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-06-15",
+        "dateFormatted": "Thu, Jun 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "June",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-07-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-07-01",
+        "dateFormatted": "Sat, Jul 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "July",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-07-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-07-15",
+        "dateFormatted": "Sat, Jul 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "July",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-08-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-08-01",
+        "dateFormatted": "Tue, Aug 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "August",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-08-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-08-15",
+        "dateFormatted": "Tue, Aug 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "August",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-09-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-09-01",
+        "dateFormatted": "Fri, Sep 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "September",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-09-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-09-15",
+        "dateFormatted": "Fri, Sep 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "September",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-10-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-10-01",
+        "dateFormatted": "Sun, Oct 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "October",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-10-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-10-15",
+        "dateFormatted": "Sun, Oct 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "October",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-11-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-11-01",
+        "dateFormatted": "Wed, Nov 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "November",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-11-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-11-15",
+        "dateFormatted": "Wed, Nov 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "November",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-12-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-12-01",
+        "dateFormatted": "Fri, Dec 1, 2028",
+        "day": 1,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "December",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    },
+    {
+      "name": "2028-12-15",
+      "status": "pass",
+      "data": {
+        "baseRate": 400,
+        "date": "2028-12-15",
+        "dateFormatted": "Fri, Dec 15, 2028",
+        "day": 15,
+        "hourlyRate": 60,
+        "isSpecialDate": false,
+        "month": "December",
+        "rateType": null,
+        "specialLabel": null,
+        "specialMultiplier": null,
+        "totalCost": 800,
+        "year": 2028
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 72,
+    "total": 72,
+    "warnings": 0
+  },
+  "testName": "pricing-rates",
+  "timestamp": "2026-01-14T05:49:49-06:00"
+}

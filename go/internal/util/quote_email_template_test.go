@@ -25,7 +25,7 @@ func TestQuoteEmailTemplateCompatibility(t *testing.T) {
 		DepositLink:    "https://invoice.stripe.com/i/test",
 	}
 
-	html := GenerateQuoteEmailHTML(data)
+	html := GenerateQuoteEmailHTML(data, nil)
 
 	// Test 1: All required content is present
 	requiredContent := []string{
@@ -160,7 +160,7 @@ func TestQuoteEmailTemplateMobileCompatibility(t *testing.T) {
 		RateLabel:     "Base Rate",
 	}
 
-	html := GenerateQuoteEmailHTML(data)
+	html := GenerateQuoteEmailHTML(data, nil)
 
 	// Test: Viewport meta tag
 	if !strings.Contains(html, "viewport") {
@@ -197,7 +197,7 @@ func TestQuoteEmailTemplateDataIntegrity(t *testing.T) {
 		RateLabel:     "Premium Rate",
 	}
 
-	html := GenerateQuoteEmailHTML(data)
+	html := GenerateQuoteEmailHTML(data, nil)
 
 	// Verify all data fields are correctly inserted
 	tests := []struct {

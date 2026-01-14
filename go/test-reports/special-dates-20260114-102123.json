@@ -1,0 +1,420 @@
+{
+  "results": [
+    {
+      "name": "New Year's Day (2026-01-01)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2026-01-01",
+        "dateFormatted": "Thu, Jan 1, 2026",
+        "dateMMDDYYYY": "01/01/2026",
+        "dayOfWeek": "Thu",
+        "label": "New Year's Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Thanksgiving (2026-11-26)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2026-11-26",
+        "dateFormatted": "Thu, Nov 26, 2026",
+        "dateMMDDYYYY": "11/26/2026",
+        "dayOfWeek": "Thu",
+        "label": "Thanksgiving",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Christmas Eve (2026-12-24)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2026-12-24",
+        "dateFormatted": "Thu, Dec 24, 2026",
+        "dateMMDDYYYY": "12/24/2026",
+        "dayOfWeek": "Thu",
+        "label": "Christmas Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Christmas Day (2026-12-25)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2026-12-25",
+        "dateFormatted": "Fri, Dec 25, 2026",
+        "dateMMDDYYYY": "12/25/2026",
+        "dayOfWeek": "Fri",
+        "label": "Christmas Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2026
+      }
+    },
+    {
+      "name": "New Year's Eve (2026-12-31)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2026-12-31",
+        "dateFormatted": "Thu, Dec 31, 2026",
+        "dateMMDDYYYY": "12/31/2026",
+        "dayOfWeek": "Thu",
+        "label": "New Year's Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Pre Thanksgiving (2026-11-25)",
+      "status": "pass",
+      "expected": "1.5x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2026-11-25",
+        "dateFormatted": "Wed, Nov 25, 2026",
+        "dateMMDDYYYY": "11/25/2026",
+        "dayOfWeek": "Wed",
+        "label": "Pre Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Past Thanksgiving (2026-11-27)",
+      "status": "pass",
+      "expected": "1.5x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2026-11-27",
+        "dateFormatted": "Fri, Nov 27, 2026",
+        "dateMMDDYYYY": "11/27/2026",
+        "dayOfWeek": "Fri",
+        "label": "Past Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Pre New Year's Eve (2026-12-30)",
+      "status": "pass",
+      "expected": "1.5x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2026-12-30",
+        "dateFormatted": "Wed, Dec 30, 2026",
+        "dateMMDDYYYY": "12/30/2026",
+        "dayOfWeek": "Wed",
+        "label": "Pre New Year's Eve",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2026
+      }
+    },
+    {
+      "name": "New Year's Day (2027-01-01)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2027-01-01",
+        "dateFormatted": "Fri, Jan 1, 2027",
+        "dateMMDDYYYY": "01/01/2027",
+        "dayOfWeek": "Fri",
+        "label": "New Year's Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Thanksgiving (2027-11-25)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2027-11-25",
+        "dateFormatted": "Thu, Nov 25, 2027",
+        "dateMMDDYYYY": "11/25/2027",
+        "dayOfWeek": "Thu",
+        "label": "Thanksgiving",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Christmas Eve (2027-12-24)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2027-12-24",
+        "dateFormatted": "Fri, Dec 24, 2027",
+        "dateMMDDYYYY": "12/24/2027",
+        "dayOfWeek": "Fri",
+        "label": "Christmas Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Christmas Day (2027-12-25)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2027-12-25",
+        "dateFormatted": "Sat, Dec 25, 2027",
+        "dateMMDDYYYY": "12/25/2027",
+        "dayOfWeek": "Sat",
+        "label": "Christmas Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2027
+      }
+    },
+    {
+      "name": "New Year's Eve (2027-12-31)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2027-12-31",
+        "dateFormatted": "Fri, Dec 31, 2027",
+        "dateMMDDYYYY": "12/31/2027",
+        "dayOfWeek": "Fri",
+        "label": "New Year's Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Pre Thanksgiving (2027-11-24)",
+      "status": "pass",
+      "expected": "1.5x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2027-11-24",
+        "dateFormatted": "Wed, Nov 24, 2027",
+        "dateMMDDYYYY": "11/24/2027",
+        "dayOfWeek": "Wed",
+        "label": "Pre Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Past Thanksgiving (2027-11-26)",
+      "status": "pass",
+      "expected": "1.5x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2027-11-26",
+        "dateFormatted": "Fri, Nov 26, 2027",
+        "dateMMDDYYYY": "11/26/2027",
+        "dayOfWeek": "Fri",
+        "label": "Past Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Pre New Year's Eve (2027-12-30)",
+      "status": "pass",
+      "expected": "1.5x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2027-12-30",
+        "dateFormatted": "Thu, Dec 30, 2027",
+        "dateMMDDYYYY": "12/30/2027",
+        "dayOfWeek": "Thu",
+        "label": "Pre New Year's Eve",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2027
+      }
+    },
+    {
+      "name": "New Year's Day (2028-01-01)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2028-01-01",
+        "dateFormatted": "Sat, Jan 1, 2028",
+        "dateMMDDYYYY": "01/01/2028",
+        "dayOfWeek": "Sat",
+        "label": "New Year's Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Thanksgiving (2028-11-23)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2028-11-23",
+        "dateFormatted": "Thu, Nov 23, 2028",
+        "dateMMDDYYYY": "11/23/2028",
+        "dayOfWeek": "Thu",
+        "label": "Thanksgiving",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Christmas Eve (2028-12-24)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2028-12-24",
+        "dateFormatted": "Sun, Dec 24, 2028",
+        "dateMMDDYYYY": "12/24/2028",
+        "dayOfWeek": "Sun",
+        "label": "Christmas Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Christmas Day (2028-12-25)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2028-12-25",
+        "dateFormatted": "Mon, Dec 25, 2028",
+        "dateMMDDYYYY": "12/25/2028",
+        "dayOfWeek": "Mon",
+        "label": "Christmas Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2028
+      }
+    },
+    {
+      "name": "New Year's Eve (2028-12-31)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2028-12-31",
+        "dateFormatted": "Sun, Dec 31, 2028",
+        "dateMMDDYYYY": "12/31/2028",
+        "dayOfWeek": "Sun",
+        "label": "New Year's Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Pre Thanksgiving (2028-11-22)",
+      "status": "pass",
+      "expected": "1.5x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2028-11-22",
+        "dateFormatted": "Wed, Nov 22, 2028",
+        "dateMMDDYYYY": "11/22/2028",
+        "dayOfWeek": "Wed",
+        "label": "Pre Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Past Thanksgiving (2028-11-24)",
+      "status": "pass",
+      "expected": "1.5x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2028-11-24",
+        "dateFormatted": "Fri, Nov 24, 2028",
+        "dateMMDDYYYY": "11/24/2028",
+        "dayOfWeek": "Fri",
+        "label": "Past Thanksgiving",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Pre New Year's Eve (2028-12-30)",
+      "status": "pass",
+      "expected": "1.5x multiplier",
+      "actual": "1.50x multiplier",
+      "data": {
+        "configInfo": "\u003csmall style=\"font-size: 0.85rem;\"\u003eHolidays are defined in \u003ccode\u003ego/internal/services/pricing/estimate.go\u003c/code\u003e in \u003ccode\u003eGetHolidayDatesForYear()\u003c/code\u003e function.\u003cbr\u003eTo add new holidays, edit the function to include new dates with format:\u003c/small\u003e\u003cpre class=\"mb-0 mt-2\" style=\"font-size: 0.75rem;\"\u003e\u003ccode\u003e\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}\u003c/code\u003e\u003c/pre\u003e",
+        "date": "2028-12-30",
+        "dateFormatted": "Sat, Dec 30, 2028",
+        "dateMMDDYYYY": "12/30/2028",
+        "dayOfWeek": "Sat",
+        "label": "Pre New Year's Eve",
+        "multiplier": 1.5,
+        "type": "surge",
+        "year": 2028
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 24,
+    "total": 24,
+    "warnings": 0
+  },
+  "testName": "special-dates",
+  "timestamp": "2026-01-14T10:21:23-06:00"
+}

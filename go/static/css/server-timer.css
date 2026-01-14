@@ -3,24 +3,122 @@
     position: fixed;
     top: 50%;
     right: 0;
-    transform: translateY(-50%) rotate(360deg);
-    transform-origin: right center;
-    background: rgba(0, 0, 0, 0.8);
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
     color: #fff;
-    padding: 12px 8px;
+    padding: 0;
     border-radius: 8px 0 0 8px;
     font-family: 'Courier New', monospace;
-    font-size: 16px;
+    font-size: 14px;
     z-index: 9999;
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
     display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    white-space: nowrap;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+    min-width: 180px;
+    max-width: 180px;
+    transition: max-width 0.3s ease, min-width 0.3s ease;
+    overflow: hidden;
+}
+
+#server-timer.collapsed {
+    min-width: 40px;
+    max-width: 40px;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+}
+
+#server-timer.collapsed:hover {
+    box-shadow: -2px 0 15px rgba(0, 0, 0, 0.4);
+}
+
+#server-timer.collapsed .timer-collapse-btn i {
+    opacity: 1;
+    visibility: visible;
+    display: block;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#server-timer .timer-content {
+    padding: 16px 12px;
+    display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    line-height: 1.0;
-    letter-spacing: -0.3px;
+    gap: 12px;
+    flex: 1;
+    transition: opacity 0.2s ease 0.1s;
+    min-width: 140px;
 }
+
+#server-timer.collapsed .timer-content {
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+    transition: opacity 0.1s ease, width 0.3s ease, padding 0.3s ease;
+}
+
+.timer-collapse-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 8px 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    min-width: 40px;
+    flex-shrink: 0;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    z-index: 10000;
+}
+
+.timer-collapse-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#server-timer.collapsed .timer-collapse-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+#server-timer.collapsed .timer-collapse-btn {
+    border-left: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    z-index: 10000;
+    background: rgba(255, 255, 255, 0.15);
+    width: 100%;
+    height: 100%;
+    min-height: 60px;
+}
+
+#server-timer .timer-header {
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 8px;
+}
+
+#server-timer .timer-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    letter-spacing: 1px;
+}
+
 #server-timer .timer-time {
     font-weight: bold;
     display: flex;
@@ -28,21 +126,184 @@
     align-items: center;
     gap: 2px;
 }
+
 #server-timer .time-unit {
     font-size: 16px;
     font-weight: bold;
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
     letter-spacing: -0.3px;
 }
+
 #server-timer .time-unit .prefix {
     opacity: 0.8;
+    font-size: 12px;
 }
+
 #server-timer .time-unit .value {
     min-width: 2ch;
     text-align: right;
 }
+
 #server-timer.error {
-    background: rgba(220, 53, 69, 0.9);
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.95) 0%, rgba(200, 35, 51, 0.95) 100%);
+}
+
+/* Restart Timer Section */
+.restart-timer-section {
+    width: 100%;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.restart-timer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.restart-timer-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    letter-spacing: 0.5px;
+}
+
+.btn-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 24px;
+}
+
+.btn-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.btn-toggle.paused {
+    background: rgba(40, 167, 69, 0.3);
+    border-color: rgba(40, 167, 69, 0.5);
+}
+
+.btn-toggle.paused:hover {
+    background: rgba(40, 167, 69, 0.4);
+}
+
+.restart-countdown {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.countdown-label {
+    font-size: 10px;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.countdown-time {
+    font-size: 18px;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    color: #ffc107;
+    letter-spacing: 1px;
+}
+
+.restart-interval-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+}
+
+.restart-interval-selector label {
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.restart-interval-selector select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    flex: 1;
+}
+
+.restart-interval-selector select:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.restart-interval-selector select:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.restart-interval-selector select option {
+    background: #000;
+    color: #fff;
+}
+
+/* Manual Restart Button */
+.btn-manual-restart {
+    background: rgba(220, 53, 69, 0.3);
+    border: 1px solid rgba(220, 53, 69, 0.5);
+    color: #fff;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: bold;
+}
+
+.btn-manual-restart:hover {
+    background: rgba(220, 53, 69, 0.5);
+    border-color: rgba(220, 53, 69, 0.7);
+}
+
+.btn-manual-restart:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-manual-restart i {
+    font-size: 12px;
 }

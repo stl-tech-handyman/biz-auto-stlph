@@ -1,0 +1,172 @@
+{
+  "results": [
+    {
+      "name": "2026-01-14",
+      "status": "warning",
+      "message": "Weather service not available (API keys may not be set) - placeholder data",
+      "data": {
+        "condition": "N/A",
+        "date": "2026-01-14",
+        "dateFormatted": "Wed, Jan 14, 2026",
+        "dayOfWeek": "Wednesday",
+        "description": "Service not configured",
+        "humidity": 0,
+        "isPlaceholder": true,
+        "temperature": 0,
+        "windSpeed": 0
+      }
+    },
+    {
+      "name": "2026-01-15",
+      "status": "warning",
+      "message": "Weather service not available (API keys may not be set) - placeholder data",
+      "data": {
+        "condition": "N/A",
+        "date": "2026-01-15",
+        "dateFormatted": "Thu, Jan 15, 2026",
+        "dayOfWeek": "Thursday",
+        "description": "Service not configured",
+        "humidity": 0,
+        "isPlaceholder": true,
+        "temperature": 0,
+        "windSpeed": 0
+      }
+    },
+    {
+      "name": "2026-01-16",
+      "status": "warning",
+      "message": "Weather service not available (API keys may not be set) - placeholder data",
+      "data": {
+        "condition": "N/A",
+        "date": "2026-01-16",
+        "dateFormatted": "Fri, Jan 16, 2026",
+        "dayOfWeek": "Friday",
+        "description": "Service not configured",
+        "humidity": 0,
+        "isPlaceholder": true,
+        "temperature": 0,
+        "windSpeed": 0
+      }
+    },
+    {
+      "name": "2026-01-17",
+      "status": "warning",
+      "message": "Weather service not available (API keys may not be set) - placeholder data",
+      "data": {
+        "condition": "N/A",
+        "date": "2026-01-17",
+        "dateFormatted": "Sat, Jan 17, 2026",
+        "dayOfWeek": "Saturday",
+        "description": "Service not configured",
+        "humidity": 0,
+        "isPlaceholder": true,
+        "temperature": 0,
+        "windSpeed": 0
+      }
+    },
+    {
+      "name": "2026-01-18",
+      "status": "warning",
+      "message": "Weather service not available (API keys may not be set) - placeholder data",
+      "data": {
+        "condition": "N/A",
+        "date": "2026-01-18",
+        "dateFormatted": "Sun, Jan 18, 2026",
+        "dayOfWeek": "Sunday",
+        "description": "Service not configured",
+        "humidity": 0,
+        "isPlaceholder": true,
+        "temperature": 0,
+        "windSpeed": 0
+      }
+    },
+    {
+      "name": "2026-01-19",
+      "status": "warning",
+      "message": "Weather service not available (API keys may not be set) - placeholder data",
+      "data": {
+        "condition": "N/A",
+        "date": "2026-01-19",
+        "dateFormatted": "Mon, Jan 19, 2026",
+        "dayOfWeek": "Monday",
+        "description": "Service not configured",
+        "humidity": 0,
+        "isPlaceholder": true,
+        "temperature": 0,
+        "windSpeed": 0
+      }
+    },
+    {
+      "name": "2026-01-20",
+      "status": "warning",
+      "message": "Weather service not available (API keys may not be set) - placeholder data",
+      "data": {
+        "condition": "N/A",
+        "date": "2026-01-20",
+        "dateFormatted": "Tue, Jan 20, 2026",
+        "dayOfWeek": "Tuesday",
+        "description": "Service not configured",
+        "humidity": 0,
+        "isPlaceholder": true,
+        "temperature": 0,
+        "windSpeed": 0
+      }
+    },
+    {
+      "name": "2026-01-21",
+      "status": "warning",
+      "message": "Weather service not available (API keys may not be set) - placeholder data",
+      "data": {
+        "condition": "N/A",
+        "date": "2026-01-21",
+        "dateFormatted": "Wed, Jan 21, 2026",
+        "dayOfWeek": "Wednesday",
+        "description": "Service not configured",
+        "humidity": 0,
+        "isPlaceholder": true,
+        "temperature": 0,
+        "windSpeed": 0
+      }
+    },
+    {
+      "name": "2026-01-22",
+      "status": "warning",
+      "message": "Weather service not available (API keys may not be set) - placeholder data",
+      "data": {
+        "condition": "N/A",
+        "date": "2026-01-22",
+        "dateFormatted": "Thu, Jan 22, 2026",
+        "dayOfWeek": "Thursday",
+        "description": "Service not configured",
+        "humidity": 0,
+        "isPlaceholder": true,
+        "temperature": 0,
+        "windSpeed": 0
+      }
+    },
+    {
+      "name": "2026-01-23",
+      "status": "warning",
+      "message": "Weather service not available (API keys may not be set) - placeholder data",
+      "data": {
+        "condition": "N/A",
+        "date": "2026-01-23",
+        "dateFormatted": "Fri, Jan 23, 2026",
+        "dayOfWeek": "Friday",
+        "description": "Service not configured",
+        "humidity": 0,
+        "isPlaceholder": true,
+        "temperature": 0,
+        "windSpeed": 0
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 0,
+    "total": 10,
+    "warnings": 10
+  },
+  "testName": "weather-forecast",
+  "timestamp": "2026-01-14T05:44:49-06:00"
+}

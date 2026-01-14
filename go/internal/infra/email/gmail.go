@@ -55,8 +55,8 @@ func NewGmailSender() (*GmailSender, error) {
 				"hypothesisId": "H1,H5",
 				"location":     "gmail.go:NewGmailSender",
 				"message":      "GMAIL_CREDENTIALS_JSON not set - returning error",
-				"data":          map[string]interface{}{},
-				"timestamp":     time.Now().UnixMilli(),
+				"data":         map[string]interface{}{},
+				"timestamp":    time.Now().UnixMilli(),
 			}
 			json.NewEncoder(logFile).Encode(logEntry)
 			logFile.Close()
@@ -78,8 +78,14 @@ func NewGmailSender() (*GmailSender, error) {
 			"data": map[string]interface{}{
 				"credentialsPath": credentialsJSON,
 				"fileExists":      fileExists,
-				"statError":       func() string { if statErr != nil { return statErr.Error() } else { return "" } }(),
-				"isFile":          fileExists && !fileInfo.IsDir(),
+				"statError": func() string {
+					if statErr != nil {
+						return statErr.Error()
+					} else {
+						return ""
+					}
+				}(),
+				"isFile": fileExists && !fileInfo.IsDir(),
 			},
 			"timestamp": time.Now().UnixMilli(),
 		}
@@ -181,7 +187,7 @@ func NewGmailSender() (*GmailSender, error) {
 			"location":     "gmail.go:NewGmailSender",
 			"message":      "Before JWT config creation - checking scope",
 			"data": map[string]interface{}{
-				"requestedScope": gmail.GmailModifyScope,
+				"requestedScope":  gmail.GmailModifyScope,
 				"credsDataLength": len(credsData),
 			},
 			"timestamp": time.Now().UnixMilli(),
@@ -202,9 +208,21 @@ func NewGmailSender() (*GmailSender, error) {
 			"location":     "gmail.go:NewGmailSender",
 			"message":      "After JWT config creation",
 			"data": map[string]interface{}{
-				"jwtConfigError": func() string { if err != nil { return err.Error() } else { return "" } }(),
+				"jwtConfigError": func() string {
+					if err != nil {
+						return err.Error()
+					} else {
+						return ""
+					}
+				}(),
 				"jwtConfigSuccess": err == nil,
-				"serviceAccountEmail": func() string { if config != nil { return config.Email } else { return "" } }(),
+				"serviceAccountEmail": func() string {
+					if config != nil {
+						return config.Email
+					} else {
+						return ""
+					}
+				}(),
 			},
 			"timestamp": time.Now().UnixMilli(),
 		}
@@ -234,7 +252,7 @@ func NewGmailSender() (*GmailSender, error) {
 			"location":     "gmail.go:NewGmailSender",
 			"message":      "Checking impersonation email",
 			"data": map[string]interface{}{
-				"gmailFromEnv": impersonateEmail,
+				"gmailFromEnv":        impersonateEmail,
 				"serviceAccountEmail": config.Email,
 			},
 			"timestamp": time.Now().UnixMilli(),
@@ -314,7 +332,13 @@ func NewGmailSender() (*GmailSender, error) {
 			"message":      "After creating Gmail service",
 			"data": map[string]interface{}{
 				"serviceCreated": service != nil,
-				"error":          func() string { if err != nil { return err.Error() } else { return "" } }(),
+				"error": func() string {
+					if err != nil {
+						return err.Error()
+					} else {
+						return ""
+					}
+				}(),
 			},
 			"timestamp": time.Now().UnixMilli(),
 		}
@@ -356,6 +380,31 @@ func (g *GmailSender) SendEmail(ctx context.Context, req *ports.SendEmailRequest
 		logFile.Close()
 	}
 	// #endregion
+	// #region agent log
+	if logFile, logErr := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); logErr == nil {
+		htmlSample := req.HTMLBody
+		if len(htmlSample) > 1000 {
+			htmlSample = htmlSample[:1000]
+		}
+		hasAppleStyle := strings.Contains(req.HTMLBody, "system-ui") || strings.Contains(req.HTMLBody, "#F5F5F7") || strings.Contains(req.HTMLBody, "appl_")
+		hasOriginalStyle := strings.Contains(req.HTMLBody, "Arial, Helvetica") && strings.Contains(req.HTMLBody, "#ffffff") && !strings.Contains(req.HTMLBody, "appl_")
+		json.NewEncoder(logFile).Encode(map[string]interface{}{
+			"sessionId":    "debug-session",
+			"runId":        "run1",
+			"hypothesisId": "I",
+			"location":     "gmail.go:SendEmail",
+			"message":      "Before building message - HTML content check",
+			"data": map[string]interface{}{
+				"htmlLen":          len(req.HTMLBody),
+				"hasAppleStyle":    hasAppleStyle,
+				"hasOriginalStyle": hasOriginalStyle,
+				"htmlSample":       htmlSample,
+			},
+			"timestamp": time.Now().UnixMilli(),
+		})
+		logFile.Close()
+	}
+	// #endregion
 	// Build email message
 	message := g.buildMessage(req)
 
@@ -394,7 +443,13 @@ func (g *GmailSender) SendEmail(ctx context.Context, req *ports.SendEmailRequest
 			"location":     "gmail.go:SendEmail",
 			"message":      "After calling Messages.Send API",
 			"data": map[string]interface{}{
-				"error":     func() string { if err != nil { return err.Error() } else { return "" } }(),
+				"error": func() string {
+					if err != nil {
+						return err.Error()
+					} else {
+						return ""
+					}
+				}(),
 				"success":   err == nil,
 				"messageID": messageID,
 				"to":        req.To,
@@ -488,13 +543,19 @@ func (g *GmailSender) SendEmailDraft(ctx context.Context, req *ports.SendEmailRe
 			"location":     "gmail.go:SendEmailDraft",
 			"message":      "After calling Drafts.Create API",
 			"data": map[string]interface{}{
-				"error":          func() string { if err != nil { return err.Error() } else { return "" } }(),
+				"error": func() string {
+					if err != nil {
+						return err.Error()
+					} else {
+						return ""
+					}
+				}(),
 				"success":        err == nil,
 				"draftCreated":   createdDraft != nil,
 				"draftID":        draftID,
 				"draftMessageID": draftMessageID,
 				"to":             req.To,
-				"subject":         req.Subject,
+				"subject":        req.Subject,
 			},
 			"timestamp": time.Now().UnixMilli(),
 		}
@@ -583,23 +644,23 @@ func (g *GmailSender) buildMessage(req *ports.SendEmailRequest) *gmail.Message {
 // GetMessage retrieves an email message from Gmail by message ID
 func (g *GmailSender) GetMessage(ctx context.Context, messageID string) (string, error) {
 	userEmail := g.from
-	
+
 	// Get the message with full format to get HTML body
 	msg, err := g.service.Users.Messages.Get(userEmail, messageID).Format("full").Context(ctx).Do()
 	if err != nil {
 		return "", fmt.Errorf("failed to get message: %w", err)
 	}
-	
+
 	// Extract HTML body from message parts
 	var htmlBody string
 	if msg.Payload != nil {
 		htmlBody = g.extractHTMLFromPayload(msg.Payload)
 	}
-	
+
 	if htmlBody == "" {
 		return "", fmt.Errorf("no HTML body found in message")
 	}
-	
+
 	return htmlBody, nil
 }
 
@@ -608,7 +669,7 @@ func (g *GmailSender) extractHTMLFromPayload(payload *gmail.MessagePart) string 
 	if payload == nil {
 		return ""
 	}
-	
+
 	// Check if this part has HTML content
 	if payload.MimeType == "text/html" && payload.Body != nil && payload.Body.Data != "" {
 		data, err := base64.URLEncoding.DecodeString(payload.Body.Data)
@@ -616,7 +677,7 @@ func (g *GmailSender) extractHTMLFromPayload(payload *gmail.MessagePart) string 
 			return string(data)
 		}
 	}
-	
+
 	// Recursively check parts
 	if payload.Parts != nil {
 		for _, part := range payload.Parts {
@@ -625,6 +686,16 @@ func (g *GmailSender) extractHTMLFromPayload(payload *gmail.MessagePart) string 
 			}
 		}
 	}
-	
+
 	return ""
+}
+
+// GetService returns the Gmail service
+func (g *GmailSender) GetService() *gmail.Service {
+	return g.service
+}
+
+// GetFromEmail returns the from email address
+func (g *GmailSender) GetFromEmail() string {
+	return g.from
 }

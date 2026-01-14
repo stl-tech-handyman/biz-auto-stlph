@@ -125,3 +125,16 @@ func (bl *BusinessLoader) LoadAllBusinesses(ctx context.Context) ([]*domain.Busi
 	return businesses, nil
 }
 
+// GetBusinessConfigPath returns the path to a business config file
+func (bl *BusinessLoader) GetBusinessConfigPath(businessID string) string {
+	return bl.config.GetBusinessConfigPath(businessID)
+}
+
+
+// InvalidateCache removes a business configuration from the cache
+// This forces the next LoadBusiness call to reload from disk
+func (bl *BusinessLoader) InvalidateCache(businessID string) {
+	bl.cacheMu.Lock()
+	defer bl.cacheMu.Unlock()
+	delete(bl.cache, businessID)
+}

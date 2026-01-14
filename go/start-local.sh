@@ -7,6 +7,44 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/.env"
 
+# Fix Go toolchain configuration
+# Allow toolchain auto-download but prefer local if compatible
+# This ensures go.mod requirements are met while using local Go when possible
+export GOTOOLCHAIN=auto
+# #region agent log
+LOG_FILE="c:/Users/Alexey/Code/biz-operating-system/stlph/.cursor/debug.log"
+echo "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"start-local.sh:toolchain-fix\",\"message\":\"Toolchain fix applied\",\"data\":{\"GOTOOLCHAIN\":\"local\",\"originalGOROOT\":\"$GOROOT\"},\"timestamp\":$(date +%s%3N)}" >> "$LOG_FILE"
+# #endregion
+
+# Also fix GOROOT if it's pointing to toolchain module cache
+if [ -z "$GOROOT" ] || [[ "$GOROOT" == *"toolchain@"* ]]; then
+    # Try to find actual Go installation
+    GO_BIN=$(which go 2>/dev/null || command -v go 2>/dev/null)
+    # #region agent log
+    echo "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"start-local.sh:goroot-fix\",\"message\":\"Found Go binary\",\"data\":{\"goBin\":\"$GO_BIN\"},\"timestamp\":$(date +%s%3N)}" >> "$LOG_FILE"
+    # #endregion
+    if [ -n "$GO_BIN" ]; then
+        # Go binary is typically at <GOROOT>/bin/go
+        POSSIBLE_GOROOT=$(dirname "$(dirname "$GO_BIN")")
+        if [ -d "$POSSIBLE_GOROOT/src" ] && [ -f "$POSSIBLE_GOROOT/src/runtime/runtime.go" ]; then
+            export GOROOT="$POSSIBLE_GOROOT"
+            # #region agent log
+            echo "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"start-local.sh:goroot-fix\",\"message\":\"Set GOROOT from Go binary path\",\"data\":{\"newGOROOT\":\"$GOROOT\",\"stdlibExists\":true},\"timestamp\":$(date +%s%3N)}" >> "$LOG_FILE"
+            # #endregion
+        elif [ -d "/usr/local/go" ] && [ -f "/usr/local/go/src/runtime/runtime.go" ]; then
+            export GOROOT="/usr/local/go"
+            # #region agent log
+            echo "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"start-local.sh:goroot-fix\",\"message\":\"Set GOROOT to /usr/local/go\",\"data\":{\"newGOROOT\":\"$GOROOT\"},\"timestamp\":$(date +%s%3N)}" >> "$LOG_FILE"
+            # #endregion
+        elif [ -d "C:/Program Files/Go" ] && [ -f "C:/Program Files/Go/src/runtime/runtime.go" ]; then
+            export GOROOT="C:/Program Files/Go"
+            # #region agent log
+            echo "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"start-local.sh:goroot-fix\",\"message\":\"Set GOROOT to C:/Program Files/Go\",\"data\":{\"newGOROOT\":\"$GOROOT\"},\"timestamp\":$(date +%s%3N)}" >> "$LOG_FILE"
+            # #endregion
+        fi
+    fi
+fi
+
 export STRIPE_SECRET_KEY_PROD="sk_live_YOUR_PROD_KEY_HERE"
 export SERVICE_API_KEY="test-api-key-12345"
 export ENV="dev"

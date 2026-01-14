@@ -33,15 +33,16 @@ Tests all date scenarios:
 - Expiration date calculations
 - Date normalization (midnight-based)
 
-### 2. Expiration Calculation Test
-Tests expiration date rules:
-- ≤3 days: Expires at midnight today
-- 4-7 days: Expires in 48 hours
-- 8-14 days: Expires in 3 days
-- 15+ days: Expires in 2 weeks
+### 2. Deposit Booking Deadline Test
+Calculates how soon we need the deposit from them to book the staffing reservation. Tests deposit deadline rules for different values of days until event:
+- ≤3 days: Deposit deadline is midnight today
+- 4-7 days: Deposit deadline is in 48 hours
+- 8-14 days: Deposit deadline is in 3 days
+- 15+ days: Deposit deadline is in 2 weeks
 
 **What it validates:**
-- Expiration dates are in the future
+- Deposit deadlines are calculated correctly based on days until event
+- Deadlines are in the future (unless event is today)
 - Correct time calculations
 - Proper formatting
 

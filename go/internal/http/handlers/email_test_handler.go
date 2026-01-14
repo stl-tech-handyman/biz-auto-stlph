@@ -438,7 +438,7 @@ func (h *EmailHandler) runTestScenario(ctx context.Context, scenario TestScenari
 		UrgencyLevel:       urgencyLevel,
 	}
 
-	htmlBody := util.GenerateQuoteEmailHTML(emailData)
+	htmlBody := util.GenerateQuoteEmailHTML(emailData, nil)
 	result.HTMLGenerated = htmlBody
 
 	// Validate HTML contains expected elements

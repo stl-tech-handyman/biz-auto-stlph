@@ -198,6 +198,8 @@ func (h *TestHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 		response, err = h.testSpecialDates(req)
 	case "surge-dates":
 		response, err = h.testSurgeDates(req)
+	case "validate-email-templates":
+		response, err = h.testValidateEmailTemplates(req)
 	default:
 		// #region agent log
 		writeDebugLog("test_handler.go:117", "Hit default case - unknown test", map[string]interface{}{
@@ -437,7 +439,7 @@ func (h *TestHandler) testDateVariations(req TestRequest) (TestResponse, error) 
 func (h *TestHandler) testExpirationCalculation(req TestRequest) (TestResponse, error) {
 	now := time.Now()
 	response := TestResponse{
-		TestName: "Expiration Calculation",
+		TestName: "Deposit Booking Deadline",
 		Results:  []TestCaseResult{},
 	}
 
@@ -821,7 +823,7 @@ func (h *TestHandler) testEmailTemplate(req TestRequest) (TestResponse, error) {
 			IsReturningClient:  tc.isReturning,
 		}
 
-		html := util.GenerateQuoteEmailHTML(emailData)
+		html := util.GenerateQuoteEmailHTML(emailData, nil)
 
 		status := "pass"
 		message := ""
@@ -1166,6 +1168,53 @@ func (h *TestHandler) testSpecialDates(req TestRequest) (TestResponse, error) {
 			response.Total++
 		}
 
+		// Test surge dates adjacent to holidays (Thanksgiving and New Year's Eve)
+		for _, surge := range yearData.SurgeDates {
+			// Only include surge dates that are adjacent to holidays
+			if surge.Label == "Pre Thanksgiving" || surge.Label == "Past Thanksgiving" || surge.Label == "Pre New Year's Eve" {
+				multiplier := 1.5
+				if surge.Multiplier != nil {
+					multiplier = *surge.Multiplier
+				}
+
+				// Parse date and format it
+				surgeDate, err := time.Parse("2006-01-02", surge.Date)
+				var dateFormatted, dateMMDDYYYY, dayOfWeek string
+				if err == nil {
+					dateFormatted = surgeDate.Format("Mon, Jan 2, 2006")
+					dateMMDDYYYY = surgeDate.Format("01/02/2006")
+					dayOfWeek = surgeDate.Format("Mon")
+				} else {
+					dateFormatted = surge.Date
+					dateMMDDYYYY = surge.Date
+					dayOfWeek = ""
+				}
+
+				result := TestCaseResult{
+					Name:     fmt.Sprintf("%s (%s)", surge.Label, surge.Date),
+					Status:   "pass",
+					Message:  "",
+					Expected: "1.5x multiplier",
+					Actual:   fmt.Sprintf("%.2fx multiplier", multiplier),
+					Data: map[string]interface{}{
+						"date":          surge.Date,
+						"dateFormatted": dateFormatted,
+						"dateMMDDYYYY":  dateMMDDYYYY,
+						"dayOfWeek":     dayOfWeek,
+						"label":         surge.Label,
+						"multiplier":    multiplier,
+						"type":          surge.Type,
+						"year":          year,
+						"configInfo":    configInfo,
+					},
+				}
+
+				response.Results = append(response.Results, result)
+				response.Passed++
+				response.Total++
+			}
+		}
+
 		// Test legacy dates (if any)
 		for _, legacy := range yearData.LegacyDates {
 			multiplier := 2.0
@@ -1287,6 +1336,230 @@ func (h *TestHandler) testSurgeDates(req TestRequest) (TestResponse, error) {
 				response.Total++
 			}
 		}
+	}
+
+	return response, nil
+}
+
+// testValidateEmailTemplates validates that both email templates contain all required fields
+func (h *TestHandler) testValidateEmailTemplates(req TestRequest) (TestResponse, error) {
+	response := TestResponse{
+		TestName: "Email Template Validation",
+		Results:  []TestCaseResult{},
+	}
+
+	// Create test data with all fields populated
+	testData := util.QuoteEmailData{
+		ClientName:         "John Doe",
+		EventDate:          "Mon, Jan 19, 2026",
+		EventTime:          "6:00 PM",
+		EventLocation:      "123 Main St, St. Louis, MO 63110",
+		Occasion:           "Birthday Party",
+		GuestCount:         50,
+		Helpers:            2,
+		Hours:              4.0,
+		BaseRate:           200.0,
+		HourlyRate:         50.0,
+		TotalCost:          500.0,
+		DepositAmount:      250.0,
+		RateLabel:          "Base Rate",
+		ExpirationDate:     "January 18, 2026 at 6:00 PM",
+		DepositLink:        "https://invoice.stripe.com/i/test",
+		ConfirmationNumber: "TEST",
+		IsHighDemand:       false,
+		UrgencyLevel:       "normal",
+		DaysUntilEvent:     30,
+		IsReturningClient:  false,
+		WeatherForecast:    nil,
+		TravelFeeInfo: &util.TravelFeeData{
+			IsWithinServiceArea: true,
+			DistanceMiles:       5.0,
+			TravelFee:           0.0,
+			Message:             "within our service area - no travel fee",
+		},
+		PDFDownloadLink: "https://example.com/pdf/test",
+	}
+
+	// Required fields to check for in HTML output
+	requiredFields := []struct {
+		name        string
+		checkFunc   func(html string) bool
+		description string
+	}{
+		{"ClientName", func(html string) bool { return strings.Contains(html, testData.ClientName) }, "Client name"},
+		{"EventDate", func(html string) bool { return strings.Contains(html, testData.EventDate) }, "Event date"},
+		{"EventTime", func(html string) bool { return strings.Contains(html, testData.EventTime) }, "Event time"},
+		{"EventLocation", func(html string) bool { return strings.Contains(html, testData.EventLocation) }, "Event location"},
+		{"Occasion", func(html string) bool { return strings.Contains(html, testData.Occasion) }, "Occasion"},
+		{"GuestCount", func(html string) bool { return strings.Contains(html, fmt.Sprintf("%d", testData.GuestCount)) }, "Guest count"},
+		{"Helpers", func(html string) bool { return strings.Contains(html, fmt.Sprintf("%d", testData.Helpers)) }, "Helpers count"},
+		{"Hours", func(html string) bool { return strings.Contains(html, fmt.Sprintf("%.0f", testData.Hours)) || strings.Contains(html, "4") }, "Hours"},
+		{"TotalCost", func(html string) bool { return strings.Contains(html, "$500") || strings.Contains(html, "500") }, "Total cost"},
+		{"BaseRate", func(html string) bool { return strings.Contains(html, "$200") || strings.Contains(html, "200") }, "Base rate"},
+		{"DepositAmount", func(html string) bool { return strings.Contains(html, "$250") || strings.Contains(html, "250") }, "Deposit amount"},
+		{"DepositLink", func(html string) bool { return strings.Contains(html, testData.DepositLink) || strings.Contains(html, "href") }, "Deposit link"},
+		{"ConfirmationNumber", func(html string) bool { return strings.Contains(html, testData.ConfirmationNumber) }, "Confirmation number"},
+	}
+
+	// Test original template
+	originalHTML := util.GenerateQuoteEmailHTML(testData, nil)
+	originalMissing := []string{}
+	for _, field := range requiredFields {
+		if !field.checkFunc(originalHTML) {
+			originalMissing = append(originalMissing, field.name)
+		}
+	}
+
+	originalStatus := "pass"
+	if len(originalMissing) > 0 {
+		originalStatus = "fail"
+	}
+
+	response.Results = append(response.Results, TestCaseResult{
+		Name:     "Original Template - All Fields Present",
+		Status:   originalStatus,
+		Message:  func() string {
+			if len(originalMissing) > 0 {
+				return fmt.Sprintf("Missing fields: %s", strings.Join(originalMissing, ", "))
+			}
+			return "All required fields are present"
+		}(),
+		Expected: "All fields present",
+		Actual:   fmt.Sprintf("%d/%d fields present", len(requiredFields)-len(originalMissing), len(requiredFields)),
+		Data: map[string]interface{}{
+			"missingFields": originalMissing,
+			"htmlLength":    len(originalHTML),
+		},
+	})
+
+	if originalStatus == "pass" {
+		response.Passed++
+	} else {
+		response.Failed++
+	}
+	response.Total++
+
+	// Test Apple template
+	appleHTML := util.GenerateQuoteEmailHTMLAppleStyle(testData, nil)
+	appleMissing := []string{}
+	for _, field := range requiredFields {
+		if !field.checkFunc(appleHTML) {
+			appleMissing = append(appleMissing, field.name)
+		}
+	}
+
+	appleStatus := "pass"
+	if len(appleMissing) > 0 {
+		appleStatus = "fail"
+	}
+
+	response.Results = append(response.Results, TestCaseResult{
+		Name:     "Apple Style Template - All Fields Present",
+		Status:   appleStatus,
+		Message:  func() string {
+			if len(appleMissing) > 0 {
+				return fmt.Sprintf("Missing fields: %s", strings.Join(appleMissing, ", "))
+			}
+			return "All required fields are present"
+		}(),
+		Expected: "All fields present",
+		Actual:   fmt.Sprintf("%d/%d fields present", len(requiredFields)-len(appleMissing), len(requiredFields)),
+		Data: map[string]interface{}{
+			"missingFields": appleMissing,
+			"htmlLength":    len(appleHTML),
+		},
+	})
+
+	if appleStatus == "pass" {
+		response.Passed++
+	} else {
+		response.Failed++
+	}
+	response.Total++
+
+	// Test that templates are different (structure check)
+	hasAppleMarkers := strings.Contains(appleHTML, "appl_") || strings.Contains(appleHTML, "system-ui") || strings.Contains(appleHTML, "#F5F5F7")
+	hasOriginalMarkers := strings.Contains(originalHTML, "Arial, Helvetica") && strings.Contains(originalHTML, "#ffffff") && !strings.Contains(originalHTML, "appl_")
+
+	response.Results = append(response.Results, TestCaseResult{
+		Name:     "Template Differentiation",
+		Status:   func() string {
+			if hasAppleMarkers && hasOriginalMarkers {
+				return "pass"
+			}
+			return "warning"
+		}(),
+		Message: func() string {
+			if hasAppleMarkers && hasOriginalMarkers {
+				return "Templates are correctly differentiated"
+			}
+			return "Templates may not be using distinct styling"
+		}(),
+		Expected: "Distinct styling for each template",
+		Actual:   fmt.Sprintf("Apple markers: %v, Original markers: %v", hasAppleMarkers, hasOriginalMarkers),
+	})
+
+	if hasAppleMarkers && hasOriginalMarkers {
+		response.Passed++
+	} else {
+		response.Warnings++
+	}
+	response.Total++
+
+	// Test field order consistency (check that key sections appear in both)
+	keySections := []struct {
+		name string
+		check func(html string) bool
+	}{
+		{"Event Details Section", func(html string) bool {
+			return strings.Contains(html, "Event Details") || strings.Contains(html, "When:") || strings.Contains(html, "Where:")
+		}},
+		{"Services Section", func(html string) bool {
+			return strings.Contains(html, "Services") || strings.Contains(html, "Setup") || strings.Contains(html, "Dining")
+		}},
+		{"Pricing Section", func(html string) bool {
+			return strings.Contains(html, "Pricing") || strings.Contains(html, "Total") || strings.Contains(html, "Rate")
+		}},
+		{"Deposit CTA", func(html string) bool {
+			return strings.Contains(html, "Deposit") || strings.Contains(html, "Secure") || strings.Contains(html, "Pay")
+		}},
+	}
+
+	for _, section := range keySections {
+		originalHas := section.check(originalHTML)
+		appleHas := section.check(appleHTML)
+
+		status := "pass"
+		if !originalHas || !appleHas {
+			status = "fail"
+		}
+
+		response.Results = append(response.Results, TestCaseResult{
+			Name:     fmt.Sprintf("Section: %s", section.name),
+			Status:   status,
+			Message:  func() string {
+				if originalHas && appleHas {
+					return "Section present in both templates"
+				}
+				missing := []string{}
+				if !originalHas {
+					missing = append(missing, "original")
+				}
+				if !appleHas {
+					missing = append(missing, "apple_style")
+				}
+				return fmt.Sprintf("Missing in: %s", strings.Join(missing, ", "))
+			}(),
+			Expected: "Present in both templates",
+			Actual:   fmt.Sprintf("Original: %v, Apple: %v", originalHas, appleHas),
+		})
+
+		if status == "pass" {
+			response.Passed++
+		} else {
+			response.Failed++
+		}
+		response.Total++
 	}
 
 	return response, nil

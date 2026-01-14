@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Showcase - BizOps360 Platform</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/admin-shared.css" rel="stylesheet">
+    <link href="/static/css/server-timer.css" rel="stylesheet">
+    <style>
+        .feature-category {
+            margin-bottom: 3rem;
+        }
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .category-header h2 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        .category-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid #667eea;
+        }
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .feature-card.implemented {
+            border-left-color: #28a745;
+        }
+        .feature-card.partial {
+            border-left-color: #ffc107;
+        }
+        .feature-card.documented {
+            border-left-color: #17a2b8;
+        }
+        .feature-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #262837;
+            margin: 0;
+        }
+        .feature-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-implemented {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-partial {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .badge-documented {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .feature-description {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        .feature-details {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+        .feature-details h5 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #262837;
+            margin-bottom: 0.5rem;
+        }
+        .feature-details ul {
+            margin: 0;
+            padding-left: 1.5rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .feature-details li {
+            margin-bottom: 0.25rem;
+        }
+        .solution-section {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .solution-section h3 {
+            color: #262837;
+            margin-bottom: 1rem;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .filter-buttons {
+            margin-bottom: 2rem;
+        }
+        .filter-buttons .btn {
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .search-box {
+            margin-bottom: 2rem;
+        }
+        .last-updated {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-star-fill me-2"></i>BizOps360 Platform
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/features-showcase.html">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/financial-dashboard.html">Financial</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/analytics-dashboard.html">Analytics</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold mb-3">Platform Feature Showcase</h1>
+            <p class="lead">Comprehensive overview of all capabilities, solutions, and features</p>
+            <p class="text-muted">Automatically analyzed from codebase • Last updated: <span id="lastUpdated"></span></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number" id="totalFeatures">0</div>
+                <div class="label">Total Features</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="implementedFeatures">0</div>
+                <div class="label">Fully Implemented</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="partialFeatures">0</div>
+                <div class="label">Partially Implemented</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="documentedOnly">0</div>
+                <div class="label">Documented Only</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-buttons">
+            <button class="btn btn-outline-primary active" onclick="filterFeatures('all')">All Features</button>
+            <button class="btn btn-outline-success" onclick="filterFeatures('implemented')">Implemented</button>
+            <button class="btn btn-outline-warning" onclick="filterFeatures('partial')">Partial</button>
+            <button class="btn btn-outline-info" onclick="filterFeatures('documented')">Documented Only</button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="featureSearch" class="form-control" placeholder="Search features..." onkeyup="searchFeatures()">
+        </div>
+
+        <!-- Features by Category -->
+        <div id="featuresContainer">
+            <!-- Features will be dynamically loaded here -->
+        </div>
+
+        <div class="last-updated">
+            <p><i class="bi bi-info-circle"></i> This page analyzes the codebase to automatically discover and list features. Features are categorized by solution area.</p>
+            <p><strong>Legend:</strong> 
+                <span class="badge badge-implemented">Implemented</span> = Fully working in code • 
+                <span class="badge badge-partial">Partial</span> = Partially implemented • 
+                <span class="badge badge-documented">Documented</span> = In docs but not in code
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>BizOps360 Platform</h5>
+                    <p class="mb-0">Feature Showcase</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        <a href="/" class="text-white text-decoration-none me-3">Home</a>
+                        <span class="text-muted">v1.0</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/server-timer.js"></script>
+    <script>
+        // Feature data - automatically discovered from codebase
+        const features = [
+            // ===== LEAD PROCESSING & AUTOMATION =====
+            {
+                category: "Lead Processing & Automation",
+                categoryDescription: "Automated lead capture, processing, and workflow automation",
+                title: "Automated Lead Processing",
+                status: "implemented",
+                description: "Automatically processes form submissions from WPForms, Zapier, and other sources. Transforms raw form data into structured lead information.",
+                details: {
+                    "Implementation": [
+                        "Form event handler (POST /v1/form-events)",
+                        "Lead processor service with data transformation",
+                        "Pipeline-based workflow execution",
+                        "Support for multiple form sources"
+                    ],
+                    "Capabilities": [
+                        "Normalize input data",
+                        "Extract event details (date, time, location, helpers, hours)",
+                        "Calculate estimates automatically",
+                        "Generate confirmation numbers",
+                        "Create calendar events",
+                        "Send quote emails"
+                    ],
+                    "Integration Points": [
+                        "WPForms webhooks",
+                        "Zapier integration",
+                        "Business-specific lead processing (POST /api/business/{businessId}/process-lead)",
+                        "Legacy Zapier endpoint (POST /api/zapier/process-lead)"
+                    ]
+                }
+            },
+            {
+                category: "Lead Processing & Automation",
+                title: "Pipeline-Based Workflow Engine",
+                status: "implemented",
+                description: "Configurable YAML-based pipelines that define automated workflows for different business processes (quote & deposit, renewal followup, deposit only).",
+                details: {
+                    "Implementation": [
+                        "Pipeline runner with action execution",
+                        "YAML pipeline definitions in config/pipelines/",
+                        "Form events service",
+                        "Triggers service for external events"
+                    ],
+                    "Pipeline Types": [
+                        "quote_and_deposit - Full quote and deposit processing",
+                        "renewal_followup - Automated renewal offers",
+                        "deposit_only - Deposit payment processing"
+                    ],
+                    "Actions": [
+                        "normalize_input - Data normalization",
+                        "send_slack_notification - Team notifications"
+                    ]
+                }
+            },
+            {
+                category: "Lead Processing & Automation",
+                title: "Business-Specific Configuration",
+                status: "implemented",
+                description: "Multi-tenant support with business-specific configurations, pipelines, and templates. Each business can have custom settings, email templates, and workflows.",
+                details: {
+                    "Implementation": [
+                        "Business loader from YAML configs",
+                        "Business-specific pipelines",
+                        "Business-specific email templates",
+                        "Business-specific contact information"
+                    ],
+                    "Configuration Files": [
+                        "config/businesses/{businessId}.yaml",
+                        "config/pipelines/{pipelineKey}.yaml",
+                        "templates/{businessId}/*.html"
+                    ]
+                }
+            },
+
+            // ===== PRICING & FINANCIAL CALCULATIONS =====
+            {
+                category: "Pricing & Financial Calculations",
+                categoryDescription: "Dynamic pricing, rate calculations, and financial management",
+                title: "Dynamic Pricing Engine",
+                status: "implemented",
+                description: "Year-based pricing with automatic rate adjustments. Base rates and hourly rates vary by year (2025-2030+). Supports first 4 hours base block + extra hours pricing.",
+                details: {
+                    "Implementation": [
+                        "BaseRate struct with BasePerHelper and ExtraPerHourPerHelper",
+                        "Year-based rate lookup (2025: $275/$45, 2026: $300/$50, etc.)",
+                        "Automatic rate selection based on event year",
+                        "Fallback to nearest year for out-of-range dates"
+                    ],
+                    "Rate Structure": [
+                        "Base block: First 4 hours at base rate per helper",
+                        "Extra hours: Additional hours at hourly rate per helper",
+                        "Multi-helper support: Rates multiply by number of helpers"
+                    ]
+                }
+            },
+            {
+                category: "Pricing & Financial Calculations",
+                title: "Special Date Pricing (Holidays & Surge)",
+                status: "implemented",
+                description: "Automatic detection and pricing adjustment for holidays (2x multiplier) and surge dates (1.25x-3.0x multiplier). Dynamic calculation of Thanksgiving and adjacent dates.",
+                details: {
+                    "Implementation": [
+                        "Holiday detection (New Year's Day, Thanksgiving, Christmas Eve/Day, New Year's Eve)",
+                        "Surge date rules with configurable multipliers",
+                        "Thanksgiving adjacent dates (day before/after = 1.5x)",
+                        "New Year's Eve adjacent dates (Dec 30 = 1.5x)",
+                        "Legacy special date support for backward compatibility"
+                    ],
+                    "Holiday Rules": [
+                        "Fixed holidays: 2x multiplier",
+                        "Thanksgiving: Dynamically calculated (4th Thursday of November)",
+                        "Precedence: Holidays > Surge > Legacy"
+                    ],
+                    "Surge Rules": [
+                        "Multiplier range: 1.25x to 3.0x",
+                        "Year-specific surge dates",
+                        "Recurring surge dates (Jan 1, Feb 5, May 17, Aug 19, Dec 27)"
+                    ]
+                }
+            },
+            {
+                category: "Pricing & Financial Calculations",
+                title: "Dynamic Deposit Calculation",
+                status: "implemented",
+                description: "Intelligent deposit calculation based on total cost, with configurable rules. Supports multiple calculation methods and priority-based selection.",
+                details: {
+                    "Implementation": [
+                        "Stripe deposit calculator service",
+                        "Priority-based deposit calculation (manual > estimate > event details)",
+                        "Deposit calculation from estimate (POST /api/stripe/deposit/calculate)",
+                        "Deposit with email (POST /api/stripe/deposit/with-email)"
+                    ],
+                    "Calculation Methods": [
+                        "Direct deposit value override (highest priority)",
+                        "Calculate from provided estimate",
+                        "Calculate from event details (date, hours, helpers)"
+                    ],
+                    "Features": [
+                        "Automatic deposit amount calculation",
+                        "Deposit deadline calculation (14 days default)",
+                        "Non-refundable deposit notice for events < 3 days"
+                    ]
+                }
+            },
+            {
+                category: "Pricing & Financial Calculations",
+                title: "Contractor Payout Calculation",
+                status: "implemented",
+                description: "Calculate contractor payouts with base rates and multipliers. Multipliers apply only to special dates (holidays), not surge dates, ensuring proper profit margins.",
+                details: {
+                    "Implementation": [
+                        "Base payout = baseRate × helpers (first 4 hours) + hourlyRate × helpers × extraHours",
+                        "Multiplier application for holidays only",
+                        "Surge dates do NOT affect contractor payouts",
+                        "Financial dashboard integration"
+                    ],
+                    "Payout Rules": [
+                        "Base rate per helper for first 4 hours",
+                        "Hourly rate per helper for additional hours",
+                        "Holiday multiplier applied to total payout",
+                        "Surge pricing is revenue-only (no contractor multiplier)"
+                    ]
+                }
+            },
+            {
+                category: "Pricing & Financial Calculations",
+                title: "Travel Fee Calculation",
+                status: "implemented",
+                description: "Calculate travel fees based on distance from business location. Uses Google Distance Matrix API to determine if location is within service radius.",
+                details: {
+                    "Implementation": [
+                        "Distance Matrix API integration",
+                        "Service radius configuration per business",
+                        "Travel fee calculation based on distance",
+                        "Within/outside service area detection"
+                    ],
+                    "Features": [
+                        "Automatic distance calculation",
+                        "Service radius checking",
+                        "Travel fee display in quotes",
+                        "Zero fee for locations within radius"
+                    ]
+                }
+            },
+
+            // ===== EMAIL & COMMUNICATION =====
+            {
+                category: "Email & Communication",
+                categoryDescription: "Professional email generation, templates, and communication automation",
+                title: "Quote Email Generation",
+                status: "implemented",
+                description: "Generate professional quote emails with dynamic content, personalization, and urgency messaging. Supports multiple template styles (original and Apple-style).",
+                details: {
+                    "Implementation": [
+                        "Quote email handler (POST /api/email/quote)",
+                        "Quote email preview (POST /api/email/quote/preview)",
+                        "Quote email test all (POST /api/email/quote/test-all)",
+                        "Template selection (original/apple_style)",
+                        "Business-specific template support"
+                    ],
+                    "Email Features": [
+                        "Dynamic expiration dates based on urgency",
+                        "Urgency-based banners (critical/urgent/high/moderate/normal)",
+                        "Availability meter",
+                        "Personalized greeting from Anna",
+                        "Event countdown intelligence",
+                        "High-demand date detection",
+                        "Returning client recognition",
+                        "Non-refundable deposit notice (≤3 days)",
+                        "Weather forecast integration (< 10 days)",
+                        "Travel fee information",
+                        "PDF download link"
+                    ]
+                }
+            },
+            {
+                category: "Email & Communication",
+                title: "Apple-Style Email Templates",
+                status: "implemented",
+                description: "Modern, Apple-inspired email templates with responsive design, optimized for email client compatibility, and professional appearance.",
+                details: {
+                    "Implementation": [
+                        "GenerateQuoteEmailHTMLAppleStyle function",
+                        "Apple-style CSS with media queries",
+                        "Responsive design for mobile/desktop",
+                        "Email client compatibility (Gmail, Outlook, Apple Mail)"
+                    ],
+                    "Design Features": [
+                        "Apple-inspired color scheme (#F5F5F7 background)",
+                        "System font stack",
+                        "Responsive layout",
+                        "Mobile-optimized",
+                        "Professional typography"
+                    ]
+                }
+            },
+            {
+                category: "Email & Communication",
+                title: "Final Invoice Email",
+                status: "implemented",
+                description: "Generate and send final invoice emails after events with payment links, gratuity options, and event summary.",
+                details: {
+                    "Implementation": [
+                        "Final invoice handler (POST /api/email/final-invoice)",
+                        "Final invoice preview (POST /api/email/final-invoice/preview)",
+                        "Stripe payment link generation",
+                        "Gratuity link generation"
+                    ],
+                    "Features": [
+                        "Event summary",
+                        "Final payment amount",
+                        "Secure Stripe payment link",
+                        "Separate gratuity link",
+                        "Net 7 payment terms",
+                        "Payment options (check, cash, online)"
+                    ]
+                }
+            },
+            {
+                category: "Email & Communication",
+                title: "Deposit Booking Email",
+                status: "implemented",
+                description: "Send deposit booking confirmation emails with payment instructions and event details.",
+                details: {
+                    "Implementation": [
+                        "Booking deposit handler (POST /api/email/booking-deposit)",
+                        "Deposit email preview (POST /api/email/deposit/preview)"
+                    ]
+                }
+            },
+            {
+                category: "Email & Communication",
+                title: "Review Request Email",
+                status: "implemented",
+                description: "Automated review request emails to collect customer feedback after events.",
+                details: {
+                    "Implementation": [
+                        "Review request preview (POST /api/email/review-request/preview)"
+                    ]
+                }
+            },
+            {
+                category: "Email & Communication",
+                title: "Email Draft Support",
+                status: "implemented",
+                description: "Save emails as drafts in Gmail instead of sending immediately, allowing for review and manual sending.",
+                details: {
+                    "Implementation": [
+                        "SaveAsDraft flag in email requests",
+                        "Gmail draft creation",
+                        "Email client draft support"
+                    ]
+                }
+            },
+            {
+                category: "Email & Communication",
+                title: "Gmail Integration",
+                status: "implemented",
+                description: "Full Gmail API integration for sending emails, creating drafts, and managing email operations.",
+                details: {
+                    "Implementation": [
+                        "Gmail sender service",
+                        "OAuth2 authentication",
+                        "Email sending via Gmail API",
+                        "Draft creation support"
+                    ]
+                }
+            },
+
+            // ===== PAYMENT PROCESSING =====
+            {
+                category: "Payment Processing",
+                categoryDescription: "Stripe integration for deposits, invoices, and payment management",
+                title: "Stripe Deposit Processing",
+                status: "implemented",
+                description: "Create Stripe invoices for deposits with automatic calculation, custom fields, and email delivery.",
+                details: {
+                    "Implementation": [
+                        "Deposit calculation endpoint (POST /api/stripe/deposit/calculate)",
+                        "Deposit with email (POST /api/stripe/deposit/with-email)",
+                        "Stripe invoice creation",
+                        "Custom metadata support"
+                    ],
+                    "Features": [
+                        "Automatic deposit amount calculation",
+                        "Custom invoice fields",
+                        "Memo and footer customization",
+                        "Email delivery via Stripe",
+                        "Payment link generation"
+                    ]
+                }
+            },
+            {
+                category: "Payment Processing",
+                title: "Stripe Final Invoice",
+                status: "implemented",
+                description: "Generate final invoices after events with remaining balance, gratuity options, and secure payment processing.",
+                details: {
+                    "Implementation": [
+                        "Final invoice handler (POST /api/stripe/final-invoice)",
+                        "Invoice calculation",
+                        "Payment link generation"
+                    ]
+                }
+            },
+            {
+                category: "Payment Processing",
+                title: "Stripe Webhook Handling",
+                status: "implemented",
+                description: "Process Stripe webhooks for payment events, invoice updates, and payment status changes.",
+                details: {
+                    "Implementation": [
+                        "Webhook handler (POST /api/stripe/webhook)",
+                        "Event signature verification",
+                        "Payment event processing",
+                        "Invoice status updates"
+                    ]
+                }
+            },
+
+            // ===== PDF & DOCUMENT GENERATION =====
+            {
+                category: "PDF & Document Generation",
+                categoryDescription: "PDF quote generation, storage, and secure access",
+                title: "PDF Quote Generation",
+                status: "implemented",
+                description: "Generate PDF quotes with all event details, pricing, and payment information. PDFs are attached to emails and available for download via secure token.",
+                details: {
+                    "Implementation": [
+                        "PDF generation service",
+                        "Quote PDF handler (GET /api/quote/pdf?token=...)",
+                        "PDF token generation",
+                        "Cloud Storage integration",
+                        "Firestore token storage"
+                    ],
+                    "Features": [
+                        "PDF attachment to quote emails",
+                        "Secure token-based download",
+                        "Token expiration management",
+                        "Cloud Storage upload",
+                        "Access tracking",
+                        "Regeneration support for expired quotes"
+                    ]
+                }
+            },
+            {
+                category: "PDF & Document Generation",
+                title: "Quote Regeneration",
+                status: "implemented",
+                description: "Allow clients to regenerate expired quotes via public form, maintaining original pricing and terms.",
+                details: {
+                    "Implementation": [
+                        "Regenerate handler (POST /api/quote/regenerate)",
+                        "Public form access",
+                        "Original quote data preservation"
+                    ]
+                }
+            },
+
+            // ===== CALENDAR INTEGRATION =====
+            {
+                category: "Calendar Integration",
+                categoryDescription: "Google Calendar integration for event scheduling",
+                title: "Calendar Event Creation",
+                status: "implemented",
+                description: "Automatically create Google Calendar events for booked events with all relevant details.",
+                details: {
+                    "Implementation": [
+                        "Calendar handler (POST /api/calendar/create)",
+                        "Google Calendar API integration",
+                        "Event details mapping"
+                    ]
+                }
+            },
+
+            // ===== WEATHER & LOCATION SERVICES =====
+            {
+                category: "Weather & Location Services",
+                categoryDescription: "Weather forecasts and location-based services",
+                title: "Weather Forecast Integration",
+                status: "implemented",
+                description: "Automatically include weather forecasts in quote emails for events less than 10 days away, helping clients prepare for outdoor events.",
+                details: {
+                    "Implementation": [
+                        "Weather API integration",
+                        "Automatic forecast retrieval",
+                        "Weather display in email templates",
+                        "Conditional display (< 10 days only)"
+                    ],
+                    "Weather Data": [
+                        "Temperature",
+                        "Condition (Clear, Clouds, Rain, etc.)",
+                        "Description",
+                        "Recommendations based on weather"
+                    ]
+                }
+            },
+            {
+                category: "Weather & Location Services",
+                title: "Address Geocoding",
+                status: "implemented",
+                description: "Geocode event addresses to coordinates for distance calculations and location services.",
+                details: {
+                    "Implementation": [
+                        "Geocoding service",
+                        "Address to coordinates conversion",
+                        "Distance calculation support"
+                    ]
+                }
+            },
+            {
+                category: "Weather & Location Services",
+                title: "Distance Matrix API",
+                status: "implemented",
+                description: "Calculate travel distances and times using Google Distance Matrix API for travel fee calculations.",
+                details: {
+                    "Implementation": [
+                        "Distance Matrix API integration",
+                        "Travel time calculation",
+                        "Distance-based fee calculation"
+                    ]
+                }
+            },
+
+            // ===== ANALYTICS & REPORTING =====
+            {
+                category: "Analytics & Reporting",
+                categoryDescription: "Financial analytics, event statistics, and business intelligence",
+                title: "Financial Dashboard",
+                status: "implemented",
+                description: "Comprehensive financial dashboard showing revenue, contractor payouts, expenses, and net profit with visualizations and date filtering.",
+                details: {
+                    "Implementation": [
+                        "Financial dashboard page (/financial-dashboard.html)",
+                        "Revenue vs Payouts charts",
+                        "Profit margin trends",
+                        "Event financial breakdown table",
+                        "Expense tracking (localStorage)"
+                    ],
+                    "Features": [
+                        "Total revenue tracking",
+                        "Contractor payout calculation",
+                        "Expense management",
+                        "Net profit calculation",
+                        "Date range filtering",
+                        "Chart visualizations",
+                        "CSV export"
+                    ]
+                }
+            },
+            {
+                category: "Analytics & Reporting",
+                title: "Analytics Dashboard",
+                status: "implemented",
+                description: "Event statistics dashboard with breakdowns by year, month, day of week, and helper distribution.",
+                details: {
+                    "Implementation": [
+                        "Analytics dashboard page (/analytics-dashboard.html)",
+                        "Events by year/month charts",
+                        "Day of week distribution",
+                        "Helper distribution analysis",
+                        "Year-over-year comparison"
+                    ],
+                    "Statistics": [
+                        "Total events count",
+                        "Events by year",
+                        "Events by month",
+                        "Events by day of week",
+                        "Average helpers per event",
+                        "Special dates count",
+                        "CSV export"
+                    ]
+                }
+            },
+            {
+                category: "Analytics & Reporting",
+                title: "Test Dashboard",
+                status: "implemented",
+                description: "Comprehensive testing dashboard for validating pricing, rates, date variations, urgency levels, and email templates.",
+                details: {
+                    "Implementation": [
+                        "Test dashboard page (/test-dashboard.html)",
+                        "Multiple test suites",
+                        "Date filtering (year/month)",
+                        "Advanced/simplified views"
+                    ],
+                    "Test Suites": [
+                        "Date Variations Test",
+                        "Deposit Booking Deadline",
+                        "Urgency Levels",
+                        "Deposit Calculation",
+                        "Pricing & Rates",
+                        "Email Template",
+                        "Weather Forecast",
+                        "Form Validation"
+                    ]
+                }
+            },
+
+            // ===== INTEGRATION & APIs =====
+            {
+                category: "Integration & APIs",
+                categoryDescription: "API endpoints, webhooks, and third-party integrations",
+                title: "RESTful API",
+                status: "implemented",
+                description: "Comprehensive REST API with versioning, authentication, and standardized endpoints for all platform features.",
+                details: {
+                    "Implementation": [
+                        "API v1 endpoints (/v1/form-events, /v1/triggers)",
+                        "Legacy API endpoints (/api/*)",
+                        "API key authentication",
+                        "HMAC signature verification",
+                        "Request/response logging"
+                    ],
+                    "API Features": [
+                        "Form event processing",
+                        "Trigger-based workflows",
+                        "Estimate calculation",
+                        "Email generation",
+                        "Stripe integration",
+                        "PDF generation",
+                        "Health checks"
+                    ]
+                }
+            },
+            {
+                category: "Integration & APIs",
+                title: "Zapier Integration",
+                status: "implemented",
+                description: "Legacy Zapier endpoint for processing leads from Zapier workflows, matching original Apps Script functionality.",
+                details: {
+                    "Implementation": [
+                        "Zapier handler (POST /api/zapier/process-lead)",
+                        "Lead data transformation",
+                        "Quote email generation"
+                    ]
+                }
+            },
+            {
+                category: "Integration & APIs",
+                title: "Swagger/OpenAPI Documentation",
+                status: "implemented",
+                description: "Interactive API documentation with Swagger UI for exploring and testing endpoints.",
+                details: {
+                    "Implementation": [
+                        "Swagger UI (/swagger.html)",
+                        "Simple Swagger UI (/swagger-ui-simple.html)",
+                        "OpenAPI specification",
+                        "API testing interface"
+                    ]
+                }
+            },
+            {
+                category: "Integration & APIs",
+                title: "Health & Monitoring",
+                status: "implemented",
+                description: "Health check endpoints for monitoring, readiness checks, and system status.",
+                details: {
+                    "Implementation": [
+                        "Health check (GET /api/health)",
+                        "Readiness check (GET /api/health/ready)",
+                        "Liveness check (GET /api/health/live)",
+                        "Time endpoint (GET /api/time)",
+                        "Server start time tracking"
+                    ]
+                }
+            },
+
+            // ===== CONFIGURATION & MANAGEMENT =====
+            {
+                category: "Configuration & Management",
+                categoryDescription: "Business configuration, settings, and system management",
+                title: "Business Configuration System",
+                status: "implemented",
+                description: "YAML-based business configuration with support for multiple businesses, custom pipelines, templates, and settings.",
+                details: {
+                    "Implementation": [
+                        "Business loader from YAML",
+                        "Pipeline configuration",
+                        "Template management",
+                        "Contact information configuration"
+                    ],
+                    "Configuration Files": [
+                        "config/businesses/{businessId}.yaml",
+                        "config/pipelines/{pipelineKey}.yaml",
+                        "templates/{businessId}/*.html"
+                    ]
+                }
+            },
+            {
+                category: "Configuration & Management",
+                title: "Settings Management",
+                status: "implemented",
+                description: "Settings API for managing email template preferences and system configuration.",
+                details: {
+                    "Implementation": [
+                        "Settings handler (GET/POST /api/settings)",
+                        "Email template settings (GET/POST /api/settings/email-template)",
+                        "Settings page (/settings.html)"
+                    ]
+                }
+            },
+            {
+                category: "Configuration & Management",
+                title: "Server Management",
+                status: "implemented",
+                description: "Server restart functionality for development and hot-reload capabilities.",
+                details: {
+                    "Implementation": [
+                        "Server restart handler (POST /api/server/restart)",
+                        "Server uptime tracking",
+                        "Auto-restart timer (client-side)"
+                    ]
+                }
+            },
+
+            // ===== TESTING & QUALITY ASSURANCE =====
+            {
+                category: "Testing & Quality Assurance",
+                categoryDescription: "Testing tools, validation, and quality assurance",
+                title: "Comprehensive Test Suite",
+                status: "implemented",
+                description: "Automated test suite covering all major features including pricing, dates, urgency levels, deposits, and email templates.",
+                details: {
+                    "Implementation": [
+                        "Test handler with multiple test types",
+                        "Test dashboard UI",
+                        "Test result visualization",
+                        "Date filtering and search"
+                    ],
+                    "Test Types": [
+                        "Date Variations Test",
+                        "Deposit Booking Deadline Calculation",
+                        "Urgency Level Calculation",
+                        "Deposit Calculation",
+                        "Pricing & Rates",
+                        "Email Template Generation",
+                        "Weather Forecast",
+                        "Form Validation"
+                    ]
+                }
+            },
+            {
+                category: "Testing & Quality Assurance",
+                title: "Quote Preview Tools",
+                status: "implemented",
+                description: "Interactive preview tools for testing quote emails, templates, and configurations before sending.",
+                details: {
+                    "Implementation": [
+                        "Quote preview page (/quote-preview.html)",
+                        "Email template preview (/email-template-preview.html)",
+                        "Quote test all (/quote-test-all.html)",
+                        "Final invoice test (/test-final-invoice.html)"
+                    ]
+                }
+            },
+
+            // ===== DOCUMENTED BUT NOT FULLY IMPLEMENTED =====
+            {
+                category: "Documented Features",
+                categoryDescription: "Features documented but not yet fully implemented in code",
+                title: "Monday.com Integration",
+                status: "documented",
+                description: "Integration with Monday.com for CRM and project management. Documented in architecture but implementation is stubbed.",
+                details: {
+                    "Documentation": [
+                        "Architecture docs mention Monday.com integration",
+                        "Trigger service supports Monday.com resources",
+                        "Implementation is placeholder/stub"
+                    ]
+                }
+            },
+            {
+                category: "Documented Features",
+                title: "Slack Integration",
+                status: "partial",
+                description: "Slack notification action exists but may need full implementation. Documented in pipeline actions.",
+                details: {
+                    "Implementation": [
+                        "send_slack_notification action exists",
+                        "May need full Slack API integration"
+                    ]
+                }
+            },
+            {
+                category: "Documented Features",
+                title: "Firestore/Cloud SQL Persistence",
+                status: "documented",
+                description: "Job persistence in Firestore or Cloud SQL. Currently using in-memory storage. Documented as TODO in README.",
+                details: {
+                    "Documentation": [
+                        "README mentions Firestore/Cloud SQL for job persistence",
+                        "Currently using in-memory storage",
+                        "Firestore client exists for PDF tokens"
+                    ]
+                }
+            },
+            {
+                category: "Documented Features",
+                title: "Returning Client Detection",
+                status: "partial",
+                description: "Returning client recognition is mentioned in email templates but detection logic needs CRM/calendar integration.",
+                details: {
+                    "Implementation": [
+                        "Email template supports IsReturningClient flag",
+                        "Detection logic is TODO (needs CRM/calendar query)",
+                        "Currently defaults to false"
+                    ]
+                }
+            }
+        ];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+            renderFeatures();
+            updateStats();
+        });
+
+        function renderFeatures() {
+            const container = document.getElementById('featuresContainer');
+            const categories = {};
+            
+            // Group features by category
+            features.forEach(feature => {
+                if (!categories[feature.category]) {
+                    categories[feature.category] = {
+                        description: feature.categoryDescription || '',
+                        features: []
+                    };
+                }
+                categories[feature.category].features.push(feature);
+            });
+
+            // Render categories
+            let html = '';
+            Object.keys(categories).sort().forEach(category => {
+                const cat = categories[category];
+                html += `
+                    <div class="feature-category" data-category="${category}">
+                        <div class="category-header">
+                            <h2>${category}</h2>
+                            <p>${cat.description}</p>
+                        </div>
+                        ${cat.features.map(feature => renderFeatureCard(feature)).join('')}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderFeatureCard(feature) {
+            const statusClass = feature.status;
+            const badgeClass = `badge-${feature.status}`;
+            const badgeText = feature.status === 'implemented' ? 'Implemented' : 
+                            feature.status === 'partial' ? 'Partial' : 'Documented';
+
+            let detailsHtml = '';
+            if (feature.details) {
+                detailsHtml = '<div class="feature-details">';
+                Object.keys(feature.details).forEach(key => {
+                    detailsHtml += `<h5>${key}:</h5><ul>`;
+                    feature.details[key].forEach(item => {
+                        detailsHtml += `<li>${item}</li>`;
+                    });
+                    detailsHtml += '</ul>';
+                });
+                detailsHtml += '</div>';
+            }
+
+            return `
+                <div class="feature-card ${statusClass}" data-status="${feature.status}" data-title="${feature.title.toLowerCase()}">
+                    <div class="feature-header">
+                        <h3 class="feature-title">${feature.title}</h3>
+                        <span class="feature-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div class="feature-description">${feature.description}</div>
+                    ${detailsHtml}
+                </div>
+            `;
+        }
+
+        function updateStats() {
+            const total = features.length;
+            const implemented = features.filter(f => f.status === 'implemented').length;
+            const partial = features.filter(f => f.status === 'partial').length;
+            const documented = features.filter(f => f.status === 'documented').length;
+
+            document.getElementById('totalFeatures').textContent = total;
+            document.getElementById('implementedFeatures').textContent = implemented;
+            document.getElementById('partialFeatures').textContent = partial;
+            document.getElementById('documentedOnly').textContent = documented;
+        }
+
+        function filterFeatures(status) {
+            // Update button states
+            document.querySelectorAll('.filter-buttons .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Filter features
+            const cards = document.querySelectorAll('.feature-card');
+            cards.forEach(card => {
+                if (status === 'all' || card.dataset.status === status) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Hide/show categories with no visible features
+            document.querySelectorAll('.feature-category').forEach(category => {
+                const visibleCards = category.querySelectorAll('.feature-card[style="display: block"], .feature-card:not([style*="display: none"])');
+                if (status !== 'all' && visibleCards.length === 0) {
+                    category.style.display = 'none';
+                } else {
+                    category.style.display = 'block';
+                }
+            });
+        }
+
+        function searchFeatures() {
+            const searchTerm = document.getElementById('featureSearch').value.toLowerCase();
+            const cards = document.querySelectorAll('.feature-card');
+            
+            cards.forEach(card => {
+                const title = card.dataset.title;
+                const description = card.querySelector('.feature-description').textContent.toLowerCase();
+                const matches = title.includes(searchTerm) || description.includes(searchTerm);
+                
+                card.style.display = matches ? 'block' : 'none';
+            });
+
+            // Hide/show categories
+            document.querySelectorAll('.feature-category').forEach(category => {
+                const visibleCards = category.querySelectorAll('.feature-card[style="display: block"], .feature-card:not([style*="display: none"])');
+                if (visibleCards.length === 0) {
+                    category.style.display = 'none';
+                } else {
+                    category.style.display = 'block';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

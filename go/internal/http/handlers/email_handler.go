@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"math"
 	"net/http"
@@ -37,14 +39,14 @@ func getStringFromMap(m map[string]interface{}, key string) string {
 
 // EmailHandler handles email-related endpoints
 type EmailHandler struct {
-	emailClient          *email.EmailServiceClient
-	gmailSender          *email.GmailSender
-	geocodingService     *geo.GeocodingService
+	emailClient           *email.EmailServiceClient
+	gmailSender           *email.GmailSender
+	geocodingService      *geo.GeocodingService
 	distanceMatrixService *geo.DistanceMatrixService
-	weatherService       *weather.WeatherService
-	businessLoader       *config.BusinessLoader
-	pdfService           *pdf.Service
-	logger               *slog.Logger
+	weatherService        *weather.WeatherService
+	businessLoader        *config.BusinessLoader
+	pdfService            *pdf.Service
+	logger                *slog.Logger
 }
 
 // NewEmailHandler creates a new email handler
@@ -655,7 +657,19 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 		DryRun        bool    `json:"dryRun"`
 		SaveAsDraft   bool    `json:"saveAsDraft"`
 		PayWithCheck  bool    `json:"payWithCheck"` // If true, attach PDF quote
+		Template      string  `json:"template"`     // Template type: "original" or "apple_style"
 	}
+
+	// #region agent log
+	if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		bodyBytes, _ := io.ReadAll(r.Body)
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) // Restore body for ReadJSON
+		var rawBody map[string]interface{}
+		json.Unmarshal(bodyBytes, &rawBody)
+		json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "J", "location": "email_handler.go:641", "message": "HandleQuoteEmail - raw request body", "data": map[string]interface{}{"rawBody": rawBody, "templateInRaw": rawBody["template"]}, "timestamp": time.Now().UnixMilli()})
+		f.Close()
+	}
+	// #endregion
 
 	if err := util.ReadJSON(r, &body); err != nil {
 		util.WriteError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
@@ -743,9 +757,9 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 
 				recommendation := weather.GetWeatherRecommendation(forecast, isOutdoor)
 				weatherForecast = &util.WeatherForecastData{
-					Temperature:   forecast.Temperature,
-					Condition:     forecast.Condition,
-					Description:   forecast.Description,
+					Temperature:    forecast.Temperature,
+					Condition:      forecast.Condition,
+					Description:    forecast.Description,
 					Recommendation: recommendation,
 				}
 			} else if err != nil {
@@ -763,7 +777,7 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 		// Get location info from business config (if available)
 		var originLat, originLng, radiusMiles float64
 		var originAddress string
-		
+
 		// Try to get business config if businessLoader is available
 		// Default to "stlpartyhelpers" if no business ID in request
 		businessID := "stlpartyhelpers" // Default business ID
@@ -786,7 +800,7 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 				}
 			}
 		}
-		
+
 		// Fallback to hardcoded defaults if business config not available
 		if originLat == 0 && originLng == 0 {
 			originLat = geo.OfficeLat
@@ -794,10 +808,10 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 			radiusMiles = geo.ServiceRadiusMiles
 			originAddress = geo.OfficeAddress
 		}
-		
+
 		var distanceMiles float64
 		var distanceSource string
-		
+
 		// Use Haversine formula for distance calculation (Distance Matrix API not implemented yet)
 		if h.geocodingService != nil {
 			// Geocode destination
@@ -815,7 +829,7 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 				h.logger.Warn("Failed to geocode address for travel fee calculation", "error", err)
 			}
 		}
-		
+
 		// Calculate travel fee if we have a distance
 		if distanceMiles > 0 {
 			// Calculate travel fee - first check if within service area using config radius
@@ -844,14 +858,14 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 				}
 				feePerHelper = math.Round(feePerHelper)
 				totalTravelFee := feePerHelper * float64(body.Helpers)
-				
+
 				var message string
 				if body.Helpers == 1 {
 					message = fmt.Sprintf("outside of our area — $%.0f travel fee", totalTravelFee)
 				} else {
 					message = fmt.Sprintf("outside of our area — $%.0f travel fee (for %d helpers)", totalTravelFee, body.Helpers)
 				}
-				
+
 				travelFeeResult = &pricing.TravelFeeResult{
 					IsWithinServiceArea: false,
 					DistanceMiles:       distanceMiles,
@@ -861,12 +875,12 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 					Message:             message,
 				}
 			}
-			
+
 			travelFeeAmount = travelFeeResult.TotalTravelFee
-			
+
 			// Add travel fee to total cost
 			totalCost += travelFeeAmount
-			
+
 			// Create travel fee data for email
 			travelFeeInfo = &util.TravelFeeData{
 				IsWithinServiceArea: travelFeeResult.IsWithinServiceArea,
@@ -874,7 +888,7 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 				TravelFee:           travelFeeResult.TotalTravelFee,
 				Message:             travelFeeResult.Message,
 			}
-			
+
 			h.logger.Info("Travel fee calculated",
 				"distanceMiles", distanceMiles,
 				"distanceSource", distanceSource,
@@ -929,7 +943,90 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 		PDFDownloadLink:    pdfDownloadLink,        // PDF download link
 	}
 
-	htmlBody := util.GenerateQuoteEmailHTML(emailData)
+	// Generate HTML based on template selection
+	// #region agent log
+	if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A", "location": "email_handler.go:933", "message": "HandleQuoteEmail - body.Template value", "data": map[string]interface{}{"template": body.Template, "templateLen": len(body.Template)}, "timestamp": time.Now().UnixMilli()})
+		f.Close()
+	}
+	// #endregion
+	templateType := body.Template
+	if templateType == "" {
+		// Get default template from business config
+		businessID := "stlpartyhelpers" // Default business ID
+		defaultTemplate := "original"   // Fallback default
+		if h.businessLoader != nil {
+			if businessConfig, err := h.businessLoader.LoadBusiness(r.Context(), businessID); err == nil && businessConfig != nil {
+				if businessConfig.Templates.EmailTemplateSettings.DefaultTemplate != "" {
+					defaultTemplate = businessConfig.Templates.EmailTemplateSettings.DefaultTemplate
+				}
+			}
+		}
+		templateType = defaultTemplate
+	}
+	// #region agent log
+	if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "email_handler.go:937", "message": "HandleQuoteEmail - templateType after default", "data": map[string]interface{}{"templateType": templateType, "isAppleStyle": templateType == "apple_style"}, "timestamp": time.Now().UnixMilli()})
+		f.Close()
+	}
+	// #endregion
+
+	var htmlBody string
+	if templateType == "apple_style" {
+		// #region agent log
+		if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C", "location": "email_handler.go:940", "message": "HandleQuoteEmail - calling Apple style", "data": map[string]interface{}{"templateType": templateType}, "timestamp": time.Now().UnixMilli()})
+			f.Close()
+		}
+		// #endregion
+		// Load business config for contact info
+		businessID := "stlpartyhelpers"
+		var businessConfig *domain.BusinessConfig
+		if h.businessLoader != nil {
+			if config, err := h.businessLoader.LoadBusiness(r.Context(), businessID); err == nil {
+				businessConfig = config
+			}
+		}
+		htmlBody = util.GenerateQuoteEmailHTMLAppleStyle(emailData, businessConfig)
+		// #region agent log
+		if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			htmlSample := htmlBody
+			if len(htmlSample) > 500 {
+				htmlSample = htmlSample[:500]
+			}
+			hasAppleStyle := strings.Contains(htmlBody, "system-ui") || strings.Contains(htmlBody, "#F5F5F7") || strings.Contains(htmlBody, "appl_")
+			json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C", "location": "email_handler.go:959", "message": "HandleQuoteEmail - Apple style HTML generated", "data": map[string]interface{}{"htmlLen": len(htmlBody), "hasAppleStyle": hasAppleStyle, "htmlSample": htmlSample}, "timestamp": time.Now().UnixMilli()})
+			f.Close()
+		}
+		// #endregion
+	} else {
+		// #region agent log
+		if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "email_handler.go:944", "message": "HandleQuoteEmail - calling original", "data": map[string]interface{}{"templateType": templateType}, "timestamp": time.Now().UnixMilli()})
+			f.Close()
+		}
+		// #endregion
+		// Load business config for contact info
+		businessID := "stlpartyhelpers"
+		var businessConfig *domain.BusinessConfig
+		if h.businessLoader != nil {
+			if config, err := h.businessLoader.LoadBusiness(r.Context(), businessID); err == nil {
+				businessConfig = config
+			}
+		}
+		htmlBody = util.GenerateQuoteEmailHTML(emailData, businessConfig)
+		// #region agent log
+		if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			htmlSample := htmlBody
+			if len(htmlSample) > 500 {
+				htmlSample = htmlSample[:500]
+			}
+			hasAppleStyle := strings.Contains(htmlBody, "system-ui") || strings.Contains(htmlBody, "#F5F5F7") || strings.Contains(htmlBody, "appl_")
+			json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "email_handler.go:967", "message": "HandleQuoteEmail - original HTML generated", "data": map[string]interface{}{"htmlLen": len(htmlBody), "hasAppleStyle": hasAppleStyle, "htmlSample": htmlSample}, "timestamp": time.Now().UnixMilli()})
+			f.Close()
+		}
+		// #endregion
+	}
 
 	// Format date with day of week for subject
 	eventDateWithDay := formatDateWithDayOfWeek(emailData.EventDate)
@@ -1100,6 +1197,7 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 		Occasion    string  `json:"occasion"`
 		GuestCount  int     `json:"guestCount"`
 		ClientName  string  `json:"clientName"`
+		Template    string  `json:"template"` // Template type: "original" or "apple_style"
 	}
 
 	if err := util.ReadJSON(r, &body); err != nil {
@@ -1249,7 +1347,90 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 		TravelFeeInfo:      travelFeeInfo,          // Travel fee information
 	}
 
-	htmlBody := util.GenerateQuoteEmailHTML(emailData)
+	// Generate HTML based on template selection
+	// #region agent log
+	if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A", "location": "email_handler.go:1265", "message": "HandleQuoteEmailPreview - body.Template value", "data": map[string]interface{}{"template": body.Template, "templateLen": len(body.Template)}, "timestamp": time.Now().UnixMilli()})
+		f.Close()
+	}
+	// #endregion
+	templateType := body.Template
+	if templateType == "" {
+		// Get default template from business config
+		businessID := "stlpartyhelpers" // Default business ID
+		defaultTemplate := "original"   // Fallback default
+		if h.businessLoader != nil {
+			if businessConfig, err := h.businessLoader.LoadBusiness(r.Context(), businessID); err == nil && businessConfig != nil {
+				if businessConfig.Templates.EmailTemplateSettings.DefaultTemplate != "" {
+					defaultTemplate = businessConfig.Templates.EmailTemplateSettings.DefaultTemplate
+				}
+			}
+		}
+		templateType = defaultTemplate
+	}
+	// #region agent log
+	if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "email_handler.go:1269", "message": "HandleQuoteEmailPreview - templateType after default", "data": map[string]interface{}{"templateType": templateType, "isAppleStyle": templateType == "apple_style"}, "timestamp": time.Now().UnixMilli()})
+		f.Close()
+	}
+	// #endregion
+
+	var htmlBody string
+	if templateType == "apple_style" {
+		// #region agent log
+		if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C", "location": "email_handler.go:1272", "message": "HandleQuoteEmailPreview - calling Apple style", "data": map[string]interface{}{"templateType": templateType}, "timestamp": time.Now().UnixMilli()})
+			f.Close()
+		}
+		// #endregion
+		// Load business config for contact info
+		businessID := "stlpartyhelpers"
+		var businessConfig *domain.BusinessConfig
+		if h.businessLoader != nil {
+			if config, err := h.businessLoader.LoadBusiness(r.Context(), businessID); err == nil {
+				businessConfig = config
+			}
+		}
+		htmlBody = util.GenerateQuoteEmailHTMLAppleStyle(emailData, businessConfig)
+		// #region agent log
+		if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			htmlSample := htmlBody
+			if len(htmlSample) > 500 {
+				htmlSample = htmlSample[:500]
+			}
+			hasAppleStyle := strings.Contains(htmlBody, "system-ui") || strings.Contains(htmlBody, "#F5F5F7") || strings.Contains(htmlBody, "appl_")
+			json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C", "location": "email_handler.go:1315", "message": "HandleQuoteEmailPreview - Apple style HTML generated", "data": map[string]interface{}{"htmlLen": len(htmlBody), "hasAppleStyle": hasAppleStyle, "htmlSample": htmlSample}, "timestamp": time.Now().UnixMilli()})
+			f.Close()
+		}
+		// #endregion
+	} else {
+		// #region agent log
+		if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "email_handler.go:1276", "message": "HandleQuoteEmailPreview - calling original", "data": map[string]interface{}{"templateType": templateType}, "timestamp": time.Now().UnixMilli()})
+			f.Close()
+		}
+		// #endregion
+		// Load business config for contact info
+		businessID := "stlpartyhelpers"
+		var businessConfig *domain.BusinessConfig
+		if h.businessLoader != nil {
+			if config, err := h.businessLoader.LoadBusiness(r.Context(), businessID); err == nil {
+				businessConfig = config
+			}
+		}
+		htmlBody = util.GenerateQuoteEmailHTML(emailData, businessConfig)
+		// #region agent log
+		if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			htmlSample := htmlBody
+			if len(htmlSample) > 500 {
+				htmlSample = htmlSample[:500]
+			}
+			hasAppleStyle := strings.Contains(htmlBody, "system-ui") || strings.Contains(htmlBody, "#F5F5F7") || strings.Contains(htmlBody, "appl_")
+			json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D", "location": "email_handler.go:1323", "message": "HandleQuoteEmailPreview - original HTML generated", "data": map[string]interface{}{"htmlLen": len(htmlBody), "hasAppleStyle": hasAppleStyle, "htmlSample": htmlSample}, "timestamp": time.Now().UnixMilli()})
+			f.Close()
+		}
+		// #endregion
+	}
 
 	// Format date with day of week for subject
 	eventDateWithDay := formatDateWithDayOfWeek(emailData.EventDate)
@@ -1380,23 +1561,16 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 
 	h.logger.Info("quote email preview sent successfully", "messageId", emailResult.MessageID, "to", body.To, "draft", draft)
 
-	// Try to fetch the sent email from Gmail to confirm it was sent
-	var fetchedHTMLBody string
-	if !body.SaveAsDraft && h.gmailSender != nil && emailResult.MessageID != "" {
-		// Wait 2 seconds to ensure message is available in Gmail
-		time.Sleep(2 * time.Second)
-		fetched, err := h.gmailSender.GetMessage(r.Context(), emailResult.MessageID)
-		if err != nil {
-			h.logger.Warn("failed to fetch sent email from Gmail", "error", err, "messageId", emailResult.MessageID)
-			// Fall back to generated HTML body
-			fetchedHTMLBody = htmlBody
-		} else {
-			fetchedHTMLBody = fetched
-		}
-	} else {
-		// Use generated HTML body for drafts or if Gmail sender not available
-		fetchedHTMLBody = htmlBody
+	// Return the original generated HTML body for preview (not fetched from Gmail)
+	// Gmail may strip or modify styles when processing emails, so we use the original generated HTML
+	// which we know is correct (confirmed by instrumentation logs)
+	// #region agent log
+	if f, err := os.OpenFile(GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		hasApple := strings.Contains(htmlBody, "system-ui") || strings.Contains(htmlBody, "#F5F5F7") || strings.Contains(htmlBody, "appl_")
+		json.NewEncoder(f).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "H", "location": "email_handler.go:1500", "message": "Returning generated HTML body for preview (not fetching from Gmail)", "data": map[string]interface{}{"htmlLen": len(htmlBody), "hasAppleStyle": hasApple, "templateType": templateType}, "timestamp": time.Now().UnixMilli()})
+		f.Close()
 	}
+	// #endregion
 
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"ok":      true,
@@ -1406,7 +1580,7 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 			"sent":      sent,
 			"draft":     draft,
 			"error":     "",
-			"htmlBody":  fetchedHTMLBody, // Include HTML body fetched from Gmail (or generated)
+			"htmlBody":  htmlBody, // Return original generated HTML (Gmail may modify it when fetching)
 		},
 	})
 }

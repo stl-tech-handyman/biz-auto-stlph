@@ -1,0 +1,96 @@
+{
+  "results": [
+    {
+      "name": "0 days until event",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical"
+    },
+    {
+      "name": "1 days until event",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical"
+    },
+    {
+      "name": "2 days until event",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical"
+    },
+    {
+      "name": "3 days until event",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical"
+    },
+    {
+      "name": "4 days until event",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent"
+    },
+    {
+      "name": "5 days until event",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent"
+    },
+    {
+      "name": "6 days until event",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent"
+    },
+    {
+      "name": "7 days until event",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent"
+    },
+    {
+      "name": "8 days until event",
+      "status": "pass",
+      "expected": "high",
+      "actual": "high"
+    },
+    {
+      "name": "14 days until event",
+      "status": "pass",
+      "expected": "high",
+      "actual": "high"
+    },
+    {
+      "name": "15 days until event",
+      "status": "pass",
+      "expected": "moderate",
+      "actual": "moderate"
+    },
+    {
+      "name": "30 days until event",
+      "status": "pass",
+      "expected": "moderate",
+      "actual": "moderate"
+    },
+    {
+      "name": "31 days until event",
+      "status": "pass",
+      "expected": "normal",
+      "actual": "normal"
+    },
+    {
+      "name": "60 days until event",
+      "status": "pass",
+      "expected": "normal",
+      "actual": "normal"
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 14,
+    "total": 14,
+    "warnings": 0
+  },
+  "testName": "urgency-levels",
+  "timestamp": "2026-01-14T10:21:15-06:00"
+}

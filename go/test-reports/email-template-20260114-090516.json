@@ -1,0 +1,52 @@
+{
+  "results": [
+    {
+      "name": "Regular event, 30 days",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:00 PM - 5:30 PM. ",
+      "data": {
+        "daysUntilEvent": 30,
+        "htmlLength": 19764,
+        "urgencyLevel": "moderate"
+      }
+    },
+    {
+      "name": "Urgent event, 3 days",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:00 PM - 5:30 PM. ",
+      "data": {
+        "daysUntilEvent": 3,
+        "htmlLength": 19731,
+        "urgencyLevel": "critical"
+      }
+    },
+    {
+      "name": "High demand event, 15 days",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:00 PM - 5:30 PM. ",
+      "data": {
+        "daysUntilEvent": 15,
+        "htmlLength": 19764,
+        "urgencyLevel": "moderate"
+      }
+    },
+    {
+      "name": "Returning client, 10 days",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:00 PM - 5:30 PM. ",
+      "data": {
+        "daysUntilEvent": 10,
+        "htmlLength": 20032,
+        "urgencyLevel": "high"
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 4,
+    "total": 4,
+    "warnings": 0
+  },
+  "testName": "email-template",
+  "timestamp": "2026-01-14T09:05:16-06:00"
+}

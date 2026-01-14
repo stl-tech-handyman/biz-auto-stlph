@@ -33,6 +33,9 @@ type Router struct {
 	testHandler          *handlers.TestHandler
 	pdfHandler           *handlers.PDFHandler
 	regenerateHandler    *handlers.RegenerateHandler
+	serverRestartHandler *handlers.ServerRestartHandler
+	settingsHandler      *handlers.SettingsHandler
+	emailAnalysisHandler *handlers.EmailAnalysisHandler
 	logger               *slog.Logger
 	environment          string
 }
@@ -56,9 +59,12 @@ func NewRouter(
 
 	// Initialize PDF handler (optional - will fail gracefully if not configured)
 	pdfHandler, _ := handlers.NewPDFHandler(logger)
-	
+
 	// Initialize regenerate handler
 	regenerateHandler := handlers.NewRegenerateHandler(emailHandler, logger)
+
+	// Initialize email analysis handler (may fail if credentials not set, that's ok)
+	emailAnalysisHandler, _ := handlers.NewEmailAnalysisHandler(logger)
 
 	return &Router{
 		formEventsHandler:    handlers.NewFormEventsHandler(formEventsService),
@@ -76,6 +82,9 @@ func NewRouter(
 		testHandler:          testHandler,
 		pdfHandler:           pdfHandler,
 		regenerateHandler:    regenerateHandler,
+		serverRestartHandler: handlers.NewServerRestartHandler(logger),
+		settingsHandler:      handlers.NewSettingsHandler(businessLoader, logger),
+		emailAnalysisHandler: emailAnalysisHandler,
 		logger:               logger,
 		environment:          environment,
 	}
@@ -144,7 +153,7 @@ func (r *Router) Handler() http.Handler {
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net;")
 		http.ServeFile(w, r, "./index.html")
 	})
-	
+
 	// Serve test pages
 	mux.HandleFunc("/test-final-invoice.html", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -200,6 +209,24 @@ func (r *Router) Handler() http.Handler {
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net;")
 		http.ServeFile(w, r, "./pdf-feature-docs.html")
 	})
+	mux.HandleFunc("/email-template-preview.html", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		// Override CSP header to allow CDN resources and inline styles/scripts
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net;")
+		http.ServeFile(w, r, "./email-template-preview.html")
+	})
+	mux.HandleFunc("/settings.html", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		// Override CSP header to allow CDN resources and inline styles/scripts
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net;")
+		http.ServeFile(w, r, "./settings.html")
+	})
 	mux.HandleFunc("/arrival-time-test.html", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -208,6 +235,33 @@ func (r *Router) Handler() http.Handler {
 		// Override CSP header to allow CDN resources and inline styles/scripts
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net;")
 		http.ServeFile(w, r, "./arrival-time-test.html")
+	})
+	mux.HandleFunc("/features-showcase.html", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		// Override CSP header to allow CDN resources and inline styles/scripts
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net;")
+		http.ServeFile(w, r, "./features-showcase.html")
+	})
+	mux.HandleFunc("/financial-dashboard.html", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		// Override CSP header to allow CDN resources and inline styles/scripts
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net;")
+		http.ServeFile(w, r, "./financial-dashboard.html")
+	})
+	mux.HandleFunc("/analytics-dashboard.html", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		// Override CSP header to allow CDN resources and inline styles/scripts
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net;")
+		http.ServeFile(w, r, "./analytics-dashboard.html")
 	})
 
 	// Internal Documentation
@@ -243,6 +297,25 @@ func (r *Router) Handler() http.Handler {
 
 	// Zapier endpoint (legacy, matching Apps Script flow) - no auth required
 	mux.HandleFunc("/api/zapier/process-lead", r.zapierHandler.HandleProcessLead)
+
+	// Email Analysis endpoints - require API key
+	if r.emailAnalysisHandler != nil {
+		mux.Handle("/api/email-analysis/analyze", middleware.APIKeyMiddleware(r.logger, http.HandlerFunc(r.emailAnalysisHandler.HandleAnalyze)))
+		mux.Handle("/api/email-analysis/status", middleware.APIKeyMiddleware(r.logger, http.HandlerFunc(r.emailAnalysisHandler.HandleStatus)))
+	}
+
+	// Email Analysis Stats endpoint - no auth required (public stats)
+	emailAnalysisStatsHandler := handlers.NewEmailAnalysisStatsHandler(r.logger)
+	mux.HandleFunc("/api/email-analysis/stats", emailAnalysisStatsHandler.HandleStats)
+
+	// Email Analysis Dashboard page
+	mux.HandleFunc("/email-analysis-dashboard.html", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		http.ServeFile(w, r, "./email-analysis-dashboard.html")
+	})
 
 	// Legacy API routes (matching JS API) - require API key
 	// Register longer/more specific paths FIRST to ensure correct route matching
@@ -284,10 +357,24 @@ func (r *Router) Handler() http.Handler {
 	if r.pdfHandler != nil {
 		mux.HandleFunc("/api/quote/pdf", r.pdfHandler.HandlePDFDownload)
 	}
-	
+
 	// Regenerate quote endpoint - no auth required (public form submission)
 	if r.regenerateHandler != nil {
 		mux.HandleFunc("/api/quote/regenerate", r.regenerateHandler.HandleRegenerateQuote)
+	}
+
+	// Settings endpoints - no auth required (dev only)
+	if r.settingsHandler != nil {
+		mux.HandleFunc("/api/settings", r.settingsHandler.HandleGetAllSettings)
+		mux.HandleFunc("/api/settings/email-template", func(w http.ResponseWriter, req *http.Request) {
+			if req.Method == http.MethodGet {
+				r.settingsHandler.HandleGetEmailTemplateSettings(w, req)
+			} else if req.Method == http.MethodPost {
+				r.settingsHandler.HandleUpdateEmailTemplateSettings(w, req)
+			} else {
+				http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			}
+		})
 	}
 
 	// Health endpoints - no auth required
@@ -298,6 +385,50 @@ func (r *Router) Handler() http.Handler {
 
 	// Time endpoint - no auth required
 	mux.HandleFunc("/api/time", r.healthHandler.HandleTime)
+
+	// Server restart endpoint - no auth required (dev only)
+	// #region agent log
+	if logFile, err := os.OpenFile(handlers.GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		handlerNil := r.serverRestartHandler == nil
+		json.NewEncoder(logFile).Encode(map[string]interface{}{
+			"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D",
+			"location": "router.go:314", "message": "Registering /api/server/restart endpoint",
+			"data": map[string]interface{}{
+				"handlerNil": handlerNil,
+				"timestamp":  time.Now().UnixMilli(),
+			},
+		})
+		logFile.Close()
+	}
+	// #endregion
+	if r.serverRestartHandler != nil {
+		mux.HandleFunc("/api/server/restart", r.serverRestartHandler.HandleRestart)
+		// #region agent log
+		if logFile, err := os.OpenFile(handlers.GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			json.NewEncoder(logFile).Encode(map[string]interface{}{
+				"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D",
+				"location": "router.go:330", "message": "SUCCESS: /api/server/restart route registered",
+				"data": map[string]interface{}{
+					"timestamp": time.Now().UnixMilli(),
+				},
+			})
+			logFile.Close()
+		}
+		// #endregion
+	} else {
+		// #region agent log
+		if logFile, err := os.OpenFile(handlers.GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			json.NewEncoder(logFile).Encode(map[string]interface{}{
+				"sessionId": "debug-session", "runId": "run1", "hypothesisId": "D",
+				"location": "router.go:324", "message": "ERROR: serverRestartHandler is nil, cannot register /api/server/restart",
+				"data": map[string]interface{}{
+					"timestamp": time.Now().UnixMilli(),
+				},
+			})
+			logFile.Close()
+		}
+		// #endregion
+	}
 
 	// Commits endpoint - no auth required
 	mux.HandleFunc("/api/commits", r.commitsHandler.HandleCommits)
@@ -313,8 +444,8 @@ func (r *Router) Handler() http.Handler {
 				"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A",
 				"location": "router.go:305", "message": "Test reports handler called",
 				"data": map[string]interface{}{
-					"path":     r.URL.Path,
-					"method":   r.Method,
+					"path":      r.URL.Path,
+					"method":    r.Method,
 					"timestamp": time.Now().UnixMilli(),
 				},
 			})
@@ -339,7 +470,7 @@ func (r *Router) Handler() http.Handler {
 					"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B",
 					"location": "router.go:320", "message": "Path traversal attempt blocked",
 					"data": map[string]interface{}{
-						"filename": filename,
+						"filename":  filename,
 						"timestamp": time.Now().UnixMilli(),
 					},
 				})
@@ -357,8 +488,8 @@ func (r *Router) Handler() http.Handler {
 				"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A",
 				"location": "router.go:353", "message": "Checking if test report file exists",
 				"data": map[string]interface{}{
-					"filename": filename,
-					"filePath": filePath,
+					"filename":  filename,
+					"filePath":  filePath,
 					"timestamp": time.Now().UnixMilli(),
 				},
 			})
@@ -373,9 +504,9 @@ func (r *Router) Handler() http.Handler {
 					"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C",
 					"location": "router.go:365", "message": "Test report file not found",
 					"data": map[string]interface{}{
-						"filename": filename,
-						"filePath": filePath,
-						"error":    err.Error(),
+						"filename":  filename,
+						"filePath":  filePath,
+						"error":     err.Error(),
 						"timestamp": time.Now().UnixMilli(),
 					},
 				})
@@ -392,8 +523,8 @@ func (r *Router) Handler() http.Handler {
 				"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A",
 				"location": "router.go:378", "message": "Serving test report file",
 				"data": map[string]interface{}{
-					"filename": filename,
-					"filePath": filePath,
+					"filename":  filename,
+					"filePath":  filePath,
 					"timestamp": time.Now().UnixMilli(),
 				},
 			})
@@ -420,9 +551,9 @@ func (r *Router) Handler() http.Handler {
 				"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A",
 				"location": "router.go:306", "message": "Test handler wrapper called",
 				"data": map[string]interface{}{
-					"path":     req.URL.Path,
-					"rawPath":  req.URL.RawPath,
-					"method":   req.Method,
+					"path":      req.URL.Path,
+					"rawPath":   req.URL.RawPath,
+					"method":    req.Method,
 					"timestamp": time.Now().UnixMilli(),
 				},
 			})
@@ -447,8 +578,8 @@ func (r *Router) Handler() http.Handler {
 				"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C",
 				"location": "router.go:336", "message": "Root handler wrapper called",
 				"data": map[string]interface{}{
-					"path":     req.URL.Path,
-					"method":   req.Method,
+					"path":      req.URL.Path,
+					"method":    req.Method,
 					"timestamp": time.Now().UnixMilli(),
 				},
 			})
@@ -466,7 +597,7 @@ func (r *Router) Handler() http.Handler {
 					"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C",
 					"location": "router.go:345", "message": "Root handler delegating to HandleRoot",
 					"data": map[string]interface{}{
-						"path":     req.URL.Path,
+						"path":      req.URL.Path,
 						"timestamp": time.Now().UnixMilli(),
 					},
 				})
@@ -482,7 +613,8 @@ func (r *Router) Handler() http.Handler {
 		// #region agent log
 		if logFile, err := os.OpenFile(handlers.GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
 			// Log detailed path information to debug route matching
-			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "router.go:185", "message": "ServeMux routing request", "data": map[string]interface{}{"path": r.URL.Path, "rawPath": r.URL.RawPath, "method": r.Method, "url": r.URL.String(), "pathLen": len(r.URL.Path), "timestamp": time.Now().UnixMilli()}})
+			isRestartPath := r.URL.Path == "/api/server/restart"
+			json.NewEncoder(logFile).Encode(map[string]interface{}{"sessionId": "debug-session", "runId": "run1", "hypothesisId": "B", "location": "router.go:185", "message": "ServeMux routing request", "data": map[string]interface{}{"path": r.URL.Path, "rawPath": r.URL.RawPath, "method": r.Method, "url": r.URL.String(), "pathLen": len(r.URL.Path), "isRestartPath": isRestartPath, "timestamp": time.Now().UnixMilli()}})
 			logFile.Close()
 		}
 		// #endregion

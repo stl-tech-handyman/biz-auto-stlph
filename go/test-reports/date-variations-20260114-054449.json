@@ -1,0 +1,157 @@
+{
+  "results": [
+    {
+      "name": "Today (0 days)",
+      "status": "pass",
+      "message": " Same-day booking: Email shows 'Deposit Should Be Paid Now' with no expiration date.",
+      "expected": "critical",
+      "actual": "critical",
+      "data": {
+        "daysUntilEvent": 0,
+        "expirationDate": "N/A - Not shown in email",
+        "expirationFormatted": "N/A - Email shows 'Deposit Should Be Paid Now' instead",
+        "urgencyLevel": "critical"
+      }
+    },
+    {
+      "name": "Tomorrow (1 days)",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical",
+      "data": {
+        "daysUntilEvent": 1,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST",
+        "urgencyLevel": "critical"
+      }
+    },
+    {
+      "name": "2 days from now (2 days)",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical",
+      "data": {
+        "daysUntilEvent": 2,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST",
+        "urgencyLevel": "critical"
+      }
+    },
+    {
+      "name": "3 days from now (3 days)",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical",
+      "data": {
+        "daysUntilEvent": 3,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST",
+        "urgencyLevel": "critical"
+      }
+    },
+    {
+      "name": "4 days from now (4 days)",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent",
+      "data": {
+        "daysUntilEvent": 4,
+        "expirationDate": "2026-01-16T05:44:49-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 5:44 AM CST",
+        "urgencyLevel": "urgent"
+      }
+    },
+    {
+      "name": "7 days from now (7 days)",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent",
+      "data": {
+        "daysUntilEvent": 7,
+        "expirationDate": "2026-01-16T05:44:49-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 5:44 AM CST",
+        "urgencyLevel": "urgent"
+      }
+    },
+    {
+      "name": "8 days from now (8 days)",
+      "status": "pass",
+      "expected": "high",
+      "actual": "high",
+      "data": {
+        "daysUntilEvent": 8,
+        "expirationDate": "2026-01-17T05:44:49-06:00",
+        "expirationFormatted": "Sat, Jan 17, 2026 5:44 AM CST",
+        "urgencyLevel": "high"
+      }
+    },
+    {
+      "name": "14 days from now (14 days)",
+      "status": "pass",
+      "expected": "high",
+      "actual": "high",
+      "data": {
+        "daysUntilEvent": 14,
+        "expirationDate": "2026-01-17T05:44:49-06:00",
+        "expirationFormatted": "Sat, Jan 17, 2026 5:44 AM CST",
+        "urgencyLevel": "high"
+      }
+    },
+    {
+      "name": "15 days from now (15 days)",
+      "status": "pass",
+      "expected": "moderate",
+      "actual": "moderate",
+      "data": {
+        "daysUntilEvent": 15,
+        "expirationDate": "2026-01-28T05:44:49-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 5:44 AM CST",
+        "urgencyLevel": "moderate"
+      }
+    },
+    {
+      "name": "30 days from now (30 days)",
+      "status": "pass",
+      "expected": "moderate",
+      "actual": "moderate",
+      "data": {
+        "daysUntilEvent": 30,
+        "expirationDate": "2026-01-28T05:44:49-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 5:44 AM CST",
+        "urgencyLevel": "moderate"
+      }
+    },
+    {
+      "name": "31 days from now (31 days)",
+      "status": "pass",
+      "expected": "normal",
+      "actual": "normal",
+      "data": {
+        "daysUntilEvent": 31,
+        "expirationDate": "2026-01-28T05:44:49-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 5:44 AM CST",
+        "urgencyLevel": "normal"
+      }
+    },
+    {
+      "name": "60 days from now (59 days)",
+      "status": "pass",
+      "expected": "normal",
+      "actual": "normal",
+      "data": {
+        "daysUntilEvent": 59,
+        "expirationDate": "2026-01-28T05:44:49-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 5:44 AM CST",
+        "urgencyLevel": "normal"
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 12,
+    "total": 12,
+    "warnings": 0
+  },
+  "testName": "date-variations",
+  "timestamp": "2026-01-14T05:44:49-06:00"
+}

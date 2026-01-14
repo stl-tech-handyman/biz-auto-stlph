@@ -242,7 +242,9 @@ func (h *ZapierHandler) HandleProcessLead(w http.ResponseWriter, r *http.Request
 			IsReturningClient:  false,                  // TODO: Check if client has booked before (query CRM/calendar)
 		}
 
-		htmlBody := util.GenerateQuoteEmailHTML(emailData)
+		// businessConfig is nil - GetContactInfo will use smart defaults based on business ID
+		// Use original template by default
+		htmlBody := util.GenerateQuoteEmailHTML(emailData, nil)
 		subject := fmt.Sprintf("Party Helpers for %s - %s - Estimate & Details for %s",
 			payload.Occasion, formatDateForEmail(eventDate), clientName)
 

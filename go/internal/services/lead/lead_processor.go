@@ -193,24 +193,52 @@ func (p *Processor) sendQuoteEmail(ctx context.Context, data *util.TransformedLe
 	depositCalc := stripe.CalculateDepositFromEstimate(estimateCents)
 	depositAmount := util.CentsToDollars(depositCalc.Value)
 
-	// Generate email HTML
-	emailData := util.QuoteEmailData{
-		ClientName:    data.ClientName,
-		EventDate:     dateForEmail,
-		EventTime:     data.EventTime,
-		EventLocation: data.EventLocation,
-		Occasion:      data.Occasion,
-		GuestCount:    data.GuestCount,
-		Helpers:       data.NumHelpers,
-		Hours:         data.Duration,
-		BaseRate:      estimate.BasePerHelper,
-		HourlyRate:    estimate.ExtraPerHourPerHelper,
-		TotalCost:     estimate.TotalCost,
-		DepositAmount: depositAmount,
-		RateLabel:     rateLabel,
+	// Calculate days until event
+	now := time.Now()
+	daysUntilEvent := int(data.EventDate.Sub(now).Hours() / 24)
+	if daysUntilEvent < 0 {
+		daysUntilEvent = 0
 	}
 
-	htmlBody := util.GenerateQuoteEmailHTML(emailData)
+	// Determine urgency level
+	urgencyLevel := util.CalculateUrgencyLevel(daysUntilEvent)
+
+	// Calculate expiration date dynamically based on days until event
+	_, expirationFormatted := util.CalculateExpirationDate(daysUntilEvent)
+
+	// Generate confirmation number
+	confirmationNumber := util.GenerateConfirmationNumber(data.Email, data.Occasion, data.EventDate)
+
+	// Generate email HTML
+	emailData := util.QuoteEmailData{
+		ClientName:         data.ClientName,
+		EventDate:          dateForEmail,
+		EventTime:          data.EventTime,
+		EventLocation:      data.EventLocation,
+		Occasion:           data.Occasion,
+		GuestCount:         data.GuestCount,
+		Helpers:            data.NumHelpers,
+		Hours:              data.Duration,
+		BaseRate:           estimate.BasePerHelper,
+		HourlyRate:         estimate.ExtraPerHourPerHelper,
+		TotalCost:          estimate.TotalCost,
+		DepositAmount:      depositAmount,
+		RateLabel:          rateLabel,
+		ExpirationDate:     expirationFormatted,
+		DepositLink:        "", // Will be generated when deposit invoice is created
+		ConfirmationNumber: confirmationNumber,
+		IsHighDemand:       estimate.IsSpecialDate, // High demand = special date (holiday/surge)
+		UrgencyLevel:       urgencyLevel,           // Urgency level based on days until event
+		DaysUntilEvent:     daysUntilEvent,         // Number of days until event
+		IsReturningClient:  false,                  // TODO: Check if client has booked before (query CRM/calendar)
+		WeatherForecast:    nil,                    // Optional - not calculated here
+		TravelFeeInfo:      nil,                    // Optional - not calculated here
+		PDFDownloadLink:    "",                     // Optional - not generated here
+	}
+
+	// businessConfig is nil - GetContactInfo will use smart defaults based on business ID
+	// Use original template by default
+	htmlBody := util.GenerateQuoteEmailHTML(emailData, nil)
 	subject := fmt.Sprintf("Party Helpers for %s - %s - Estimate & Details for %s",
 		data.Occasion, dateForEmail, data.ClientName)
 
@@ -255,4 +283,3 @@ func formatDateForEmail(date time.Time) string {
 	// Format as "Fri, Jan 19, 2026" (day of week, short month, day, year)
 	return date.Format("Mon, Jan 2, 2006")
 }
-

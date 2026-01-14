@@ -38,6 +38,18 @@ if [ ! -f "$ENV_FILE" ] || ! grep -q "GMAIL_CREDENTIALS_JSON=" "$ENV_FILE" || [ 
     fi
 fi
 
+# Fix Go toolchain configuration (same fix as start-local.sh)
+export GOTOOLCHAIN=auto
+GO_BIN=$(which go 2>/dev/null || command -v go 2>/dev/null)
+if [ -n "$GO_BIN" ]; then
+    POSSIBLE_GOROOT=$(dirname "$(dirname "$GO_BIN")")
+    if [ -d "$POSSIBLE_GOROOT/src" ] && [ -f "$POSSIBLE_GOROOT/src/runtime/runtime.go" ]; then
+        export GOROOT="$POSSIBLE_GOROOT"
+    elif [ -d "C:/Program Files/Go" ] && [ -f "C:/Program Files/Go/src/runtime/runtime.go" ]; then
+        export GOROOT="C:/Program Files/Go"
+    fi
+fi
+
 # Start server
 echo "🚀 Starting server..."
 cd "$SCRIPT_DIR"

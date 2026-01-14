@@ -25,23 +25,91 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="/">Home</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/test-dashboard.html">Tests</a>
+                    
+                    <!-- Dashboards -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="dashboardsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-speedometer2"></i> Dashboards
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/financial-dashboard.html">
+                                <i class="bi bi-cash-stack"></i> Financial Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="/analytics-dashboard.html">
+                                <i class="bi bi-graph-up-arrow"></i> Analytics Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="/email-analysis-dashboard.html">
+                                <i class="bi bi-envelope-paper"></i> Email Analysis Dashboard
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/test-dashboard.html">
+                                <i class="bi bi-lightning-charge"></i> Test Dashboard
+                            </a></li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/quote-preview.html">Quote Preview</a>
+                    
+                    <!-- Email Tools -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="emailDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-envelope"></i> Email Tools
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/email-template-preview.html">
+                                <i class="bi bi-envelope-heart"></i> Email Template Preview
+                            </a></li>
+                            <li><a class="dropdown-item" href="/email-analysis-dashboard.html">
+                                <i class="bi bi-envelope-paper"></i> Email Analysis
+                            </a></li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/quote-test-all.html">Quote Test All</a>
+                    
+                    <!-- Quote Tools -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="quoteDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-file-text"></i> Quote Tools
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/quote-preview.html">
+                                <i class="bi bi-eye"></i> Quote Preview
+                            </a></li>
+                            <li><a class="dropdown-item" href="/quote-test-all.html">
+                                <i class="bi bi-check2-square"></i> Quote Test All
+                            </a></li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pdf-feature-docs.html">PDF Feature Docs</a>
+                    
+                    <!-- Features & Testing -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="featuresDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-stars"></i> Features
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/features-showcase.html">
+                                <i class="bi bi-star"></i> Feature Showcase
+                            </a></li>
+                            <li><a class="dropdown-item" href="/pdf-feature-docs.html">
+                                <i class="bi bi-file-pdf"></i> PDF Feature Docs
+                            </a></li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/docs/internal/">Documentation</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/api/health">Health</a>
+                    
+                    <!-- System -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="systemDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear"></i> System
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/settings.html">
+                                <i class="bi bi-sliders"></i> Settings
+                            </a></li>
+                            <li><a class="dropdown-item" href="/api/health">
+                                <i class="bi bi-heart-pulse"></i> Health Check
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/docs/internal/">
+                                <i class="bi bi-book"></i> Documentation
+                            </a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -53,7 +121,11 @@
         <div class="container text-center">
             <h1 class="display-4 fw-bold mb-3">Quote Engine Admin Dashboard</h1>
             <p class="lead">Manage, test, and monitor the quote engine system</p>
-            <p class="text-warning mt-2"><strong>🔥 Hot Reload Active - Page will auto-refresh on server restart!</strong></p>
+            <p class="text-warning mt-2"><strong>🔥 Hot Reload Active - Server auto-restart timer available in sidebar!</strong></p>
+            <div class="alert alert-info mt-3 d-inline-block">
+                <i class="bi bi-envelope-paper-heart me-2"></i>
+                <strong>New:</strong> <a href="/email-template-preview.html" class="alert-link">Email Template Preview</a> - Preview the new Apple-style email templates!
+            </div>
         </div>
     </div>
 
@@ -63,6 +135,14 @@
         <div class="row mb-5">
             <div class="col-12">
                 <h2 class="section-title">Quick Actions</h2>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-center p-4">
+                    <i class="bi bi-stars card-icon"></i>
+                    <h5 class="card-title">Feature Showcase</h5>
+                    <p class="card-text">View all platform features</p>
+                    <a href="/features-showcase.html" class="btn btn-primary btn-sm">View Features</a>
+                </div>
             </div>
             <div class="col-md-3 mb-4">
                 <div class="card text-center p-4">
@@ -82,6 +162,14 @@
             </div>
             <div class="col-md-3 mb-4">
                 <div class="card text-center p-4">
+                    <i class="bi bi-envelope-paper-heart card-icon"></i>
+                    <h5 class="card-title">Email Template</h5>
+                    <p class="card-text">Preview email templates</p>
+                    <a href="/email-template-preview.html" class="btn btn-primary btn-sm">Preview</a>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-center p-4">
                     <i class="bi bi-file-earmark-text-fill card-icon"></i>
                     <h5 class="card-title">Documentation</h5>
                     <p class="card-text">View system docs</p>
@@ -94,6 +182,22 @@
                     <h5 class="card-title">System Health</h5>
                     <p class="card-text">Check system status</p>
                     <a href="/api/health" class="btn btn-primary btn-sm">Check Health</a>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-center p-4">
+                    <i class="bi bi-cash-stack card-icon"></i>
+                    <h5 class="card-title">Financial Dashboard</h5>
+                    <p class="card-text">Track revenue, payouts & profit</p>
+                    <a href="/financial-dashboard.html" class="btn btn-primary btn-sm">View Financials</a>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-center p-4">
+                    <i class="bi bi-graph-up-arrow card-icon"></i>
+                    <h5 class="card-title">Analytics Dashboard</h5>
+                    <p class="card-text">Event statistics & insights</p>
+                    <a href="/analytics-dashboard.html" class="btn btn-primary btn-sm">View Analytics</a>
                 </div>
             </div>
         </div>
@@ -112,10 +216,10 @@
                             <span class="badge bg-success">Active</span>
                         </div>
                     </div>
-                    <p class="card-text">Comprehensive testing suite for all quote engine features. Test date variations, expiration calculations, pricing, and more.</p>
+                    <p class="card-text">Comprehensive testing suite for all quote engine features. Test date variations, deposit booking deadlines, pricing, and more.</p>
                     <ul class="list-unstyled">
                         <li><i class="bi bi-check-circle text-success me-2"></i>Date Variations Test</li>
-                        <li><i class="bi bi-check-circle text-success me-2"></i>Expiration Calculation</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Deposit Booking Deadline</li>
                         <li><i class="bi bi-check-circle text-success me-2"></i>Urgency Levels</li>
                         <li><i class="bi bi-check-circle text-success me-2"></i>Deposit Calculation</li>
                         <li><i class="bi bi-check-circle text-success me-2"></i>Pricing & Rates</li>
@@ -143,6 +247,25 @@
                         <li><i class="bi bi-check-circle text-success me-2"></i>Email HTML preview</li>
                     </ul>
                     <a href="/quote-preview.html" class="btn btn-primary">Open Quote Preview</a>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-envelope-paper-heart text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-0">Email Template Preview</h5>
+                            <span class="badge bg-info">New</span>
+                        </div>
+                    </div>
+                    <p class="card-text">Preview and test email templates with the new Apple-style design. Compare different templates and customize content in real-time.</p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Apple-style template</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Interactive preview</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Template comparison</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Real-time customization</li>
+                    </ul>
+                    <a href="/email-template-preview.html" class="btn btn-primary">Open Template Preview</a>
                 </div>
             </div>
             <div class="col-md-6 mb-4">
@@ -216,7 +339,7 @@
                     <ul class="list-unstyled mb-0">
                         <li><code>POST /api/test/run-all</code> - Run all tests</li>
                         <li><code>POST /api/test/date-variations</code> - Date variations test</li>
-                        <li><code>POST /api/test/expiration-calc</code> - Expiration calculation</li>
+                        <li><code>POST /api/test/expiration-calc</code> - Deposit booking deadline calculation</li>
                         <li><code>POST /api/test/urgency-levels</code> - Urgency levels</li>
                         <li><code>POST /api/test/deposit-calc</code> - Deposit calculation</li>
                         <li><code>POST /api/test/pricing-rates</code> - Pricing & rates</li>
@@ -259,19 +382,6 @@
                         </div>
                     </div>
                     <p class="card-text">Test arrival time calculation logic - validates that advised time is 0.5-1 hour before event time.</p>
-                    <a href="/arrival-time-test.html" class="btn btn-primary">Open Arrival Test</a>
-                </div>
-            </div>
-            <div class="col-md-6 mb-4">
-                <div class="card p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-clock-history text-primary me-3" style="font-size: 2rem;"></i>
-                        <div>
-                            <h5 class="card-title mb-0">Arrival Time Test</h5>
-                            <span class="badge bg-success">New</span>
-                        </div>
-                    </div>
-                    <p class="card-text">Test arrival time calculation logic - validates 0.5-1 hour difference.</p>
                     <a href="/arrival-time-test.html" class="btn btn-primary">Open Arrival Test</a>
                 </div>
             </div>

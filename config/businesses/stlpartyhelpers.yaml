@@ -42,6 +42,13 @@ gmail:
   sender: "team@stlpartyhelpers.com"
   senderName: "STL Party Helpers"
 
+contact:
+  supportEmail: "team@stlpartyhelpers.com"
+  websiteURL: "https://stlpartyhelpers.com"
+  logoURL: "https://stlpartyhelpers.com/wp-content/uploads/2025/08/stlph-logo-2.jpg"
+  bookAppointmentURL: "https://stlpartyhelpers.com/book-appointment"
+  # phone: "+1-XXX-XXX-XXXX"  # Optional
+
 slack:
   enabled: true
   webhookEnv: "SLACK_WEBHOOK_STL"
@@ -51,6 +58,11 @@ templates:
     quote: "stlpartyhelpers/quote_email.html"
     deposit: "stlpartyhelpers/deposit_email.html"
     renewal: "stlpartyhelpers/renewal_email.html"
+  emailTemplateSettings:
+    defaultTemplate: "original"  # Options: "original", "apple_style"
+    availableTemplates:
+      - "original"
+      - "apple_style"
 
 pipelines:
   defaultForm: "quote_and_deposit"
