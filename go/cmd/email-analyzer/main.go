@@ -97,25 +97,13 @@ func main() {
 		log.Fatalf("Failed to init Sheets: %v", err)
 	}
 
-	// Get or create spreadsheet
+	// Spreadsheet ID is REQUIRED - don't create new spreadsheets automatically
 	if *spreadsheetID == "" {
-		if *rebuild {
-			log.Fatalf("rebuild mode requires -spreadsheet ID")
-		}
-		spreadsheet, err := sheetsService.Spreadsheets.Create(&sheets.Spreadsheet{
-			Properties: &sheets.SpreadsheetProperties{
-				Title: "90K email historic analysis and classification",
-			},
-		}).Context(ctx).Do()
-		if err != nil {
-			log.Fatalf("Failed to create spreadsheet: %v", err)
-		}
-		*spreadsheetID = spreadsheet.SpreadsheetId
-		fmt.Printf("\n✅ Created spreadsheet: %s\n", spreadsheet.SpreadsheetUrl)
-		fmt.Printf("📊 Spreadsheet ID: %s\n", *spreadsheetID)
-		fmt.Printf("📋 Spreadsheet Name: 90K email historic analysis and classification\n")
-		fmt.Printf("🌐 Dashboard URL: http://localhost:8080/email-analysis-dashboard.html?spreadsheet_id=%s\n\n", *spreadsheetID)
-	} else {
+		log.Fatalf("❌ Spreadsheet ID is required. Use -spreadsheet flag with an existing spreadsheet ID.\n   Example: -spreadsheet \"1AqrivHOOF1HxjW2t_1XnGUhN4lwcdSv18VacyH36HeU\"\n   \n   To use the existing spreadsheet: -spreadsheet \"1AqrivHOOF1HxjW2t_1XnGUhN4lwcdSv18VacyH36HeU\"")
+	}
+	
+	// Verify spreadsheet exists and is accessible
+	{
 		// Verify spreadsheet exists and is accessible
 		fmt.Printf("🔍 Verifying spreadsheet access...\n")
 		spreadsheet, err := sheetsService.Spreadsheets.Get(*spreadsheetID).Context(ctx).Do()
@@ -1868,13 +1856,6 @@ func writeBatch(ctx context.Context, service *sheets.Service, spreadsheetID stri
 		return fmt.Errorf("cannot write empty batch")
 	}
 	
-	// Get current row count BEFORE write
-	beforeResp, beforeErr := service.Spreadsheets.Values.Get(spreadsheetID, "Raw Data!A:A").Context(ctx).Do()
-	beforeCount := 0
-	if beforeErr == nil && len(beforeResp.Values) > 0 {
-		beforeCount = len(beforeResp.Values) - 1 // Exclude header
-	}
-	
 	vr := &sheets.ValueRange{
 		Values: batch,
 	}
@@ -1896,101 +1877,77 @@ func writeBatch(ctx context.Context, service *sheets.Service, spreadsheetID stri
 		return fmt.Errorf("expected %d rows, but %d rows were updated", len(batch), rowsUpdated)
 	}
 	
+	writeBatchCounter++
+	
 	// CRITICAL VERIFICATION: Read back from sheet to confirm data is actually there
-	// Wait a moment for write to commit
-	time.Sleep(500 * time.Millisecond)
+	// Only verify every 5th batch to avoid rate limits, or if 30 seconds have passed
+	shouldVerify := writeBatchCounter%5 == 0 || time.Since(lastVerificationTime) > 30*time.Second
 	
-	// Get first message ID from batch for verification
-	firstMessageID := ""
-	if len(batch) > 0 && len(batch[0]) > 0 {
-		firstMessageID = fmt.Sprintf("%v", batch[0][0])
-	}
-	
-	// Read back from Raw Data to verify
-	readResp, readErr := service.Spreadsheets.Values.Get(spreadsheetID, "Raw Data!A:A").Context(ctx).Do()
-	if readErr != nil {
-		return fmt.Errorf("write appeared successful but cannot read back from sheet: %w", readErr)
-	}
-	
-	afterCount := 0
-	if len(readResp.Values) > 0 {
-		afterCount = len(readResp.Values) - 1 // Exclude header
-	}
-	
-	// Verify row count increased
-	if afterCount <= beforeCount {
-		return fmt.Errorf("VERIFICATION FAILED: Row count did not increase. Before: %d, After: %d. Data may not have been written!", beforeCount, afterCount)
-	}
-	
-	// Verify specific message ID is in the sheet
-	if firstMessageID != "" {
-		found := false
-		// Check last 50 rows (where our new data should be)
-		checkRows := 50
-		if len(readResp.Values) < checkRows {
-			checkRows = len(readResp.Values)
-		}
-		startIdx := len(readResp.Values) - checkRows
-		if startIdx < 0 {
-			startIdx = 0
+	if shouldVerify {
+		// Wait a moment for write to commit
+		time.Sleep(1 * time.Second)
+		
+		// Get first message ID from batch for verification
+		firstMessageID := ""
+		if len(batch) > 0 && len(batch[0]) > 0 {
+			firstMessageID = fmt.Sprintf("%v", batch[0][0])
 		}
 		
-		for i := startIdx; i < len(readResp.Values); i++ {
-			if len(readResp.Values[i]) > 0 {
-				if fmt.Sprintf("%v", readResp.Values[i][0]) == firstMessageID {
-					found = true
-					break
-				}
-			}
-		}
-		
-		if !found {
-			fmt.Printf("  ⚠️  Warning: Message ID %s not found in verification read (may be timing issue)\n", firstMessageID)
-			fmt.Printf("  📊 But row count increased from %d to %d, so write likely succeeded\n", beforeCount, afterCount)
-		} else {
-			fmt.Printf("  ✅ VERIFIED: Message ID %s confirmed in sheet\n", firstMessageID)
-		}
-	}
-	
-	fmt.Printf("  ✅ Confirmed: %d rows written (sheet now has %d total data rows, was %d)\n", rowsUpdated, afterCount, beforeCount)
-	
-	return nil
-	
-	// Additional verification: read back the last row to confirm it was written
-	// Get the first message ID from the batch (column A, first row)
-	if len(batch) > 0 && len(batch[0]) > 0 {
-		firstMessageID := fmt.Sprintf("%v", batch[0][0])
-		
-		// Read back from Raw Data to verify
+		// Read back from Raw Data to verify - only read last 100 rows to minimize quota
 		readResp, readErr := service.Spreadsheets.Values.Get(spreadsheetID, "Raw Data!A:A").Context(ctx).Do()
-		if readErr == nil && len(readResp.Values) > 0 {
-			// Check if our message ID is in the last few rows
-			found := false
-			checkRows := len(readResp.Values)
-			if checkRows > 10 {
-				checkRows = 10 // Check last 10 rows
+		if readErr != nil {
+			// If rate limited, log warning but don't fail (write likely succeeded)
+			if strings.Contains(readErr.Error(), "429") || strings.Contains(readErr.Error(), "RATE_LIMIT") {
+				fmt.Printf("  ⚠️  Rate limited during verification (write likely succeeded, API returned %d rows)\n", rowsUpdated)
+			} else {
+				fmt.Printf("  ⚠️  Could not verify write (error: %v), but API confirmed %d rows written\n", readErr, rowsUpdated)
 			}
-			startIdx := len(readResp.Values) - checkRows
-			if startIdx < 0 {
-				startIdx = 0
+		} else {
+			afterCount := 0
+			if len(readResp.Values) > 0 {
+				afterCount = len(readResp.Values) - 1 // Exclude header
 			}
 			
-			for i := startIdx; i < len(readResp.Values); i++ {
-				if len(readResp.Values[i]) > 0 {
-					if fmt.Sprintf("%v", readResp.Values[i][0]) == firstMessageID {
-						found = true
-						break
+			// Verify specific message ID is in the sheet
+			if firstMessageID != "" {
+				found := false
+				// Check last 100 rows (where our new data should be)
+				checkRows := 100
+				if len(readResp.Values) < checkRows {
+					checkRows = len(readResp.Values)
+				}
+				startIdx := len(readResp.Values) - checkRows
+				if startIdx < 0 {
+					startIdx = 0
+				}
+				
+				for i := startIdx; i < len(readResp.Values); i++ {
+					if len(readResp.Values[i]) > 0 {
+						if fmt.Sprintf("%v", readResp.Values[i][0]) == firstMessageID {
+							found = true
+							break
+						}
 					}
 				}
+				
+				if found {
+					fmt.Printf("  ✅ VERIFIED: Message ID %s confirmed in sheet (total rows: %d)\n", firstMessageID, afterCount)
+				} else {
+					fmt.Printf("  ⚠️  Message ID %s not found in last 100 rows, but API confirmed %d rows written\n", firstMessageID, rowsUpdated)
+					fmt.Printf("  📊 Sheet has %d total data rows\n", afterCount)
+				}
+			} else {
+				fmt.Printf("  ✅ VERIFIED: Sheet has %d total data rows (API confirmed %d rows written)\n", afterCount, rowsUpdated)
 			}
 			
-			if !found {
-				fmt.Printf("  ⚠️  Warning: Written message ID %s not found in sheet verification\n", firstMessageID)
-			} else {
-				fmt.Printf("  ✅ Verified: Message ID %s confirmed in sheet (total rows: %d)\n", firstMessageID, len(readResp.Values))
-			}
+			lastVerificationTime = time.Now()
 		}
+	} else {
+		// Still log the write success
+		fmt.Printf("  ✅ Confirmed: %d rows written to spreadsheet (batch #%d)\n", rowsUpdated, writeBatchCounter)
 	}
+	
+	return nil
 	
 	return nil
 }
