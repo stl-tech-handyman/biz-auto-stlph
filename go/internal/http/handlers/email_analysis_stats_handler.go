@@ -249,6 +249,12 @@ func initSheetsService(ctx context.Context) (*sheets.Service, error) {
 		return nil, err
 	}
 
+	// Domain-wide delegation: impersonate a real user.
+	// Without Subject, reads can silently return empty/permission issues -> dashboard shows zeros.
+	if subj := os.Getenv("GMAIL_FROM"); subj != "" {
+		config.Subject = subj
+	}
+
 	client := config.Client(ctx)
 	return sheets.NewService(ctx, option.WithHTTPClient(client))
 }
