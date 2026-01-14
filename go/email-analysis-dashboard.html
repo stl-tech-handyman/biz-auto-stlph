@@ -274,8 +274,12 @@
         function renderStats(stats) {
             const container = document.getElementById('stats-container');
             
+            // Ensure arrays exist (handle null from API)
+            if (!stats.jobs || !Array.isArray(stats.jobs)) stats.jobs = [];
+            if (!stats.active_agents || !Array.isArray(stats.active_agents)) stats.active_agents = [];
+            
             const lastUpdated = new Date(stats.last_updated);
-            const lastRun = stats.last_run ? new Date(stats.last_run) : null;
+            const lastRun = stats.last_run && stats.last_run !== '0001-01-01T00:00:00Z' ? new Date(stats.last_run) : null;
             const timeSince = lastRun ? formatTimeAgo(lastRun) : 'Never';
             
             container.innerHTML = `
