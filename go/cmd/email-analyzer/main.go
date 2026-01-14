@@ -708,6 +708,9 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 						if verbose {
 							fmt.Printf("  💾 Wrote batch of %d emails\n", len(batchToWrite))
 						}
+						// Lightweight progress reporting to Sheets (safe frequency).
+						// We avoid writing State/Email Mapping here to stay under Sheets write quotas.
+						updateJobStats(ctx, sheetsService, spreadsheetID, jobID, jobName, agentID, currentProcessed, currentSkipped, false)
 					} else {
 						mu.Unlock()
 					}
