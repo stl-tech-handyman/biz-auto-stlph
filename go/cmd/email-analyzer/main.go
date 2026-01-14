@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -97,14 +98,49 @@ func main() {
 		log.Fatalf("Failed to init Sheets: %v", err)
 	}
 
-	// Spreadsheet ID is REQUIRED - don't create new spreadsheets automatically
+	// Get or find spreadsheet
+	const spreadsheetName = "90K email historic analysis and classification"
+	
 	if *spreadsheetID == "" {
-		log.Fatalf("❌ Spreadsheet ID is required. Use -spreadsheet flag with an existing spreadsheet ID.\n   Example: -spreadsheet \"1AqrivHOOF1HxjW2t_1XnGUhN4lwcdSv18VacyH36HeU\"\n   \n   To use the existing spreadsheet: -spreadsheet \"1AqrivHOOF1HxjW2t_1XnGUhN4lwcdSv18VacyH36HeU\"")
+		// Search for existing spreadsheet with the correct name
+		fmt.Printf("🔍 Searching for existing spreadsheet: %s\n", spreadsheetName)
+		
+		driveService, err := initDrive(ctx)
+		if err != nil {
+			log.Fatalf("Failed to init Drive API (needed to search for spreadsheet): %v", err)
+		}
+		
+		// Search for spreadsheet by name
+		foundID, err := findSpreadsheetByName(ctx, driveService, spreadsheetName)
+		if err != nil {
+			log.Fatalf("Failed to search for spreadsheet: %v", err)
+		}
+		
+		if foundID != "" {
+			*spreadsheetID = foundID
+			fmt.Printf("✅ Found existing spreadsheet: %s\n", foundID)
+			fmt.Printf("🔗 URL: https://docs.google.com/spreadsheets/d/%s\n\n", foundID)
+		} else {
+			// Create new spreadsheet
+			fmt.Printf("📝 No existing spreadsheet found. Creating new one...\n")
+			spreadsheet, err := sheetsService.Spreadsheets.Create(&sheets.Spreadsheet{
+				Properties: &sheets.SpreadsheetProperties{
+					Title: spreadsheetName,
+				},
+			}).Context(ctx).Do()
+			if err != nil {
+				log.Fatalf("Failed to create spreadsheet: %v", err)
+			}
+			*spreadsheetID = spreadsheet.SpreadsheetId
+			fmt.Printf("\n✅ Created new spreadsheet: %s\n", spreadsheet.SpreadsheetUrl)
+			fmt.Printf("📊 Spreadsheet ID: %s\n", *spreadsheetID)
+			fmt.Printf("📋 Spreadsheet Name: %s\n", spreadsheetName)
+			fmt.Printf("🌐 Dashboard URL: http://localhost:8080/email-analysis-dashboard.html?spreadsheet_id=%s\n\n", *spreadsheetID)
+		}
 	}
 	
 	// Verify spreadsheet exists and is accessible
 	{
-		// Verify spreadsheet exists and is accessible
 		fmt.Printf("🔍 Verifying spreadsheet access...\n")
 		spreadsheet, err := sheetsService.Spreadsheets.Get(*spreadsheetID).Context(ctx).Do()
 		if err != nil {
@@ -115,14 +151,14 @@ func main() {
 		fmt.Printf("🔗 URL: https://docs.google.com/spreadsheets/d/%s\n\n", *spreadsheetID)
 		
 		// Update spreadsheet name if it's not correct
-		if spreadsheet.Properties.Title != "90K email historic analysis and classification" {
-			fmt.Printf("📝 Updating spreadsheet name to '90K email historic analysis and classification'...\n")
+		if spreadsheet.Properties.Title != spreadsheetName {
+			fmt.Printf("📝 Updating spreadsheet name to '%s'...\n", spreadsheetName)
 			_, err := sheetsService.Spreadsheets.BatchUpdate(*spreadsheetID, &sheets.BatchUpdateSpreadsheetRequest{
 				Requests: []*sheets.Request{
 					{
 						UpdateSpreadsheetProperties: &sheets.UpdateSpreadsheetPropertiesRequest{
 							Properties: &sheets.SpreadsheetProperties{
-								Title: "90K email historic analysis and classification",
+								Title: spreadsheetName,
 							},
 							Fields: "title",
 						},
@@ -355,6 +391,52 @@ func initSheets(ctx context.Context) (*sheets.Service, error) {
 	
 	client := config.Client(ctx)
 	return sheets.NewService(ctx, option.WithHTTPClient(client))
+}
+
+func initDrive(ctx context.Context) (*drive.Service, error) {
+	credsJSON := os.Getenv("GMAIL_CREDENTIALS_JSON")
+	if credsJSON == "" {
+		return nil, fmt.Errorf("GMAIL_CREDENTIALS_JSON not set")
+	}
+
+	var credsData []byte
+	if _, err := os.Stat(credsJSON); err == nil {
+		credsData, _ = os.ReadFile(credsJSON)
+	} else {
+		credsData = []byte(credsJSON)
+	}
+
+	config, err := google.JWTConfigFromJSON(credsData, drive.DriveReadonlyScope)
+	if err != nil {
+		return nil, err
+	}
+
+	config.Subject = newEmail // team@stlpartyhelpers.com
+	
+	client := config.Client(ctx)
+	return drive.NewService(ctx, option.WithHTTPClient(client))
+}
+
+func findSpreadsheetByName(ctx context.Context, driveService *drive.Service, name string) (string, error) {
+	// Search for spreadsheets with exact name
+	query := fmt.Sprintf("name='%s' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false", strings.ReplaceAll(name, "'", "\\'"))
+	
+	resp, err := driveService.Files.List().
+		Q(query).
+		Fields("files(id, name)").
+		Context(ctx).
+		Do()
+	
+	if err != nil {
+		return "", fmt.Errorf("failed to search Drive: %w", err)
+	}
+	
+	// Return first match (should only be one with exact name)
+	if len(resp.Files) > 0 {
+		return resp.Files[0].Id, nil
+	}
+	
+	return "", nil // Not found
 }
 
 // Lock represents a processing lock
