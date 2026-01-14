@@ -171,11 +171,12 @@
         // Auto-detect spreadsheet on page load
         async function autoDetectSpreadsheet() {
             try {
-                // First, check URL parameter
+                // First, check URL parameter (highest priority)
                 const params = new URLSearchParams(window.location.search);
                 const urlSpreadsheetID = params.get('spreadsheet_id');
                 
                 if (urlSpreadsheetID) {
+                    console.log('Found spreadsheet ID in URL:', urlSpreadsheetID);
                     currentSpreadsheetID = urlSpreadsheetID;
                     // Save to localStorage for future visits
                     localStorage.setItem('emailAnalysisSpreadsheetID', urlSpreadsheetID);
@@ -186,12 +187,14 @@
                 // Try to get from localStorage
                 const saved = localStorage.getItem('emailAnalysisSpreadsheetID');
                 if (saved) {
+                    console.log('Found spreadsheet ID in localStorage:', saved);
                     currentSpreadsheetID = saved;
                     loadStats();
                     return;
                 }
                 
                 // No spreadsheet found
+                console.log('No spreadsheet ID found');
                 showNoAnalysisMessage();
             } catch (error) {
                 console.error('Failed to detect spreadsheet:', error);
@@ -350,13 +353,30 @@
                                     </div>
                                 </div>
                                 ${stats.spreadsheet_url ? `
-                                    <div class="mt-2">
-                                        <a href="${stats.spreadsheet_url}" target="_blank" class="btn btn-primary">
+                                    <div class="mt-3">
+                                        <a href="${stats.spreadsheet_url}" target="_blank" class="btn btn-primary btn-lg">
                                             <i class="bi bi-file-earmark-spreadsheet"></i> Open Google Sheet
                                         </a>
-                                        <a href="${stats.spreadsheet_url}" target="_blank" class="btn btn-outline-secondary ms-2">
-                                            <i class="bi bi-box-arrow-up-right"></i> View in New Tab
-                                        </a>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="form-label"><strong>Direct Google Sheet URL:</strong></label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control font-monospace" id="sheet-url-copy" value="${stats.spreadsheet_url}" readonly>
+                                            <button class="btn btn-outline-secondary" onclick="copySheetUrl(event)" title="Copy URL">
+                                                <i class="bi bi-clipboard"></i> Copy
+                                            </button>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">
+                                            <i class="bi bi-info-circle"></i> Contains all raw data, job stats, locks, and analysis results
+                                        </small>
+                                    </div>
+                                ` : currentSpreadsheetID ? `
+                                    <div class="mt-3">
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> 
+                                            Stats loading... 
+                                            <a href="https://docs.google.com/spreadsheets/d/${currentSpreadsheetID}" target="_blank" class="alert-link">Open Sheet Directly</a>
+                                        </div>
                                     </div>
                                 ` : '<p class="text-muted mt-2"><small>Spreadsheet URL will appear once stats are loaded</small></p>'}
                             </div>
