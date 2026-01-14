@@ -45,11 +45,26 @@ func main() {
 		jobID         = flag.String("job", defaultJobID, "Job ID for this analysis run")
 		jobName       = flag.String("job-name", defaultJobName, "Job name/description")
 		workers       = flag.Int("workers", 5, "Number of concurrent workers (recommended: 3-5)")
+		testMode      = flag.Bool("test", false, "Test mode: process only 10 emails and verify writes")
 	)
 	flag.Parse()
 
 	if *all {
 		*maxEmails = 0
+	}
+	
+	// Test mode: process only 10 emails for verification
+	if *testMode {
+		*maxEmails = 10
+		*verbose = true
+		fmt.Printf("🧪 TEST MODE: Will process only 10 emails and verify writes\n")
+	}
+	
+	// Test mode: process only 10 emails for verification
+	if *testMode {
+		*maxEmails = 10
+		*verbose = true
+		fmt.Printf("🧪 TEST MODE: Will process only 10 emails and verify writes\n")
 	}
 	
 	// Generate agent ID if not provided
@@ -116,8 +131,40 @@ func main() {
 	}()
 
 	// Initialize sheets
+	fmt.Printf("📋 Initializing sheets...\n")
 	if err := initializeSheets(ctx, sheetsService, *spreadsheetID, *idempotent); err != nil {
 		log.Fatalf("Failed to initialize sheets: %v", err)
+	}
+	fmt.Printf("✅ Sheets initialized successfully\n")
+	
+	// Test write verification in test mode
+	if *testMode {
+		fmt.Printf("🧪 TEST: Verifying sheet write capability...\n")
+		testRow := [][]interface{}{
+			{"TEST_MESSAGE_ID", "TEST_THREAD_ID", time.Now().Format(time.RFC3339), "test@example.com", "test@example.com", "Test Email", "Test body", "false", "false", "false", "false", "STLPH", "1.0", "Website", "Test Page", "test@example.com", "test@example.com", "example.com", "Test User", "", "", "", "", "", "", "", "", "", "0.00", "0.00", "0.00", "0.00", "0.00", "Pending", "test_conversation", "1", "", "false", *jobID, *jobName},
+		}
+		if err := writeBatch(ctx, sheetsService, *spreadsheetID, testRow); err != nil {
+			log.Fatalf("❌ TEST FAILED: Cannot write to spreadsheet: %v", err)
+		}
+		fmt.Printf("✅ TEST PASSED: Successfully wrote test row to spreadsheet\n")
+		
+		// Verify we can read it back
+		readResp, readErr := sheetsService.Spreadsheets.Values.Get(*spreadsheetID, "Raw Data!A:A").Context(ctx).Do()
+		if readErr != nil {
+			log.Fatalf("❌ TEST FAILED: Cannot read from spreadsheet: %v", readErr)
+		}
+		found := false
+		for _, row := range readResp.Values {
+			if len(row) > 0 && fmt.Sprintf("%v", row[0]) == "TEST_MESSAGE_ID" {
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Fatalf("❌ TEST FAILED: Test row not found in spreadsheet after write")
+		}
+		fmt.Printf("✅ TEST PASSED: Successfully verified read-back from spreadsheet\n")
+		fmt.Printf("🧪 Test mode verification complete. Proceeding with email processing...\n\n")
 	}
 
 	// Rebuild mode: recompute derived sheets from Raw Data and exit
@@ -150,11 +197,16 @@ func main() {
 	}
 
 	// Default query - if -all flag is used, process ALL emails (empty query)
+	// Test mode also uses empty query to get all emails
 	// Otherwise default to form submissions for backward compatibility
 	if *query == "" {
-		if *all {
+		if *all || *testMode {
 			*query = "" // Empty query = all emails in Gmail API
-			fmt.Printf("  ℹ️  Using empty query to process ALL emails\n")
+			if *testMode {
+				fmt.Printf("  ℹ️  Test mode: Using empty query to process ALL emails\n")
+			} else {
+				fmt.Printf("  ℹ️  Using empty query to process ALL emails\n")
+			}
 		} else {
 			*query = `from:zapier.com OR from:forms OR subject:"New Lead" OR subject:"Form Submission" OR subject:"Quote"`
 		}
@@ -715,17 +767,23 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 						batch = [][]interface{}{} // Clear batch
 						mu.Unlock()
 
+						// Write batch with verification
+						fmt.Printf("  💾 Writing batch of %d emails to spreadsheet...\n", len(batchToWrite))
 						if err := writeBatch(ctx, sheetsService, spreadsheetID, batchToWrite); err != nil {
-							fmt.Printf("  ⚠️  Error writing batch: %v\n", err)
+							fmt.Printf("  ❌ ERROR writing batch: %v\n", err)
+							fmt.Printf("  🔍 Batch details: %d rows, first message ID: %v\n", len(batchToWrite), func() interface{} {
+								if len(batchToWrite) > 0 && len(batchToWrite[0]) > 0 {
+									return batchToWrite[0][0]
+								}
+								return "N/A"
+							}())
 							mu.Lock()
 							batch = batchToWrite // Restore batch on error
 							mu.Unlock()
 							continue
 						}
 
-						if verbose {
-							fmt.Printf("  💾 Wrote batch of %d emails\n", len(batchToWrite))
-						}
+						fmt.Printf("  ✅ Successfully wrote batch of %d emails to spreadsheet\n", len(batchToWrite))
 						// Lightweight progress reporting to Sheets (safe frequency).
 						// We avoid writing State/Email Mapping here to stay under Sheets write quotas.
 						updateJobStats(ctx, sheetsService, spreadsheetID, jobID, jobName, agentID, currentProcessed, currentSkipped, false)
@@ -894,12 +952,11 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 	mu.Unlock()
 
 	if len(finalBatch) > 0 {
+		fmt.Printf("  💾 Writing final batch of %d emails to spreadsheet...\n", len(finalBatch))
 		if err := writeBatch(ctx, sheetsService, spreadsheetID, finalBatch); err != nil {
 			return finalProcessed, finalSkipped, fmt.Errorf("failed to write final batch: %w", err)
 		}
-		if verbose {
-			fmt.Printf("  💾 Wrote final batch of %d emails\n", len(finalBatch))
-		}
+		fmt.Printf("  ✅ Successfully wrote final batch of %d emails to spreadsheet\n", len(finalBatch))
 
 		// Save state after final batch
 		mu.Lock()
@@ -1770,11 +1827,68 @@ func (e *EmailData) ToRow() []interface{} {
 }
 
 func writeBatch(ctx context.Context, service *sheets.Service, spreadsheetID string, batch [][]interface{}) error {
+	if len(batch) == 0 {
+		return fmt.Errorf("cannot write empty batch")
+	}
+	
 	vr := &sheets.ValueRange{
 		Values: batch,
 	}
-	_, err := service.Spreadsheets.Values.Append(spreadsheetID, "Raw Data", vr).ValueInputOption("RAW").InsertDataOption("INSERT_ROWS").Context(ctx).Do()
-	return err
+	
+	// Write batch
+	resp, err := service.Spreadsheets.Values.Append(spreadsheetID, "Raw Data", vr).ValueInputOption("RAW").InsertDataOption("INSERT_ROWS").Context(ctx).Do()
+	if err != nil {
+		return fmt.Errorf("failed to append batch: %w", err)
+	}
+	
+	// Verify write succeeded - check that we got an update response
+	if resp.Updates == nil {
+		return fmt.Errorf("write succeeded but no update response received")
+	}
+	
+	// Log verification details
+	rowsUpdated := resp.Updates.UpdatedRows
+	if rowsUpdated != int64(len(batch)) {
+		fmt.Printf("  ⚠️  Warning: Expected %d rows, but %d rows were updated\n", len(batch), rowsUpdated)
+	}
+	
+	// Additional verification: read back the last row to confirm it was written
+	// Get the first message ID from the batch (column A, first row)
+	if len(batch) > 0 && len(batch[0]) > 0 {
+		firstMessageID := fmt.Sprintf("%v", batch[0][0])
+		
+		// Read back from Raw Data to verify
+		readResp, readErr := service.Spreadsheets.Values.Get(spreadsheetID, "Raw Data!A:A").Context(ctx).Do()
+		if readErr == nil && len(readResp.Values) > 0 {
+			// Check if our message ID is in the last few rows
+			found := false
+			checkRows := len(readResp.Values)
+			if checkRows > 10 {
+				checkRows = 10 // Check last 10 rows
+			}
+			startIdx := len(readResp.Values) - checkRows
+			if startIdx < 0 {
+				startIdx = 0
+			}
+			
+			for i := startIdx; i < len(readResp.Values); i++ {
+				if len(readResp.Values[i]) > 0 {
+					if fmt.Sprintf("%v", readResp.Values[i][0]) == firstMessageID {
+						found = true
+						break
+					}
+				}
+			}
+			
+			if !found {
+				fmt.Printf("  ⚠️  Warning: Written message ID %s not found in sheet verification\n", firstMessageID)
+			} else {
+				fmt.Printf("  ✅ Verified: Message ID %s confirmed in sheet (total rows: %d)\n", firstMessageID, len(readResp.Values))
+			}
+		}
+	}
+	
+	return nil
 }
 
 func writeEmailMappingSnapshot(ctx context.Context, service *sheets.Service, spreadsheetID string, rows []*mappingAggregate) {
