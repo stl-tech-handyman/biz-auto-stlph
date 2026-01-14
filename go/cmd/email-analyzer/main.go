@@ -149,9 +149,15 @@ func main() {
 		fmt.Printf("  🆕 Starting fresh - no previous state found\n")
 	}
 
-	// Default query
+	// Default query - if -all flag is used, process ALL emails (empty query)
+	// Otherwise default to form submissions for backward compatibility
 	if *query == "" {
-		*query = `from:zapier.com OR from:forms OR subject:"New Lead" OR subject:"Form Submission" OR subject:"Quote"`
+		if *all {
+			*query = "" // Empty query = all emails in Gmail API
+			fmt.Printf("  ℹ️  Using empty query to process ALL emails\n")
+		} else {
+			*query = `from:zapier.com OR from:forms OR subject:"New Lead" OR subject:"Form Submission" OR subject:"Quote"`
+		}
 	}
 
 	fmt.Printf("Starting analysis...\n")
@@ -779,17 +785,35 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 
 			if pageToken != "" {
 				call = call.PageToken(pageToken)
+				if verbose {
+					fmt.Printf("  📄 Using page token (batch %d, continuing pagination)\n", batchNum+1)
+				}
 			}
 
 			resp, err := call.Context(ctx).Do()
 			if err != nil {
-				fmt.Printf("⚠️  Error fetching batch: %v\n", err)
+				fmt.Printf("⚠️  Error fetching batch %d: %v\n", batchNum+1, err)
+				// Log detailed error for debugging
+				if verbose {
+					fmt.Printf("  🔍 Query: %s\n", query)
+					fmt.Printf("  🔍 Page token present: %v\n", pageToken != "")
+				}
 				break
 			}
 
 			if len(resp.Messages) == 0 {
-				fmt.Printf("\n✅ No more emails found\n")
+				fmt.Printf("\n✅ No more emails found (batch %d returned 0 messages)\n", batchNum+1)
+				if verbose {
+					fmt.Printf("  🔍 Query: %s\n", query)
+					fmt.Printf("  🔍 Total batches fetched: %d\n", batchNum+1)
+				}
 				break
+			}
+
+			// Log batch details
+			if verbose || batchNum%50 == 0 {
+				fmt.Printf("  📦 Batch %d: Fetched %d message IDs | Has next page: %v\n", 
+					batchNum+1, len(resp.Messages), resp.NextPageToken != "")
 			}
 
 			// Send message IDs to workers
@@ -800,7 +824,11 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 			// Check if there are more pages
 			pageToken = resp.NextPageToken
 			if pageToken == "" {
-				fmt.Printf("\n✅ Reached end of results\n")
+				fmt.Printf("\n✅ Reached end of pagination (batch %d, no next page token)\n", batchNum+1)
+				if verbose {
+					fmt.Printf("  🔍 Total batches: %d\n", batchNum+1)
+					fmt.Printf("  🔍 Total messages fetched: ~%d\n", (batchNum+1)*batchSize)
+				}
 				break
 			}
 
