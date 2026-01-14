@@ -1,0 +1,222 @@
+{
+  "results": [
+    {
+      "name": "New Year's Day (2026-01-01)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2026-01-01",
+        "label": "New Year's Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Thanksgiving (2026-11-26)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2026-11-26",
+        "label": "Thanksgiving",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Christmas Eve (2026-12-24)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2026-12-24",
+        "label": "Christmas Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2026
+      }
+    },
+    {
+      "name": "Christmas Day (2026-12-25)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2026-12-25",
+        "label": "Christmas Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2026
+      }
+    },
+    {
+      "name": "New Year's Eve (2026-12-31)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2026-12-31",
+        "label": "New Year's Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2026
+      }
+    },
+    {
+      "name": "New Year's Day (2027-01-01)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2027-01-01",
+        "label": "New Year's Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Thanksgiving (2027-11-25)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2027-11-25",
+        "label": "Thanksgiving",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Christmas Eve (2027-12-24)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2027-12-24",
+        "label": "Christmas Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2027
+      }
+    },
+    {
+      "name": "Christmas Day (2027-12-25)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2027-12-25",
+        "label": "Christmas Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2027
+      }
+    },
+    {
+      "name": "New Year's Eve (2027-12-31)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2027-12-31",
+        "label": "New Year's Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2027
+      }
+    },
+    {
+      "name": "New Year's Day (2028-01-01)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2028-01-01",
+        "label": "New Year's Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Thanksgiving (2028-11-23)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2028-11-23",
+        "label": "Thanksgiving",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Christmas Eve (2028-12-24)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2028-12-24",
+        "label": "Christmas Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2028
+      }
+    },
+    {
+      "name": "Christmas Day (2028-12-25)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2028-12-25",
+        "label": "Christmas Day",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2028
+      }
+    },
+    {
+      "name": "New Year's Eve (2028-12-31)",
+      "status": "pass",
+      "expected": "2.0x multiplier",
+      "actual": "2.00x multiplier",
+      "data": {
+        "configInfo": "Configuration: Holidays are defined in `go/internal/services/pricing/estimate.go` in `GetHolidayDatesForYear()` function. To add new holidays, edit the function to include new dates with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(2), Label: \"Holiday Name\", Type: \"holiday\"}`",
+        "date": "2028-12-31",
+        "label": "New Year's Eve",
+        "multiplier": 2,
+        "type": "holiday",
+        "year": 2028
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 15,
+    "total": 15,
+    "warnings": 0
+  },
+  "testName": "special-dates",
+  "timestamp": "2026-01-14T04:58:13-06:00"
+}

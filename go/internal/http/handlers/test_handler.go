@@ -154,7 +154,7 @@ func (h *TestHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 	// #region agent log
 	writeDebugLog("test_handler.go:98", "Entering switch statement for test name", map[string]interface{}{
 		"testName": testName,
-		"availableCases": []string{"date-variations", "expiration-calc", "urgency-levels", "deposit-calc", "pricing-rates", "email-template", "arrival-time", "weather-forecast", "form-validation"},
+		"availableCases": []string{"date-variations", "expiration-calc", "urgency-levels", "deposit-calc", "pricing-rates", "email-template", "arrival-time", "weather-forecast", "form-validation", "special-dates", "surge-dates"},
 	})
 	// #endregion
 	switch testName {
@@ -194,6 +194,10 @@ func (h *TestHandler) HandleTest(w http.ResponseWriter, r *http.Request) {
 		response, err = h.testWeatherForecast(req)
 	case "form-validation":
 		response, err = h.testFormValidation(req)
+	case "special-dates":
+		response, err = h.testSpecialDates(req)
+	case "surge-dates":
+		response, err = h.testSurgeDates(req)
 	default:
 		// #region agent log
 		writeDebugLog("test_handler.go:117", "Hit default case - unknown test", map[string]interface{}{
@@ -245,6 +249,8 @@ func (h *TestHandler) HandleRunAllTests(w http.ResponseWriter, r *http.Request) 
 		"email-template",
 		"weather-forecast",
 		"form-validation",
+		"special-dates",
+		"surge-dates",
 	}
 
 	var allResults []TestCaseResult
@@ -381,10 +387,24 @@ func (h *TestHandler) testDateVariations(req TestRequest) (TestResponse, error) 
 		message = fmt.Sprintf("Urgency level mismatch for %d days", daysUntilEvent)
 	}
 
-		// Verify expiration date is in the future
+		// Verify expiration date is in the future (unless event is today)
+		// Note: For same-day bookings (0 days), email template shows special message with no expiration
 		if expirationDate.Before(now) && daysUntilEvent > 0 {
 			status = "fail"
 			message += " Expiration date is in the past."
+		}
+		
+		// Add note for same-day bookings
+		if daysUntilEvent == 0 {
+			message += " Same-day booking: Email shows 'Deposit Should Be Paid Now' with no expiration date."
+		}
+
+		// For same-day bookings, show that expiration is not displayed in email
+		expirationDateDisplay := expirationDate.Format(time.RFC3339)
+		expirationFormattedDisplay := expirationFormatted
+		if daysUntilEvent == 0 {
+			expirationDateDisplay = "N/A - Not shown in email"
+			expirationFormattedDisplay = "N/A - Email shows 'Deposit Should Be Paid Now' instead"
 		}
 
 		result := TestCaseResult{
@@ -396,8 +416,8 @@ func (h *TestHandler) testDateVariations(req TestRequest) (TestResponse, error) 
 			Data: map[string]interface{}{
 				"daysUntilEvent":     daysUntilEvent,
 				"urgencyLevel":       urgencyLevel,
-				"expirationDate":     expirationDate.Format(time.RFC3339),
-				"expirationFormatted": expirationFormatted,
+				"expirationDate":     expirationDateDisplay,
+				"expirationFormatted": expirationFormattedDisplay,
 			},
 		}
 
@@ -424,20 +444,21 @@ func (h *TestHandler) testExpirationCalculation(req TestRequest) (TestResponse, 
 	testCases := []struct {
 		daysUntilEvent int
 		expectedRule   string
+		note           string
 	}{
-		{0, "midnight today"},
-		{1, "midnight today"},
-		{2, "midnight today"},
-		{3, "midnight today"},
-		{4, "48 hours"},
-		{5, "48 hours"},
-		{6, "48 hours"},
-		{7, "48 hours"},
-		{8, "3 days"},
-		{14, "3 days"},
-		{15, "2 weeks"},
-		{30, "2 weeks"},
-		{60, "2 weeks"},
+		{0, "midnight today", "Same-day: Email shows 'Deposit Should Be Paid Now' with no expiration"},
+		{1, "midnight today", ""},
+		{2, "midnight today", ""},
+		{3, "midnight today", ""},
+		{4, "48 hours", ""},
+		{5, "48 hours", ""},
+		{6, "48 hours", ""},
+		{7, "48 hours", ""},
+		{8, "3 days", ""},
+		{14, "3 days", ""},
+		{15, "2 weeks", ""},
+		{30, "2 weeks", ""},
+		{60, "2 weeks", ""},
 	}
 
 	for _, tc := range testCases {
@@ -457,17 +478,34 @@ func (h *TestHandler) testExpirationCalculation(req TestRequest) (TestResponse, 
 			status = "fail"
 			message = "Expiration formatted string is empty"
 		}
+		
+		// Add note for same-day bookings
+		if tc.note != "" {
+			if message != "" {
+				message += ". " + tc.note
+			} else {
+				message = tc.note
+			}
+		}
+
+		// For same-day bookings, show that expiration is not displayed in email
+		expirationDateDisplay := expirationDate.Format(time.RFC3339)
+		expirationFormattedDisplay := expirationFormatted
+		if tc.daysUntilEvent == 0 {
+			expirationDateDisplay = "N/A - Not shown in email"
+			expirationFormattedDisplay = "N/A - Email shows 'Deposit Should Be Paid Now' instead"
+		}
 
 		result := TestCaseResult{
 			Name:     fmt.Sprintf("%d days until event", tc.daysUntilEvent),
 			Status:   status,
 			Message:  message,
 			Expected: tc.expectedRule,
-			Actual:   expirationFormatted,
+			Actual:   expirationFormattedDisplay,
 			Data: map[string]interface{}{
 				"daysUntilEvent":     tc.daysUntilEvent,
-				"expirationDate":     expirationDate.Format(time.RFC3339),
-				"expirationFormatted": expirationFormatted,
+				"expirationDate":     expirationDateDisplay,
+				"expirationFormatted": expirationFormattedDisplay,
 			},
 		}
 
@@ -619,13 +657,55 @@ func (h *TestHandler) testPricingRates(req TestRequest) (TestResponse, error) {
 	}
 
 	now := time.Now()
-	testDates := []time.Time{
-		now.AddDate(0, 0, 30),  // Regular date
-		time.Date(2026, 12, 25, 0, 0, 0, 0, now.Location()), // Christmas
-		time.Date(2026, 1, 1, 0, 0, 0, 0, now.Location()),   // New Year
+	currentYear := now.Year()
+	
+	// Generate dates for 3 years forward - one date per month for comprehensive coverage
+	testDates := []time.Time{}
+	
+	// Add today and tomorrow
+	testDates = append(testDates, now)
+	testDates = append(testDates, now.AddDate(0, 0, 1))
+	
+	// Add dates for next 3 years - first day of each month, plus some special dates
+	for year := currentYear; year < currentYear+3; year++ {
+		for month := 1; month <= 12; month++ {
+			// First day of month
+			testDates = append(testDates, time.Date(year, time.Month(month), 1, 0, 0, 0, 0, now.Location()))
+			// 15th of month
+			testDates = append(testDates, time.Date(year, time.Month(month), 15, 0, 0, 0, 0, now.Location()))
+		}
+	}
+	
+	// Remove duplicates and sort
+	dateMap := make(map[string]time.Time)
+	for _, d := range testDates {
+		key := d.Format("2006-01-02")
+		if _, exists := dateMap[key]; !exists {
+			dateMap[key] = d
+		}
+	}
+	
+	// Convert back to slice and sort
+	uniqueDates := []time.Time{}
+	for _, d := range dateMap {
+		uniqueDates = append(uniqueDates, d)
+	}
+	
+	// Sort dates
+	for i := 0; i < len(uniqueDates)-1; i++ {
+		for j := i + 1; j < len(uniqueDates); j++ {
+			if uniqueDates[i].After(uniqueDates[j]) {
+				uniqueDates[i], uniqueDates[j] = uniqueDates[j], uniqueDates[i]
+			}
+		}
 	}
 
-	for _, eventDate := range testDates {
+	for _, eventDate := range uniqueDates {
+		// Skip past dates
+		if eventDate.Before(now.AddDate(0, 0, -1)) {
+			continue
+		}
+		
 		estimate, err := pricing.CalculateEstimate(eventDate, 4.0, 2)
 		if err != nil {
 			response.Results = append(response.Results, TestCaseResult{
@@ -659,11 +739,18 @@ func (h *TestHandler) testPricingRates(req TestRequest) (TestResponse, error) {
 			Status:   status,
 			Message:  message,
 			Data: map[string]interface{}{
+				"date":               eventDate.Format("2006-01-02"),
+				"dateFormatted":      eventDate.Format("Mon, Jan 2, 2006"),
+				"year":               eventDate.Year(),
+				"month":              eventDate.Month().String(),
+				"day":                eventDate.Day(),
 				"baseRate":           estimate.BasePerHelper,
 				"hourlyRate":         estimate.ExtraPerHourPerHelper,
 				"totalCost":          estimate.TotalCost,
 				"isSpecialDate":      estimate.IsSpecialDate,
 				"specialLabel":       estimate.SpecialLabel,
+				"rateType":           estimate.RateType,
+				"specialMultiplier": estimate.SpecialDateMultiplier,
 			},
 		}
 
@@ -835,84 +922,119 @@ func (h *TestHandler) testWeatherForecast(req TestRequest) (TestResponse, error)
 		Results:  []TestCaseResult{},
 	}
 
-	if h.weatherService == nil || h.geocodingService == nil {
-		response.Results = append(response.Results, TestCaseResult{
-			Name:   "Service Availability",
-			Status: "warning",
-			Message: "Weather or geocoding service not available (API keys may not be set)",
-		})
-		response.Warnings++
-		response.Total++
-		return response, nil
-	}
-
-	// Test with St. Louis coordinates (if service is available)
+	now := time.Now()
 	testAddress := "St. Louis, MO"
-	eventDate := time.Now().AddDate(0, 0, 5) // 5 days from now
-
 	ctx := context.Background()
-	geoResult, err := h.geocodingService.GetLatLng(ctx, testAddress)
-	if err != nil {
-		response.Results = append(response.Results, TestCaseResult{
-			Name:   "Geocoding",
-			Status: "error",
-			Message: fmt.Sprintf("Failed to geocode address: %v", err),
-		})
-		response.Failed++
+	
+	// Generate 10 days forward
+	for day := 0; day < 10; day++ {
+		eventDate := now.AddDate(0, 0, day)
+		
+		if h.weatherService == nil || h.geocodingService == nil {
+			// Generate placeholder data when service is not available
+			result := TestCaseResult{
+				Name:   eventDate.Format("2006-01-02"),
+				Status: "warning",
+				Message: "Weather service not available (API keys may not be set) - placeholder data",
+				Data: map[string]interface{}{
+					"date":          eventDate.Format("2006-01-02"),
+					"dateFormatted": eventDate.Format("Mon, Jan 2, 2006"),
+					"dayOfWeek":     eventDate.Format("Monday"),
+					"temperature":   0,
+					"condition":     "N/A",
+					"description":   "Service not configured",
+					"humidity":      0,
+					"windSpeed":     0,
+					"isPlaceholder": true,
+				},
+			}
+			response.Results = append(response.Results, result)
+			response.Warnings++
+			response.Total++
+			continue
+		}
+
+		geoResult, err := h.geocodingService.GetLatLng(ctx, testAddress)
+		if err != nil {
+			result := TestCaseResult{
+				Name:   eventDate.Format("2006-01-02"),
+				Status: "error",
+				Message: fmt.Sprintf("Failed to geocode address: %v", err),
+				Data: map[string]interface{}{
+					"date":          eventDate.Format("2006-01-02"),
+					"dateFormatted": eventDate.Format("Mon, Jan 2, 2006"),
+					"dayOfWeek":     eventDate.Format("Monday"),
+				},
+			}
+			response.Results = append(response.Results, result)
+			response.Failed++
+			response.Total++
+			continue
+		}
+
+		forecast, err := h.weatherService.GetForecastForDate(ctx, geoResult.Lat, geoResult.Lng, eventDate)
+		if err != nil {
+			result := TestCaseResult{
+				Name:   eventDate.Format("2006-01-02"),
+				Status: "error",
+				Message: fmt.Sprintf("Failed to fetch weather: %v", err),
+				Data: map[string]interface{}{
+					"date":          eventDate.Format("2006-01-02"),
+					"dateFormatted": eventDate.Format("Mon, Jan 2, 2006"),
+					"dayOfWeek":     eventDate.Format("Monday"),
+				},
+			}
+			response.Results = append(response.Results, result)
+			response.Failed++
+			response.Total++
+			continue
+		}
+
+		status := "pass"
+		message := ""
+		if forecast == nil {
+			status = "warning"
+			message = "Forecast returned nil (event may be > 10 days away)"
+		} else if forecast.Temperature == 0 {
+			status = "warning"
+			message = "Temperature is zero"
+		}
+
+		data := map[string]interface{}{
+			"date":          eventDate.Format("2006-01-02"),
+			"dateFormatted": eventDate.Format("Mon, Jan 2, 2006"),
+			"dayOfWeek":     eventDate.Format("Monday"),
+		}
+		
+		if forecast != nil {
+			data["temperature"] = forecast.Temperature
+			data["condition"] = forecast.Condition
+			data["description"] = forecast.Description
+			data["humidity"] = forecast.Humidity
+			data["windSpeed"] = forecast.WindSpeed
+		} else {
+			data["temperature"] = 0
+			data["condition"] = "N/A"
+			data["description"] = "No forecast available"
+			data["humidity"] = 0
+			data["windSpeed"] = 0
+		}
+
+		result := TestCaseResult{
+			Name:    eventDate.Format("2006-01-02"),
+			Status:  status,
+			Message: message,
+			Data:    data,
+		}
+
+		response.Results = append(response.Results, result)
+		if status == "pass" {
+			response.Passed++
+		} else {
+			response.Warnings++
+		}
 		response.Total++
-		return response, nil
 	}
-
-	forecast, err := h.weatherService.GetForecastForDate(ctx, geoResult.Lat, geoResult.Lng, eventDate)
-	if err != nil {
-		response.Results = append(response.Results, TestCaseResult{
-			Name:   "Weather Fetch",
-			Status: "error",
-			Message: fmt.Sprintf("Failed to fetch weather: %v", err),
-		})
-		response.Failed++
-		response.Total++
-		return response, nil
-	}
-
-	if forecast == nil {
-		response.Results = append(response.Results, TestCaseResult{
-			Name:   "Weather Forecast",
-			Status: "warning",
-			Message: "Forecast returned nil (event may be > 10 days away)",
-		})
-		response.Warnings++
-		response.Total++
-		return response, nil
-	}
-
-	status := "pass"
-	message := ""
-	if forecast.Temperature == 0 {
-		status = "warning"
-		message = "Temperature is zero"
-	}
-
-	result := TestCaseResult{
-		Name:   "Weather Forecast",
-		Status: status,
-		Message: message,
-		Data: map[string]interface{}{
-			"temperature":   forecast.Temperature,
-			"condition":     forecast.Condition,
-			"description":   forecast.Description,
-			"humidity":      forecast.Humidity,
-			"windSpeed":     forecast.WindSpeed,
-		},
-	}
-
-	response.Results = append(response.Results, result)
-	if status == "pass" {
-		response.Passed++
-	} else {
-		response.Warnings++
-	}
-	response.Total++
 
 	return response, nil
 }
@@ -966,6 +1088,205 @@ func (h *TestHandler) testFormValidation(req TestRequest) (TestResponse, error) 
 			response.Warnings++
 		}
 		response.Total++
+	}
+
+	return response, nil
+}
+
+// testSpecialDates tests special dates (holidays) for 3 years forward
+func (h *TestHandler) testSpecialDates(req TestRequest) (TestResponse, error) {
+	response := TestResponse{
+		TestName: "Special Dates (Holidays)",
+		Results:  []TestCaseResult{},
+	}
+
+	currentYear := time.Now().Year()
+	allDates := pricing.GetAllSpecialDates(3, &currentYear)
+
+	configInfo := `<small style="font-size: 0.85rem;">Holidays are defined in <code>go/internal/services/pricing/estimate.go</code> in <code>GetHolidayDatesForYear()</code> function.<br>To add new holidays, edit the function to include new dates with format:</small><pre class="mb-0 mt-2" style="font-size: 0.75rem;"><code>"YYYY-MM-DD": {Multiplier: floatPtr(2), Label: "Holiday Name", Type: "holiday"}</code></pre>`
+
+	for year := currentYear; year < currentYear+3; year++ {
+		yearData, exists := allDates[year]
+		if !exists {
+			continue
+		}
+
+		// Test holidays
+		for _, holiday := range yearData.Holidays {
+			multiplier := 2.0
+			if holiday.Multiplier != nil {
+				multiplier = *holiday.Multiplier
+			}
+
+			status := "pass"
+			message := ""
+			if multiplier != 2.0 {
+				status = "warning"
+				message = fmt.Sprintf("Holiday multiplier is %.2f (expected 2.0)", multiplier)
+			}
+
+			// Parse date and format it
+			holidayDate, err := time.Parse("2006-01-02", holiday.Date)
+			var dateFormatted, dateMMDDYYYY, dayOfWeek string
+			if err == nil {
+				dateFormatted = holidayDate.Format("Mon, Jan 2, 2006")
+				dateMMDDYYYY = holidayDate.Format("01/02/2006")
+				dayOfWeek = holidayDate.Format("Mon")
+			} else {
+				dateFormatted = holiday.Date
+				dateMMDDYYYY = holiday.Date
+				dayOfWeek = ""
+			}
+
+			result := TestCaseResult{
+				Name:     fmt.Sprintf("%s (%s)", holiday.Label, holiday.Date),
+				Status:   status,
+				Message:  message,
+				Expected: "2.0x multiplier",
+				Actual:   fmt.Sprintf("%.2fx multiplier", multiplier),
+				Data: map[string]interface{}{
+					"date":          holiday.Date,
+					"dateFormatted": dateFormatted,
+					"dateMMDDYYYY":   dateMMDDYYYY,
+					"dayOfWeek":     dayOfWeek,
+					"label":         holiday.Label,
+					"multiplier":    multiplier,
+					"type":          holiday.Type,
+					"year":          year,
+					"configInfo":    configInfo,
+				},
+			}
+
+			response.Results = append(response.Results, result)
+			if status == "pass" {
+				response.Passed++
+			} else {
+				response.Warnings++
+			}
+			response.Total++
+		}
+
+		// Test legacy dates (if any)
+		for _, legacy := range yearData.LegacyDates {
+			multiplier := 2.0
+			if legacy.Multiplier != nil {
+				multiplier = *legacy.Multiplier
+			}
+
+			result := TestCaseResult{
+				Name:     fmt.Sprintf("%s (Legacy) - %s", legacy.Label, legacy.Date),
+				Status:   "pass",
+				Message:  "Legacy special date (for backward compatibility)",
+				Expected: "2.0x multiplier",
+				Actual:   fmt.Sprintf("%.2fx multiplier", multiplier),
+				Data: map[string]interface{}{
+					"date":       legacy.Date,
+					"label":      legacy.Label,
+					"multiplier": multiplier,
+					"type":       legacy.Type,
+					"year":       year,
+					"configInfo": `<small style="font-size: 0.85rem;">Legacy dates are in <code>legacySpecialDateRules</code> map in <code>go/internal/services/pricing/estimate.go</code>.<br>Format:</small><pre class="mb-0 mt-2" style="font-size: 0.75rem;"><code>"YYYY-MM-DD": {Multiplier: floatPtr(2), Label: "Date Name"}</code></pre>`,
+				},
+			}
+
+			response.Results = append(response.Results, result)
+			response.Passed++
+			response.Total++
+		}
+	}
+
+	return response, nil
+}
+
+// testSurgeDates tests surge dates for 3 years forward
+func (h *TestHandler) testSurgeDates(req TestRequest) (TestResponse, error) {
+	response := TestResponse{
+		TestName: "Surge Dates",
+		Results:  []TestCaseResult{},
+	}
+
+	currentYear := time.Now().Year()
+	allDates := pricing.GetAllSpecialDates(3, &currentYear)
+
+	configInfo := `<small style="font-size: 0.85rem;">Surge dates are defined in <code>go/internal/services/pricing/estimate.go</code> in <code>surgeDateRules</code> map.<br>To add new surge dates, add entries with format:</small><pre class="mb-0 mt-2" style="font-size: 0.75rem;"><code>"YYYY-MM-DD": {Multiplier: floatPtr(1.5), Label: "Surge Name", Type: "surge"}</code></pre><small style="font-size: 0.85rem;">Multiplier must be between 1.25 and 3.0. Server restart required after changes.</small>`
+
+	for year := currentYear; year < currentYear+3; year++ {
+		yearData, exists := allDates[year]
+		if !exists {
+			continue
+		}
+
+		// Test surge dates
+		if len(yearData.SurgeDates) == 0 {
+			result := TestCaseResult{
+				Name:     fmt.Sprintf("%d - No surge dates configured", year),
+				Status:   "warning",
+				Message:  "No surge dates found for this year",
+				Expected: "Surge dates configured",
+				Actual:   "No surge dates",
+				Data: map[string]interface{}{
+					"year":       year,
+					"configInfo": configInfo,
+				},
+			}
+			response.Results = append(response.Results, result)
+			response.Warnings++
+			response.Total++
+		} else {
+			for _, surge := range yearData.SurgeDates {
+				multiplier := 1.5
+				if surge.Multiplier != nil {
+					multiplier = *surge.Multiplier
+				}
+
+				status := "pass"
+				message := ""
+				if multiplier < 1.25 || multiplier > 3.0 {
+					status = "fail"
+					message = fmt.Sprintf("Surge multiplier %.2f is outside valid range (1.25-3.0)", multiplier)
+				}
+
+				// Parse date and format it
+				surgeDate, err := time.Parse("2006-01-02", surge.Date)
+				var dateFormatted, dateMMDDYYYY, dayOfWeek string
+				if err == nil {
+					dateFormatted = surgeDate.Format("Mon, Jan 2, 2006")
+					dateMMDDYYYY = surgeDate.Format("01/02/2006")
+					dayOfWeek = surgeDate.Format("Mon")
+				} else {
+					dateFormatted = surge.Date
+					dateMMDDYYYY = surge.Date
+					dayOfWeek = ""
+				}
+
+				result := TestCaseResult{
+					Name:     fmt.Sprintf("%s (%s)", surge.Label, surge.Date),
+					Status:   status,
+					Message:  message,
+					Expected: "1.25-3.0x multiplier",
+					Actual:   fmt.Sprintf("%.2fx multiplier", multiplier),
+					Data: map[string]interface{}{
+						"date":          surge.Date,
+						"dateFormatted": dateFormatted,
+						"dateMMDDYYYY":   dateMMDDYYYY,
+						"dayOfWeek":     dayOfWeek,
+						"label":         surge.Label,
+						"multiplier":    multiplier,
+						"type":          surge.Type,
+						"year":          year,
+						"configInfo":    configInfo,
+					},
+				}
+
+				response.Results = append(response.Results, result)
+				if status == "pass" {
+					response.Passed++
+				} else {
+					response.Failed++
+				}
+				response.Total++
+			}
+		}
 	}
 
 	return response, nil

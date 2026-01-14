@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "name": "2026 - No surge dates configured",
+      "status": "warning",
+      "message": "No surge dates found for this year",
+      "expected": "Surge dates configured",
+      "actual": "No surge dates",
+      "data": {
+        "configInfo": "Configuration: Surge dates are defined in `go/internal/services/pricing/estimate.go` in `surgeDateRules` map. To add new surge dates, add entries with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}`. Multiplier must be between 1.25 and 3.0. Server restart required after changes.",
+        "year": 2026
+      }
+    },
+    {
+      "name": "2027 - No surge dates configured",
+      "status": "warning",
+      "message": "No surge dates found for this year",
+      "expected": "Surge dates configured",
+      "actual": "No surge dates",
+      "data": {
+        "configInfo": "Configuration: Surge dates are defined in `go/internal/services/pricing/estimate.go` in `surgeDateRules` map. To add new surge dates, add entries with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}`. Multiplier must be between 1.25 and 3.0. Server restart required after changes.",
+        "year": 2027
+      }
+    },
+    {
+      "name": "2028 - No surge dates configured",
+      "status": "warning",
+      "message": "No surge dates found for this year",
+      "expected": "Surge dates configured",
+      "actual": "No surge dates",
+      "data": {
+        "configInfo": "Configuration: Surge dates are defined in `go/internal/services/pricing/estimate.go` in `surgeDateRules` map. To add new surge dates, add entries with format: `\"YYYY-MM-DD\": {Multiplier: floatPtr(1.5), Label: \"Surge Name\", Type: \"surge\"}`. Multiplier must be between 1.25 and 3.0. Server restart required after changes.",
+        "year": 2028
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 0,
+    "total": 3,
+    "warnings": 3
+  },
+  "testName": "surge-dates",
+  "timestamp": "2026-01-14T04:51:40-06:00"
+}

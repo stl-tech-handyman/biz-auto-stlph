@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "name": "2026-02-13",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "specialLabel": null,
+        "totalCost": 600
+      }
+    },
+    {
+      "name": "2026-12-25",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "hourlyRate": 50,
+        "isSpecialDate": true,
+        "specialLabel": "Christmas Day",
+        "totalCost": 1200
+      }
+    },
+    {
+      "name": "2026-01-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "hourlyRate": 50,
+        "isSpecialDate": true,
+        "specialLabel": "New Year's Day",
+        "totalCost": 1200
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 3,
+    "total": 3,
+    "warnings": 0
+  },
+  "testName": "pricing-rates",
+  "timestamp": "2026-01-14T05:00:45-06:00"
+}

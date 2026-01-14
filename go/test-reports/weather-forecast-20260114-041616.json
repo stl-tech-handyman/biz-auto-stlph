@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "name": "Service Availability",
+      "status": "warning",
+      "message": "Weather or geocoding service not available (API keys may not be set)"
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 0,
+    "total": 1,
+    "warnings": 1
+  },
+  "testName": "weather-forecast",
+  "timestamp": "2026-01-14T04:16:16-06:00"
+}

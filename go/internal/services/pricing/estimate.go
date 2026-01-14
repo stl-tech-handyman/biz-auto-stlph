@@ -47,7 +47,57 @@ var legacySpecialDateRules = map[string]SpecialDateRule{
 }
 
 // Surge date rules
-var surgeDateRules = map[string]SpecialDateRule{}
+var surgeDateRules = map[string]SpecialDateRule{
+	// Recurring surge dates - January 1st
+	"2025-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
+	"2026-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
+	"2027-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
+	"2028-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
+	"2029-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
+	"2030-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
+	"2031-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
+	"2032-01-01": {Multiplier: floatPtr(1.5), Label: "New Year Surge", Type: "surge"},
+	
+	// Recurring surge dates - February 5th
+	"2025-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
+	"2026-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
+	"2027-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
+	"2028-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
+	"2029-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
+	"2030-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
+	"2031-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
+	"2032-02-05": {Multiplier: floatPtr(1.5), Label: "February Surge", Type: "surge"},
+	
+	// Recurring surge dates - May 17th
+	"2025-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
+	"2026-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
+	"2027-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
+	"2028-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
+	"2029-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
+	"2030-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
+	"2031-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
+	"2032-05-17": {Multiplier: floatPtr(1.5), Label: "May Surge", Type: "surge"},
+	
+	// Recurring surge dates - August 19th
+	"2025-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
+	"2026-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
+	"2027-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
+	"2028-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
+	"2029-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
+	"2030-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
+	"2031-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
+	"2032-08-19": {Multiplier: floatPtr(1.5), Label: "August Surge", Type: "surge"},
+	
+	// Recurring surge dates - December 27th
+	"2025-12-27": {Multiplier: floatPtr(1.5), Label: "December Surge", Type: "surge"},
+	"2026-12-27": {Multiplier: floatPtr(1.5), Label: "December Surge", Type: "surge"},
+	"2027-12-27": {Multiplier: floatPtr(1.5), Label: "December Surge", Type: "surge"},
+	"2028-12-27": {Multiplier: floatPtr(1.5), Label: "December Surge", Type: "surge"},
+	"2029-12-27": {Multiplier: floatPtr(1.5), Label: "December Surge", Type: "surge"},
+	"2030-12-27": {Multiplier: floatPtr(1.5), Label: "December Surge", Type: "surge"},
+	"2031-12-27": {Multiplier: floatPtr(1.5), Label: "December Surge", Type: "surge"},
+	"2032-12-27": {Multiplier: floatPtr(1.5), Label: "December Surge", Type: "surge"},
+}
 
 func floatPtr(f float64) *float64 {
 	return &f

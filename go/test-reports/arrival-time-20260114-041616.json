@@ -1,0 +1,519 @@
+{
+  "results": [
+    {
+      "name": "Morning: 6:00 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:00 AM - 5:30 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "5:00 AM - 5:30 AM",
+        "earliestDiff": 1,
+        "eventTime": "6:00 AM",
+        "expectedRange": "5:00 AM - 5:30 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 6:30 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:30 AM - 6:00 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "5:30 AM - 6:00 AM",
+        "earliestDiff": 1,
+        "eventTime": "6:30 AM",
+        "expectedRange": "5:30 AM - 6:00 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 7:00 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 6:00 AM - 6:30 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "6:00 AM - 6:30 AM",
+        "earliestDiff": 1,
+        "eventTime": "7:00 AM",
+        "expectedRange": "6:00 AM - 6:30 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 7:30 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 6:30 AM - 7:00 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "6:30 AM - 7:00 AM",
+        "earliestDiff": 1,
+        "eventTime": "7:30 AM",
+        "expectedRange": "6:30 AM - 7:00 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 8:00 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 7:00 AM - 7:30 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "7:00 AM - 7:30 AM",
+        "earliestDiff": 1,
+        "eventTime": "8:00 AM",
+        "expectedRange": "7:00 AM - 7:30 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 8:30 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 7:30 AM - 8:00 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "7:30 AM - 8:00 AM",
+        "earliestDiff": 1,
+        "eventTime": "8:30 AM",
+        "expectedRange": "7:30 AM - 8:00 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 9:00 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 8:00 AM - 8:30 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "8:00 AM - 8:30 AM",
+        "earliestDiff": 1,
+        "eventTime": "9:00 AM",
+        "expectedRange": "8:00 AM - 8:30 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 9:30 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 8:30 AM - 9:00 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "8:30 AM - 9:00 AM",
+        "earliestDiff": 1,
+        "eventTime": "9:30 AM",
+        "expectedRange": "8:30 AM - 9:00 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 10:00 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 9:00 AM - 9:30 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "9:00 AM - 9:30 AM",
+        "earliestDiff": 1,
+        "eventTime": "10:00 AM",
+        "expectedRange": "9:00 AM - 9:30 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 10:30 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 9:30 AM - 10:00 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "9:30 AM - 10:00 AM",
+        "earliestDiff": 1,
+        "eventTime": "10:30 AM",
+        "expectedRange": "9:30 AM - 10:00 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 11:00 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 10:00 AM - 10:30 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "10:00 AM - 10:30 AM",
+        "earliestDiff": 1,
+        "eventTime": "11:00 AM",
+        "expectedRange": "10:00 AM - 10:30 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Morning: 11:30 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 10:30 AM - 11:00 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "10:30 AM - 11:00 AM",
+        "earliestDiff": 1,
+        "eventTime": "11:30 AM",
+        "expectedRange": "10:30 AM - 11:00 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 12:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 11:00 AM - 11:30 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "11:00 AM - 11:30 AM",
+        "earliestDiff": 1,
+        "eventTime": "12:00 PM",
+        "expectedRange": "11:00 AM - 11:30 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 12:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 11:30 AM - 12:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "11:30 AM - 12:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "12:30 PM",
+        "expectedRange": "11:30 AM - 12:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 1:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 12:00 PM - 12:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "12:00 PM - 12:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "1:00 PM",
+        "expectedRange": "12:00 PM - 12:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 1:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 12:30 PM - 1:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "12:30 PM - 1:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "1:30 PM",
+        "expectedRange": "12:30 PM - 1:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 2:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 1:00 PM - 1:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "1:00 PM - 1:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "2:00 PM",
+        "expectedRange": "1:00 PM - 1:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 2:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 1:30 PM - 2:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "1:30 PM - 2:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "2:30 PM",
+        "expectedRange": "1:30 PM - 2:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 3:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 2:00 PM - 2:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "2:00 PM - 2:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "3:00 PM",
+        "expectedRange": "2:00 PM - 2:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 3:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 2:30 PM - 3:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "2:30 PM - 3:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "3:30 PM",
+        "expectedRange": "2:30 PM - 3:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 4:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 3:00 PM - 3:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "3:00 PM - 3:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "4:00 PM",
+        "expectedRange": "3:00 PM - 3:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 4:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 3:30 PM - 4:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "3:30 PM - 4:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "4:30 PM",
+        "expectedRange": "3:30 PM - 4:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 5:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 4:00 PM - 4:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "4:00 PM - 4:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "5:00 PM",
+        "expectedRange": "4:00 PM - 4:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Afternoon: 5:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 4:30 PM - 5:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "4:30 PM - 5:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "5:30 PM",
+        "expectedRange": "4:30 PM - 5:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Evening: 6:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:00 PM - 5:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "5:00 PM - 5:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "6:00 PM",
+        "expectedRange": "5:00 PM - 5:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Evening: 6:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:30 PM - 6:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "5:30 PM - 6:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "6:30 PM",
+        "expectedRange": "5:30 PM - 6:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Evening: 7:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 6:00 PM - 6:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "6:00 PM - 6:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "7:00 PM",
+        "expectedRange": "6:00 PM - 6:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Evening: 7:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 6:30 PM - 7:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "6:30 PM - 7:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "7:30 PM",
+        "expectedRange": "6:30 PM - 7:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Evening: 8:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 7:00 PM - 7:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "7:00 PM - 7:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "8:00 PM",
+        "expectedRange": "7:00 PM - 7:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Evening: 8:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 7:30 PM - 8:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "7:30 PM - 8:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "8:30 PM",
+        "expectedRange": "7:30 PM - 8:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Evening: 9:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 8:00 PM - 8:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "8:00 PM - 8:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "9:00 PM",
+        "expectedRange": "8:00 PM - 8:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Evening: 9:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 8:30 PM - 9:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "8:30 PM - 9:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "9:30 PM",
+        "expectedRange": "8:30 PM - 9:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Night: 10:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 9:00 PM - 9:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "9:00 PM - 9:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "10:00 PM",
+        "expectedRange": "9:00 PM - 9:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Night: 10:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 9:30 PM - 10:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "9:30 PM - 10:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "10:30 PM",
+        "expectedRange": "9:30 PM - 10:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Night: 11:00 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 10:00 PM - 10:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "10:00 PM - 10:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "11:00 PM",
+        "expectedRange": "10:00 PM - 10:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Night: 11:30 PM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 10:30 PM - 11:00 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "10:30 PM - 11:00 PM",
+        "earliestDiff": 1,
+        "eventTime": "11:30 PM",
+        "expectedRange": "10:30 PM - 11:00 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Early Morning: 12:00 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 11:00 PM - 11:30 PM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "11:00 PM - 11:30 PM",
+        "earliestDiff": 1,
+        "eventTime": "12:00 AM",
+        "expectedRange": "11:00 PM - 11:30 PM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Night: 12:30 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 11:30 PM - 12:00 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "11:30 PM - 12:00 AM",
+        "earliestDiff": 1,
+        "eventTime": "12:30 AM",
+        "expectedRange": "11:30 PM - 12:00 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    },
+    {
+      "name": "Early Morning: 1:00 AM",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 12:00 AM - 12:30 AM (earliest: 1.00h before, latest: 0.50h before)",
+      "data": {
+        "actualRange": "12:00 AM - 12:30 AM",
+        "earliestDiff": 1,
+        "eventTime": "1:00 AM",
+        "expectedRange": "12:00 AM - 12:30 AM",
+        "latestDiff": 0.5,
+        "valid": true
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 39,
+    "total": 39,
+    "warnings": 0
+  },
+  "testName": "arrival-time",
+  "timestamp": "2026-01-14T04:16:16-06:00"
+}

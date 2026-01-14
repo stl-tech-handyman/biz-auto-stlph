@@ -355,7 +355,42 @@ func (r *Router) Handler() http.Handler {
 		if logFile, err := os.OpenFile(handlers.GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
 			json.NewEncoder(logFile).Encode(map[string]interface{}{
 				"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A",
-				"location": "router.go:330", "message": "Serving test report file",
+				"location": "router.go:353", "message": "Checking if test report file exists",
+				"data": map[string]interface{}{
+					"filename": filename,
+					"filePath": filePath,
+					"timestamp": time.Now().UnixMilli(),
+				},
+			})
+			logFile.Close()
+		}
+		// #endregion
+		// Check if file exists
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			// #region agent log
+			if logFile, err := os.OpenFile(handlers.GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+				json.NewEncoder(logFile).Encode(map[string]interface{}{
+					"sessionId": "debug-session", "runId": "run1", "hypothesisId": "C",
+					"location": "router.go:365", "message": "Test report file not found",
+					"data": map[string]interface{}{
+						"filename": filename,
+						"filePath": filePath,
+						"error":    err.Error(),
+						"timestamp": time.Now().UnixMilli(),
+					},
+				})
+				logFile.Close()
+			}
+			// #endregion
+			w.Header().Set("Content-Type", "application/json")
+			http.Error(w, `{"error":"Report file not found"}`, http.StatusNotFound)
+			return
+		}
+		// #region agent log
+		if logFile, err := os.OpenFile(handlers.GetLogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			json.NewEncoder(logFile).Encode(map[string]interface{}{
+				"sessionId": "debug-session", "runId": "run1", "hypothesisId": "A",
+				"location": "router.go:378", "message": "Serving test report file",
 				"data": map[string]interface{}{
 					"filename": filename,
 					"filePath": filePath,

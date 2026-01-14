@@ -20,6 +20,7 @@ func CalculateUrgencyLevel(daysUntilEvent int) string {
 
 // CalculateExpirationDate calculates the expiration date for a quote based on days until the event
 // Rules:
+// - Same day (0 days): Returns midnight today, but email template shows "Deposit Should Be Paid Now" with no expiration
 // - Tomorrow (1 day): till midnight of the day when form is filled out
 // - 2-3 days: till midnight of the day when form is filled out
 // - 4-7 days: 48 hours
@@ -57,8 +58,11 @@ func CalculateExpirationDate(daysUntilEvent int) (time.Time, string) {
 }
 
 // GetExpirationMessage returns a human-readable message about when the quote expires
+// Note: For same-day bookings (0 days), the email template shows special message instead
 func GetExpirationMessage(daysUntilEvent int) string {
-	if daysUntilEvent <= 3 {
+	if daysUntilEvent == 0 {
+		return "Deposit Should Be Paid Now — ASAP to Proceed with The Staffing Reservation"
+	} else if daysUntilEvent <= 3 {
 		return "This quote expires today at midnight"
 	} else if daysUntilEvent <= 7 {
 		return "This quote expires in 48 hours"

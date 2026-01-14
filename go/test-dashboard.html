@@ -7,6 +7,10 @@
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
     <link href="/static/css/admin-shared.css" rel="stylesheet">
+    <link href="/static/css/server-timer.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
     <style>
         /* Test status indicator square */
         .test-status-indicator {
@@ -53,6 +57,7 @@
             position: relative;
             z-index: 2;
         }
+        
     </style>
 </head>
 <body>
@@ -281,6 +286,30 @@
                     <div class="test-status-indicator" data-test-name="form-validation"></div>
                 </div>
             </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('special-dates')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-calendar-check card-icon"></i>
+                        <h5 class="card-title">Special Dates (Holidays)</h5>
+                        <p class="card-text text-muted">Shows all holiday dates 3 years forward. Config: <code>estimate.go</code> → <code>GetHolidayDatesForYear()</code></p>
+                        <span class="badge bg-success">Holidays</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="special-dates"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('surge-dates')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-graph-up-arrow card-icon"></i>
+                        <h5 class="card-title">Surge Dates</h5>
+                        <p class="card-text text-muted">Shows all surge dates 3 years forward. Config: <code>estimate.go</code> → <code>surgeDateRules</code> map</p>
+                        <span class="badge bg-warning text-dark">Surge</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="surge-dates"></div>
+                </div>
+            </div>
         </div>
         
         <div class="text-center mb-4">
@@ -299,12 +328,24 @@
     </div>
     
     <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <!-- DataTables Auto-Init (for tables not manually initialized) -->
+    <script src="/static/js/datatables-auto-init.js"></script>
     <script>
         // Load test status indicators when page loads
         document.addEventListener('DOMContentLoaded', function() {
             loadTestStatusIndicators();
         });
     </script>
+    <script src="/static/js/server-timer.js"></script>
     <script>
         async function runTest(testName) {
             const resultsPanel = document.getElementById('results-panel');
@@ -359,7 +400,9 @@
                 'email-template',
                 'arrival-time',
                 'weather-forecast',
-                'form-validation'
+                'form-validation',
+                'special-dates',
+                'surge-dates'
             ];
             
             try {
@@ -482,7 +525,9 @@
                 'email-template',
                 'arrival-time',
                 'weather-forecast',
-                'form-validation'
+                'form-validation',
+                'special-dates',
+                'surge-dates'
             ];
             
             testNames.forEach(testName => {
@@ -497,6 +542,9 @@
                 }
             });
         }
+        
+        // View mode state
+        let currentViewMode = 'simplified'; // Default to simplified
         
         function displayResults(data, testName) {
             const resultsDiv = document.getElementById('results');
@@ -513,9 +561,25 @@
             
             const summaryClass = failed > 0 ? 'error' : '';
             const summaryIcon = failed > 0 ? 'bi-x-circle' : 'bi-check-circle';
+            
+            // View toggle buttons
+            const viewToggle = `
+                <div class="btn-group mb-3" role="group">
+                    <button type="button" class="btn btn-sm ${currentViewMode === 'simplified' ? 'btn-primary' : 'btn-outline-primary'}" onclick="switchView('simplified', '${testName}')">
+                        <i class="bi bi-list-ul me-1"></i>Simplified
+                    </button>
+                    <button type="button" class="btn btn-sm ${currentViewMode === 'advanced' ? 'btn-primary' : 'btn-outline-primary'}" onclick="switchView('advanced', '${testName}')">
+                        <i class="bi bi-code-square me-1"></i>Advanced
+                    </button>
+                </div>
+            `;
+            
             summaryDiv.innerHTML = `
                 <div class="summary ${summaryClass}">
-                    <h3><i class="bi ${summaryIcon} me-2"></i>Test Summary: ${testName}</h3>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0"><i class="bi ${summaryIcon} me-2"></i>Test Summary: ${testName}</h3>
+                        ${viewToggle}
+                    </div>
                     <div class="row mt-3">
                         <div class="col-md-3">
                             <strong>Total:</strong> <span class="badge bg-secondary">${total}</span>
@@ -534,7 +598,528 @@
                 </div>
             `;
             
-            // Results
+            // Store data for view switching
+            window.lastTestData = data;
+            window.lastTestName = testName;
+            
+            // Display based on current view mode
+            if (currentViewMode === 'simplified') {
+                displaySimplifiedView(data, testName, resultsDiv);
+            } else {
+                displayAdvancedView(data, testName, resultsDiv);
+            }
+        }
+        
+        function switchView(mode, testName) {
+            currentViewMode = mode;
+            if (window.lastTestData && window.lastTestName) {
+                displayResults(window.lastTestData, window.lastTestName);
+            }
+        }
+        
+        function displaySimplifiedView(data, testName, resultsDiv) {
+            if (testName === 'special-dates') {
+                displaySimplifiedSpecialDates(data, resultsDiv);
+            } else if (testName === 'surge-dates') {
+                displaySimplifiedSurgeDates(data, resultsDiv);
+            } else if (testName === 'weather-forecast') {
+                displaySimplifiedWeatherForecast(data, resultsDiv);
+            } else if (testName === 'pricing-rates') {
+                displaySimplifiedPricingRates(data, resultsDiv);
+            } else {
+                // Fallback to advanced for other tests
+                displayAdvancedView(data, testName, resultsDiv);
+            }
+        }
+        
+        function displaySimplifiedSpecialDates(data, resultsDiv) {
+            if (!data.results || data.results.length === 0) {
+                resultsDiv.innerHTML = '<div class="alert alert-info">No special dates found.</div>';
+                return;
+            }
+            
+            // Group by year and get first 3 dates per year
+            const yearGroups = {};
+            data.results.forEach(result => {
+                let year;
+                if (result.data?.year) {
+                    year = result.data.year;
+                } else if (result.data?.date) {
+                    year = new Date(result.data.date + 'T00:00:00').getFullYear();
+                } else {
+                    // Try to extract from name like "New Year's Day (2026-01-01)"
+                    const match = result.name.match(/\((\d{4})-\d{2}-\d{2}\)/);
+                    year = match ? parseInt(match[1]) : new Date().getFullYear();
+                }
+                if (!yearGroups[year]) {
+                    yearGroups[year] = [];
+                }
+                yearGroups[year].push(result);
+            });
+            
+            // Get first 3 dates per year, sorted by date
+            const tableData = [];
+            Object.keys(yearGroups).sort().forEach(year => {
+                const dates = yearGroups[year]
+                    .map(r => {
+                        let dateStr = r.data?.date || '';
+                        if (!dateStr) {
+                            const match = r.name.match(/\((\d{4}-\d{2}-\d{2})\)/);
+                            dateStr = match ? match[1] : '';
+                        }
+                        return { result: r, dateStr: dateStr };
+                    })
+                    .filter(d => d.dateStr)
+                    .sort((a, b) => a.dateStr.localeCompare(b.dateStr))
+                    .slice(0, 3);
+                
+                dates.forEach(({ result, dateStr }) => {
+                    // Parse date for formatting
+                    let date = new Date(dateStr + 'T00:00:00');
+                    let dateMMDDYYYY = result.data?.dateMMDDYYYY || '';
+                    let dayOfWeek = result.data?.dayOfWeek || '';
+                    
+                    if (isNaN(date.getTime())) {
+                        const parts = dateStr.split('-');
+                        if (parts.length === 3) {
+                            date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                        }
+                    }
+                    
+                    if (!dateMMDDYYYY && !isNaN(date.getTime())) {
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        dateMMDDYYYY = `${month}/${day}/${date.getFullYear()}`;
+                    }
+                    
+                    if (!dayOfWeek && !isNaN(date.getTime())) {
+                        dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    }
+                    
+                    tableData.push({
+                        date: dateStr,
+                        dateMMDDYYYY: dateMMDDYYYY,
+                        dayOfWeek: dayOfWeek,
+                        label: result.data?.label || result.name.split('(')[0]?.trim() || result.name,
+                        multiplier: result.data?.multiplier || 2.0,
+                        type: result.data?.type || 'holiday',
+                        year: year,
+                        status: result.status
+                    });
+                });
+            });
+            
+            const tableHTML = `
+                <div class="table-responsive">
+                    <table id="specialDatesTable" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date (YYYY-MM-DD)</th>
+                                <th>Date (MM/DD/YYYY)</th>
+                                <th>Day</th>
+                                <th>Label</th>
+                                <th>Multiplier</th>
+                                <th>Type</th>
+                                <th>Year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableData.map(row => `
+                                <tr class="${row.status === 'pass' ? '' : row.status === 'warning' ? 'table-warning' : 'table-danger'}">
+                                    <td>${row.date}</td>
+                                    <td>${row.dateMMDDYYYY}</td>
+                                    <td><strong>${row.dayOfWeek}</strong></td>
+                                    <td>${row.label}</td>
+                                    <td>${row.multiplier}x</td>
+                                    <td><span class="badge bg-${row.type === 'holiday' ? 'success' : 'warning'}">${row.type}</span></td>
+                                    <td>${row.year}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = tableHTML;
+            
+            // Initialize DataTable
+            setTimeout(() => {
+                if ($.fn.DataTable.isDataTable('#specialDatesTable')) {
+                    $('#specialDatesTable').DataTable().destroy();
+                }
+                $('#specialDatesTable').DataTable({
+                    pageLength: 25,
+                    order: [[0, 'asc']],
+                    dom: 'Bfrtip',
+                    buttons: ['copy', 'csv', 'excel'],
+                    language: {
+                        search: "Filter by date:"
+                    }
+                });
+            }, 100);
+        }
+        
+        function displaySimplifiedSurgeDates(data, resultsDiv) {
+            if (!data.results || data.results.length === 0) {
+                resultsDiv.innerHTML = '<div class="alert alert-info">No surge dates found.</div>';
+                return;
+            }
+            
+            // Filter out "No surge dates configured" warnings
+            const validResults = data.results.filter(r => r.data?.date);
+            
+            if (validResults.length === 0) {
+                resultsDiv.innerHTML = '<div class="alert alert-warning">No surge dates configured for the next 3 years.</div>';
+                return;
+            }
+            
+            // Group by year and get first 3 dates per year
+            const yearGroups = {};
+            validResults.forEach(result => {
+                let year;
+                if (result.data?.year) {
+                    year = result.data.year;
+                } else if (result.data?.date) {
+                    year = new Date(result.data.date + 'T00:00:00').getFullYear();
+                } else {
+                    // Try to extract from name like "February Surge (2026-02-05)"
+                    const match = result.name.match(/\((\d{4})-\d{2}-\d{2}\)/);
+                    year = match ? parseInt(match[1]) : new Date().getFullYear();
+                }
+                if (!yearGroups[year]) {
+                    yearGroups[year] = [];
+                }
+                yearGroups[year].push(result);
+            });
+            
+            // Get first 3 dates per year, sorted by date
+            const tableData = [];
+            Object.keys(yearGroups).sort().forEach(year => {
+                const dates = yearGroups[year]
+                    .map(r => {
+                        let dateStr = r.data?.date || '';
+                        if (!dateStr) {
+                            const match = r.name.match(/\((\d{4}-\d{2}-\d{2})\)/);
+                            dateStr = match ? match[1] : '';
+                        }
+                        return { result: r, dateStr: dateStr };
+                    })
+                    .filter(d => d.dateStr)
+                    .sort((a, b) => a.dateStr.localeCompare(b.dateStr))
+                    .slice(0, 3);
+                
+                dates.forEach(({ result, dateStr }) => {
+                    // Parse date for formatting
+                    let date = new Date(dateStr + 'T00:00:00');
+                    let dateMMDDYYYY = result.data?.dateMMDDYYYY || '';
+                    let dayOfWeek = result.data?.dayOfWeek || '';
+                    
+                    if (isNaN(date.getTime())) {
+                        const parts = dateStr.split('-');
+                        if (parts.length === 3) {
+                            date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                        }
+                    }
+                    
+                    if (!dateMMDDYYYY && !isNaN(date.getTime())) {
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        dateMMDDYYYY = `${month}/${day}/${date.getFullYear()}`;
+                    }
+                    
+                    if (!dayOfWeek && !isNaN(date.getTime())) {
+                        dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    }
+                    
+                    tableData.push({
+                        date: dateStr,
+                        dateMMDDYYYY: dateMMDDYYYY,
+                        dayOfWeek: dayOfWeek,
+                        label: result.data?.label || result.name.split('(')[0]?.trim() || result.name,
+                        multiplier: result.data?.multiplier || 1.5,
+                        type: result.data?.type || 'surge',
+                        year: year,
+                        status: result.status
+                    });
+                });
+            });
+            
+            const tableHTML = `
+                <div class="table-responsive">
+                    <table id="surgeDatesTable" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date (YYYY-MM-DD)</th>
+                                <th>Date (MM/DD/YYYY)</th>
+                                <th>Day</th>
+                                <th>Label</th>
+                                <th>Multiplier</th>
+                                <th>Type</th>
+                                <th>Year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableData.map(row => `
+                                <tr class="${row.status === 'pass' ? '' : row.status === 'warning' ? 'table-warning' : 'table-danger'}">
+                                    <td>${row.date}</td>
+                                    <td>${row.dateMMDDYYYY}</td>
+                                    <td><strong>${row.dayOfWeek}</strong></td>
+                                    <td>${row.label}</td>
+                                    <td>${row.multiplier}x</td>
+                                    <td><span class="badge bg-warning text-dark">${row.type}</span></td>
+                                    <td>${row.year}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = tableHTML;
+            
+            // Initialize DataTable
+            setTimeout(() => {
+                if ($.fn.DataTable.isDataTable('#surgeDatesTable')) {
+                    $('#surgeDatesTable').DataTable().destroy();
+                }
+                $('#surgeDatesTable').DataTable({
+                    pageLength: 25,
+                    order: [[0, 'asc']],
+                    dom: 'Bfrtip',
+                    buttons: ['copy', 'csv', 'excel'],
+                    language: {
+                        search: "Filter by date:"
+                    }
+                });
+            }, 100);
+        }
+        
+        function displaySimplifiedWeatherForecast(data, resultsDiv) {
+            if (!data.results || data.results.length === 0) {
+                resultsDiv.innerHTML = '<div class="alert alert-info">No weather forecast data available.</div>';
+                return;
+            }
+            
+            const tableData = data.results.map(result => {
+                const dateStr = result.data?.date || result.name;
+                let date = new Date(dateStr + 'T00:00:00');
+                if (isNaN(date.getTime())) {
+                    const parts = dateStr.split('-');
+                    if (parts.length === 3) {
+                        date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                    } else {
+                        date = new Date();
+                    }
+                }
+                return {
+                    date: dateStr,
+                    dateFormatted: result.data?.dateFormatted || date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+                    dayOfWeek: result.data?.dayOfWeek || date.toLocaleDateString('en-US', { weekday: 'long' }),
+                    temperature: result.data?.temperature !== undefined ? result.data.temperature : 'N/A',
+                    condition: result.data?.condition || 'N/A',
+                    description: result.data?.description || 'N/A',
+                    humidity: result.data?.humidity !== undefined ? result.data.humidity : 'N/A',
+                    windSpeed: result.data?.windSpeed !== undefined ? result.data.windSpeed : 'N/A',
+                    status: result.status,
+                    isPlaceholder: result.data?.isPlaceholder || false
+                };
+            });
+            
+            const tableHTML = `
+                <div class="table-responsive">
+                    <table id="weatherForecastTable" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Day</th>
+                                <th>Temperature (°F)</th>
+                                <th>Condition</th>
+                                <th>Description</th>
+                                <th>Humidity (%)</th>
+                                <th>Wind Speed (mph)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableData.map(row => `
+                                <tr class="${row.isPlaceholder ? 'table-warning' : row.status === 'pass' ? '' : 'table-danger'}">
+                                    <td>${row.date}</td>
+                                    <td>${row.dayOfWeek}</td>
+                                    <td>${row.temperature}</td>
+                                    <td>${row.condition}</td>
+                                    <td>${row.description}</td>
+                                    <td>${row.humidity}</td>
+                                    <td>${row.windSpeed}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = tableHTML;
+            
+            // Initialize DataTable
+            setTimeout(() => {
+                if ($.fn.DataTable.isDataTable('#weatherForecastTable')) {
+                    $('#weatherForecastTable').DataTable().destroy();
+                }
+                $('#weatherForecastTable').DataTable({
+                    pageLength: 10,
+                    order: [[0, 'asc']],
+                    dom: 'Bfrtip',
+                    buttons: ['copy', 'csv', 'excel']
+                });
+            }, 100);
+        }
+        
+        function displaySimplifiedPricingRates(data, resultsDiv) {
+            if (!data.results || data.results.length === 0) {
+                resultsDiv.innerHTML = '<div class="alert alert-info">No pricing data available.</div>';
+                return;
+            }
+            
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            const twoWeeks = new Date(today);
+            twoWeeks.setDate(twoWeeks.getDate() + 14);
+            const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+            
+            const tableData = data.results.map(result => {
+                const dateStr = result.data?.date || result.name;
+                const date = new Date(dateStr + 'T00:00:00');
+                if (isNaN(date.getTime())) {
+                    // Fallback parsing
+                    const parts = dateStr.split('-');
+                    if (parts.length === 3) {
+                        date.setFullYear(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                    }
+                }
+                const daysDiff = Math.floor((date - today) / (1000 * 60 * 60 * 24));
+                
+                let timeCategory = '';
+                if (daysDiff === 0) timeCategory = 'Today';
+                else if (daysDiff === 1) timeCategory = 'Tomorrow';
+                else if (daysDiff >= 0 && daysDiff < 7) timeCategory = 'This Week';
+                else if (daysDiff >= 7 && daysDiff < 14) timeCategory = 'Next Week';
+                else if (daysDiff >= 14 && daysDiff < 21) timeCategory = '2 Weeks Out';
+                else if (date >= thisMonth && date < nextMonth) timeCategory = `This Month (${date.toLocaleDateString('en-US', { month: 'long' })})`;
+                else if (date >= nextMonth && date < new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 1)) timeCategory = `Next Month (${date.toLocaleDateString('en-US', { month: 'long' })})`;
+                else timeCategory = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                
+                return {
+                    date: dateStr,
+                    dateFormatted: result.data?.dateFormatted || date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+                    year: result.data?.year || date.getFullYear(),
+                    month: result.data?.month || date.toLocaleDateString('en-US', { month: 'long' }),
+                    baseRate: result.data?.baseRate || 0,
+                    hourlyRate: result.data?.hourlyRate || 0,
+                    totalCost: result.data?.totalCost || 0,
+                    isSpecialDate: result.data?.isSpecialDate || false,
+                    specialLabel: result.data?.specialLabel || '',
+                    rateType: result.data?.rateType || '',
+                    specialMultiplier: result.data?.specialMultiplier || null,
+                    timeCategory: timeCategory,
+                    status: result.status
+                };
+            });
+            
+            // Filter buttons
+            const filterButtons = `
+                <div class="mb-3">
+                    <div class="btn-group flex-wrap" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="filterPricingTable('all')">All</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="filterPricingTable('Today')">Today</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="filterPricingTable('Tomorrow')">Tomorrow</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="filterPricingTable('This Week')">This Week</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="filterPricingTable('Next Week')">Next Week</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="filterPricingTable('2 Weeks Out')">2 Weeks Out</button>
+                    </div>
+                    <div class="input-group mt-2" style="max-width: 300px;">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="date" id="pricingDateSearch" class="form-control" onchange="searchPricingByDate(this.value)">
+                        <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('pricingDateSearch').value = ''; searchPricingByDate('')">Clear</button>
+                    </div>
+                </div>
+            `;
+            
+            const tableHTML = `
+                ${filterButtons}
+                <div class="table-responsive">
+                    <table id="pricingRatesTable" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time Category</th>
+                                <th>Base Rate</th>
+                                <th>Hourly Rate</th>
+                                <th>Total Cost (4h, 2 helpers)</th>
+                                <th>Special Date</th>
+                                <th>Multiplier</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableData.map(row => `
+                                <tr class="${row.isSpecialDate ? 'table-info' : ''} ${row.status === 'pass' ? '' : 'table-danger'}" data-time-category="${row.timeCategory}" data-date="${row.date}">
+                                    <td>${row.date}</td>
+                                    <td>${row.timeCategory}</td>
+                                    <td>$${row.baseRate.toFixed(2)}</td>
+                                    <td>$${row.hourlyRate.toFixed(2)}</td>
+                                    <td>$${row.totalCost.toFixed(2)}</td>
+                                    <td>${row.isSpecialDate ? `<span class="badge bg-warning">${row.specialLabel || row.rateType || 'Special'}</span>` : '<span class="text-muted">-</span>'}</td>
+                                    <td>${row.specialMultiplier ? `${row.specialMultiplier}x` : '<span class="text-muted">-</span>'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = tableHTML;
+            
+            // Initialize DataTable
+            setTimeout(() => {
+                if ($.fn.DataTable.isDataTable('#pricingRatesTable')) {
+                    $('#pricingRatesTable').DataTable().destroy();
+                }
+                window.pricingTable = $('#pricingRatesTable').DataTable({
+                    pageLength: 50,
+                    order: [[0, 'asc']],
+                    dom: 'Bfrtip',
+                    buttons: ['copy', 'csv', 'excel'],
+                    language: {
+                        search: "Search all columns:"
+                    }
+                });
+            }, 100);
+        }
+        
+        function filterPricingTable(category) {
+            if (window.pricingTable) {
+                if (category === 'all') {
+                    window.pricingTable.column(1).search('').draw();
+                } else {
+                    window.pricingTable.column(1).search('^' + category + '$', true, false).draw();
+                }
+            }
+        }
+        
+        function searchPricingByDate(dateStr) {
+            if (window.pricingTable) {
+                if (dateStr) {
+                    window.pricingTable.column(0).search(dateStr).draw();
+                } else {
+                    window.pricingTable.column(0).search('').draw();
+                }
+            }
+        }
+        
+        function displayAdvancedView(data, testName, resultsDiv) {
+            // Original advanced view
             let resultsHTML = '';
             
             if (data.results && data.results.length > 0) {
@@ -553,6 +1138,12 @@
                             ${result.message ? `<p class="mb-2">${result.message}</p>` : ''}
                             ${result.expected ? `<p class="mb-1"><strong>Expected:</strong> ${result.expected}</p>` : ''}
                             ${result.actual ? `<p class="mb-2"><strong>Actual:</strong> ${result.actual}</p>` : ''}
+                            ${result.data && result.data.configInfo ? `
+                                <div class="alert alert-info mt-2 mb-2">
+                                    <i class="bi bi-info-circle me-2"></i><strong>Configuration:</strong>
+                                    <div class="mt-1">${result.data.configInfo}</div>
+                                </div>
+                            ` : ''}
                             ${result.data ? `<pre>${JSON.stringify(result.data, null, 2)}</pre>` : ''}
                         </div>
                     `;

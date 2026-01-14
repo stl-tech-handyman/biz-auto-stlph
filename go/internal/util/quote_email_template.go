@@ -99,9 +99,17 @@ func GetFirstNameWithLastInitial(fullName string) string {
 }
 
 // buildPDFDownloadHTML builds the PDF download link section for the email
-func buildPDFDownloadHTML(pdfDownloadLink string, expirationDate string) string {
+func buildPDFDownloadHTML(pdfDownloadLink string, expirationDate string, daysUntilEvent int) string {
 	if pdfDownloadLink == "" {
 		return ""
+	}
+
+	// For same-day bookings, don't show expiration date
+	expirationText := ""
+	if daysUntilEvent == 0 {
+		expirationText = `<p style="margin: 6px 0 0 0; font-size: 11px; color: #991b1b; font-style: italic; font-weight: bold;">Deposit Should Be Paid Now — ASAP to Proceed</p>`
+	} else {
+		expirationText = fmt.Sprintf(`<p style="margin: 6px 0 0 0; font-size: 11px; color: #999999; font-style: italic;">Expires: %s</p>`, expirationDate)
 	}
 
 	return fmt.Sprintf(`            <tr>
@@ -113,9 +121,9 @@ func buildPDFDownloadHTML(pdfDownloadLink string, expirationDate string) string 
                 <p style="margin: 8px 0; text-align: center;">
                   <a href="%s" style="display: inline-block; background-color: rgb(38, 37, 120); color: #ffffff; padding: 8px 16px; text-decoration: none; font-weight: bold; font-size: 14px; border-radius: 4px;">Download PDF Quote (for accounting/approval)</a>
                 </p>
-                <p style="margin: 6px 0 0 0; font-size: 11px; color: #999999; font-style: italic;">Expires: %s</p>
+                %s
               </td>
-            </tr>`, pdfDownloadLink, expirationDate)
+            </tr>`, pdfDownloadLink, expirationText)
 }
 
 // FormatDaysUntilEvent formats days until event in a clear, scannable way
@@ -380,20 +388,25 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
 	var availabilityMessage string
 	
 	// Determine availability message based on urgency level and high demand
-	switch data.UrgencyLevel {
-	case "critical": // ≤3 days
-		availabilityMessage = "Limited availability — secure with deposit today"
-	case "urgent": // 4-7 days
-		availabilityMessage = "Filling fast — secure with deposit to guarantee your spot"
-	case "high": // 8-14 days
-		availabilityMessage = "Popular date — secure with deposit soon"
-	case "moderate": // 15-30 days
-		availabilityMessage = "Spots available — secure with deposit to reserve"
-	default: // normal (>30 days)
-		if data.IsHighDemand {
-			availabilityMessage = "Popular date — secure with deposit to guarantee availability"
-		} else {
-			availabilityMessage = "Secure your date with deposit"
+	// Special handling for same-day bookings
+	if data.DaysUntilEvent == 0 {
+		availabilityMessage = "Deposit Should Be Paid Now — ASAP to Proceed with The Staffing Reservation"
+	} else {
+		switch data.UrgencyLevel {
+		case "critical": // ≤3 days
+			availabilityMessage = "Limited availability — secure with deposit today"
+		case "urgent": // 4-7 days
+			availabilityMessage = "Filling fast — secure with deposit to guarantee your spot"
+		case "high": // 8-14 days
+			availabilityMessage = "Popular date — secure with deposit soon"
+		case "moderate": // 15-30 days
+			availabilityMessage = "Spots available — secure with deposit to reserve"
+		default: // normal (>30 days)
+			if data.IsHighDemand {
+				availabilityMessage = "Popular date — secure with deposit to guarantee availability"
+			} else {
+				availabilityMessage = "Secure your date with deposit"
+			}
 		}
 	}
 	
@@ -411,20 +424,25 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
 	urgencyBannerHTML := ""
 
 	// Determine banner message based on urgency level
+	// Special handling for same-day bookings
 	var bannerMessage string
-	switch data.UrgencyLevel {
-	case "critical": // ≤3 days
-		bannerMessage = "Only a few spots left — secure your date today to avoid being left out"
-	case "urgent": // 4-7 days
-		bannerMessage = "Dates fill up fast — secure your spot now to guarantee availability"
-	case "high": // 8-14 days
-		bannerMessage = "Popular time period — secure your date soon to guarantee your spot"
-	case "moderate": // 15-30 days
-		bannerMessage = "Spots are filling up — secure your date to guarantee availability"
-	default: // normal (>30 days) or high demand date
-		if data.IsHighDemand {
-			// For high demand dates that are >30 days away
-			bannerMessage = "Popular Date — Dates Fill Up Fast. Book Sooner to Secure Your Spot"
+	if data.DaysUntilEvent == 0 {
+		bannerMessage = "Deposit Should Be Paid Now — ASAP to Proceed with The Staffing Reservation"
+	} else {
+		switch data.UrgencyLevel {
+		case "critical": // ≤3 days
+			bannerMessage = "Only a few spots left — secure your date today to avoid being left out"
+		case "urgent": // 4-7 days
+			bannerMessage = "Dates fill up fast — secure your spot now to guarantee availability"
+		case "high": // 8-14 days
+			bannerMessage = "Popular time period — secure your date soon to guarantee your spot"
+		case "moderate": // 15-30 days
+			bannerMessage = "Spots are filling up — secure your date to guarantee availability"
+		default: // normal (>30 days) or high demand date
+			if data.IsHighDemand {
+				// For high demand dates that are >30 days away
+				bannerMessage = "Popular Date — Dates Fill Up Fast. Book Sooner to Secure Your Spot"
+			}
 		}
 	}
 
@@ -825,7 +843,7 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
 		getDepositDeadlineMessage(data.DaysUntilEvent), // (due in X days to secure your staffing reservation)
 		data.EventDate,                // Final payment due date: %s (the day of your event)
 		recommendedArrivalTimeRange,   // Staff arrival time: %s
-		buildPDFDownloadHTML(data.PDFDownloadLink, data.ExpirationDate), // PDF download link section
+		buildPDFDownloadHTML(data.PDFDownloadLink, data.ExpirationDate, data.DaysUntilEvent), // PDF download link section
 		data.Occasion,                 // Ready to Secure Your %s? (occasion)
 		depositOptionsHTML,            // Deposit options message (returning vs new client)
 		data.DepositLink,              // Pay Deposit button link
@@ -850,6 +868,11 @@ func FormatEventDate(dateStr string) string {
 
 // getExpirationMessage returns the expiration message based on urgency level
 func getExpirationMessage(urgencyLevel string, daysUntilEvent int, expirationDate string) string {
+	// Special handling for same-day bookings - no expiration date shown
+	if daysUntilEvent == 0 {
+		return "Deposit Should Be Paid Now — ASAP to Proceed with The Staffing Reservation"
+	}
+	
 	switch urgencyLevel {
 	case "critical": // ≤3 days
 		// Break into two lines: deadline message and date

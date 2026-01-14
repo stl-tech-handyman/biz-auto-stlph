@@ -1,0 +1,156 @@
+{
+  "results": [
+    {
+      "name": "0 days until event",
+      "status": "pass",
+      "message": "Same-day: Email shows 'Deposit Should Be Paid Now' with no expiration",
+      "expected": "midnight today",
+      "actual": "N/A - Email shows 'Deposit Should Be Paid Now' instead",
+      "data": {
+        "daysUntilEvent": 0,
+        "expirationDate": "N/A - Not shown in email",
+        "expirationFormatted": "N/A - Email shows 'Deposit Should Be Paid Now' instead"
+      }
+    },
+    {
+      "name": "1 days until event",
+      "status": "pass",
+      "expected": "midnight today",
+      "actual": "Wed, Jan 14, 2026 11:59 PM CST",
+      "data": {
+        "daysUntilEvent": 1,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST"
+      }
+    },
+    {
+      "name": "2 days until event",
+      "status": "pass",
+      "expected": "midnight today",
+      "actual": "Wed, Jan 14, 2026 11:59 PM CST",
+      "data": {
+        "daysUntilEvent": 2,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST"
+      }
+    },
+    {
+      "name": "3 days until event",
+      "status": "pass",
+      "expected": "midnight today",
+      "actual": "Wed, Jan 14, 2026 11:59 PM CST",
+      "data": {
+        "daysUntilEvent": 3,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST"
+      }
+    },
+    {
+      "name": "4 days until event",
+      "status": "pass",
+      "expected": "48 hours",
+      "actual": "Fri, Jan 16, 2026 4:42 AM CST",
+      "data": {
+        "daysUntilEvent": 4,
+        "expirationDate": "2026-01-16T04:42:56-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 4:42 AM CST"
+      }
+    },
+    {
+      "name": "5 days until event",
+      "status": "pass",
+      "expected": "48 hours",
+      "actual": "Fri, Jan 16, 2026 4:42 AM CST",
+      "data": {
+        "daysUntilEvent": 5,
+        "expirationDate": "2026-01-16T04:42:56-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 4:42 AM CST"
+      }
+    },
+    {
+      "name": "6 days until event",
+      "status": "pass",
+      "expected": "48 hours",
+      "actual": "Fri, Jan 16, 2026 4:42 AM CST",
+      "data": {
+        "daysUntilEvent": 6,
+        "expirationDate": "2026-01-16T04:42:56-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 4:42 AM CST"
+      }
+    },
+    {
+      "name": "7 days until event",
+      "status": "pass",
+      "expected": "48 hours",
+      "actual": "Fri, Jan 16, 2026 4:42 AM CST",
+      "data": {
+        "daysUntilEvent": 7,
+        "expirationDate": "2026-01-16T04:42:56-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 4:42 AM CST"
+      }
+    },
+    {
+      "name": "8 days until event",
+      "status": "pass",
+      "expected": "3 days",
+      "actual": "Sat, Jan 17, 2026 4:42 AM CST",
+      "data": {
+        "daysUntilEvent": 8,
+        "expirationDate": "2026-01-17T04:42:56-06:00",
+        "expirationFormatted": "Sat, Jan 17, 2026 4:42 AM CST"
+      }
+    },
+    {
+      "name": "14 days until event",
+      "status": "pass",
+      "expected": "3 days",
+      "actual": "Sat, Jan 17, 2026 4:42 AM CST",
+      "data": {
+        "daysUntilEvent": 14,
+        "expirationDate": "2026-01-17T04:42:56-06:00",
+        "expirationFormatted": "Sat, Jan 17, 2026 4:42 AM CST"
+      }
+    },
+    {
+      "name": "15 days until event",
+      "status": "pass",
+      "expected": "2 weeks",
+      "actual": "Wed, Jan 28, 2026 4:42 AM CST",
+      "data": {
+        "daysUntilEvent": 15,
+        "expirationDate": "2026-01-28T04:42:56-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 4:42 AM CST"
+      }
+    },
+    {
+      "name": "30 days until event",
+      "status": "pass",
+      "expected": "2 weeks",
+      "actual": "Wed, Jan 28, 2026 4:42 AM CST",
+      "data": {
+        "daysUntilEvent": 30,
+        "expirationDate": "2026-01-28T04:42:56-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 4:42 AM CST"
+      }
+    },
+    {
+      "name": "60 days until event",
+      "status": "pass",
+      "expected": "2 weeks",
+      "actual": "Wed, Jan 28, 2026 4:42 AM CST",
+      "data": {
+        "daysUntilEvent": 60,
+        "expirationDate": "2026-01-28T04:42:56-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 4:42 AM CST"
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 13,
+    "total": 13,
+    "warnings": 0
+  },
+  "testName": "expiration-calc",
+  "timestamp": "2026-01-14T04:42:56-06:00"
+}
