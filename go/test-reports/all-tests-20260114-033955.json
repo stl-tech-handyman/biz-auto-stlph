@@ -1,0 +1,591 @@
+{
+  "results": [
+    {
+      "name": "[date-variations] Today (0 days)",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical",
+      "data": {
+        "daysUntilEvent": 0,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST",
+        "urgencyLevel": "critical"
+      }
+    },
+    {
+      "name": "[date-variations] Tomorrow (1 days)",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical",
+      "data": {
+        "daysUntilEvent": 1,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST",
+        "urgencyLevel": "critical"
+      }
+    },
+    {
+      "name": "[date-variations] 2 days from now (2 days)",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical",
+      "data": {
+        "daysUntilEvent": 2,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST",
+        "urgencyLevel": "critical"
+      }
+    },
+    {
+      "name": "[date-variations] 3 days from now (3 days)",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical",
+      "data": {
+        "daysUntilEvent": 3,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST",
+        "urgencyLevel": "critical"
+      }
+    },
+    {
+      "name": "[date-variations] 4 days from now (4 days)",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent",
+      "data": {
+        "daysUntilEvent": 4,
+        "expirationDate": "2026-01-16T03:39:55-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 3:39 AM CST",
+        "urgencyLevel": "urgent"
+      }
+    },
+    {
+      "name": "[date-variations] 7 days from now (7 days)",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent",
+      "data": {
+        "daysUntilEvent": 7,
+        "expirationDate": "2026-01-16T03:39:55-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 3:39 AM CST",
+        "urgencyLevel": "urgent"
+      }
+    },
+    {
+      "name": "[date-variations] 8 days from now (8 days)",
+      "status": "pass",
+      "expected": "high",
+      "actual": "high",
+      "data": {
+        "daysUntilEvent": 8,
+        "expirationDate": "2026-01-17T03:39:55-06:00",
+        "expirationFormatted": "Sat, Jan 17, 2026 3:39 AM CST",
+        "urgencyLevel": "high"
+      }
+    },
+    {
+      "name": "[date-variations] 14 days from now (14 days)",
+      "status": "pass",
+      "expected": "high",
+      "actual": "high",
+      "data": {
+        "daysUntilEvent": 14,
+        "expirationDate": "2026-01-17T03:39:55-06:00",
+        "expirationFormatted": "Sat, Jan 17, 2026 3:39 AM CST",
+        "urgencyLevel": "high"
+      }
+    },
+    {
+      "name": "[date-variations] 15 days from now (15 days)",
+      "status": "pass",
+      "expected": "moderate",
+      "actual": "moderate",
+      "data": {
+        "daysUntilEvent": 15,
+        "expirationDate": "2026-01-28T03:39:55-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 3:39 AM CST",
+        "urgencyLevel": "moderate"
+      }
+    },
+    {
+      "name": "[date-variations] 30 days from now (30 days)",
+      "status": "pass",
+      "expected": "moderate",
+      "actual": "moderate",
+      "data": {
+        "daysUntilEvent": 30,
+        "expirationDate": "2026-01-28T03:39:55-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 3:39 AM CST",
+        "urgencyLevel": "moderate"
+      }
+    },
+    {
+      "name": "[date-variations] 31 days from now (31 days)",
+      "status": "pass",
+      "expected": "normal",
+      "actual": "normal",
+      "data": {
+        "daysUntilEvent": 31,
+        "expirationDate": "2026-01-28T03:39:55-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 3:39 AM CST",
+        "urgencyLevel": "normal"
+      }
+    },
+    {
+      "name": "[date-variations] 60 days from now (59 days)",
+      "status": "pass",
+      "expected": "normal",
+      "actual": "normal",
+      "data": {
+        "daysUntilEvent": 59,
+        "expirationDate": "2026-01-28T03:39:55-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 3:39 AM CST",
+        "urgencyLevel": "normal"
+      }
+    },
+    {
+      "name": "[expiration-calc] 0 days until event",
+      "status": "pass",
+      "expected": "midnight today",
+      "actual": "Wed, Jan 14, 2026 11:59 PM CST",
+      "data": {
+        "daysUntilEvent": 0,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 1 days until event",
+      "status": "pass",
+      "expected": "midnight today",
+      "actual": "Wed, Jan 14, 2026 11:59 PM CST",
+      "data": {
+        "daysUntilEvent": 1,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 2 days until event",
+      "status": "pass",
+      "expected": "midnight today",
+      "actual": "Wed, Jan 14, 2026 11:59 PM CST",
+      "data": {
+        "daysUntilEvent": 2,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 3 days until event",
+      "status": "pass",
+      "expected": "midnight today",
+      "actual": "Wed, Jan 14, 2026 11:59 PM CST",
+      "data": {
+        "daysUntilEvent": 3,
+        "expirationDate": "2026-01-14T23:59:59-06:00",
+        "expirationFormatted": "Wed, Jan 14, 2026 11:59 PM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 4 days until event",
+      "status": "pass",
+      "expected": "48 hours",
+      "actual": "Fri, Jan 16, 2026 3:39 AM CST",
+      "data": {
+        "daysUntilEvent": 4,
+        "expirationDate": "2026-01-16T03:39:55-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 3:39 AM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 5 days until event",
+      "status": "pass",
+      "expected": "48 hours",
+      "actual": "Fri, Jan 16, 2026 3:39 AM CST",
+      "data": {
+        "daysUntilEvent": 5,
+        "expirationDate": "2026-01-16T03:39:55-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 3:39 AM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 6 days until event",
+      "status": "pass",
+      "expected": "48 hours",
+      "actual": "Fri, Jan 16, 2026 3:39 AM CST",
+      "data": {
+        "daysUntilEvent": 6,
+        "expirationDate": "2026-01-16T03:39:55-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 3:39 AM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 7 days until event",
+      "status": "pass",
+      "expected": "48 hours",
+      "actual": "Fri, Jan 16, 2026 3:39 AM CST",
+      "data": {
+        "daysUntilEvent": 7,
+        "expirationDate": "2026-01-16T03:39:55-06:00",
+        "expirationFormatted": "Fri, Jan 16, 2026 3:39 AM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 8 days until event",
+      "status": "pass",
+      "expected": "3 days",
+      "actual": "Sat, Jan 17, 2026 3:39 AM CST",
+      "data": {
+        "daysUntilEvent": 8,
+        "expirationDate": "2026-01-17T03:39:55-06:00",
+        "expirationFormatted": "Sat, Jan 17, 2026 3:39 AM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 14 days until event",
+      "status": "pass",
+      "expected": "3 days",
+      "actual": "Sat, Jan 17, 2026 3:39 AM CST",
+      "data": {
+        "daysUntilEvent": 14,
+        "expirationDate": "2026-01-17T03:39:55-06:00",
+        "expirationFormatted": "Sat, Jan 17, 2026 3:39 AM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 15 days until event",
+      "status": "pass",
+      "expected": "2 weeks",
+      "actual": "Wed, Jan 28, 2026 3:39 AM CST",
+      "data": {
+        "daysUntilEvent": 15,
+        "expirationDate": "2026-01-28T03:39:55-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 3:39 AM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 30 days until event",
+      "status": "pass",
+      "expected": "2 weeks",
+      "actual": "Wed, Jan 28, 2026 3:39 AM CST",
+      "data": {
+        "daysUntilEvent": 30,
+        "expirationDate": "2026-01-28T03:39:55-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 3:39 AM CST"
+      }
+    },
+    {
+      "name": "[expiration-calc] 60 days until event",
+      "status": "pass",
+      "expected": "2 weeks",
+      "actual": "Wed, Jan 28, 2026 3:39 AM CST",
+      "data": {
+        "daysUntilEvent": 60,
+        "expirationDate": "2026-01-28T03:39:55-06:00",
+        "expirationFormatted": "Wed, Jan 28, 2026 3:39 AM CST"
+      }
+    },
+    {
+      "name": "[urgency-levels] 0 days until event",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical"
+    },
+    {
+      "name": "[urgency-levels] 1 days until event",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical"
+    },
+    {
+      "name": "[urgency-levels] 2 days until event",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical"
+    },
+    {
+      "name": "[urgency-levels] 3 days until event",
+      "status": "pass",
+      "expected": "critical",
+      "actual": "critical"
+    },
+    {
+      "name": "[urgency-levels] 4 days until event",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent"
+    },
+    {
+      "name": "[urgency-levels] 5 days until event",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent"
+    },
+    {
+      "name": "[urgency-levels] 6 days until event",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent"
+    },
+    {
+      "name": "[urgency-levels] 7 days until event",
+      "status": "pass",
+      "expected": "urgent",
+      "actual": "urgent"
+    },
+    {
+      "name": "[urgency-levels] 8 days until event",
+      "status": "pass",
+      "expected": "high",
+      "actual": "high"
+    },
+    {
+      "name": "[urgency-levels] 14 days until event",
+      "status": "pass",
+      "expected": "high",
+      "actual": "high"
+    },
+    {
+      "name": "[urgency-levels] 15 days until event",
+      "status": "pass",
+      "expected": "moderate",
+      "actual": "moderate"
+    },
+    {
+      "name": "[urgency-levels] 30 days until event",
+      "status": "pass",
+      "expected": "moderate",
+      "actual": "moderate"
+    },
+    {
+      "name": "[urgency-levels] 31 days until event",
+      "status": "pass",
+      "expected": "normal",
+      "actual": "normal"
+    },
+    {
+      "name": "[urgency-levels] 60 days until event",
+      "status": "pass",
+      "expected": "normal",
+      "actual": "normal"
+    },
+    {
+      "name": "[deposit-calc] Total: $100.00",
+      "status": "warning",
+      "message": "Deposit 50.00 is outside expected range (15-30% of 100.00)",
+      "expected": "15-30% of $100.00 ($15.00 - $30.00)",
+      "actual": "$50.00",
+      "data": {
+        "depositAmount": 50,
+        "percentage": 50,
+        "totalCost": 100
+      }
+    },
+    {
+      "name": "[deposit-calc] Total: $200.00",
+      "status": "pass",
+      "expected": "15-30% of $200.00 ($30.00 - $60.00)",
+      "actual": "$50.00",
+      "data": {
+        "depositAmount": 50,
+        "percentage": 25,
+        "totalCost": 200
+      }
+    },
+    {
+      "name": "[deposit-calc] Total: $300.00",
+      "status": "pass",
+      "expected": "15-30% of $300.00 ($45.00 - $90.00)",
+      "actual": "$50.00",
+      "data": {
+        "depositAmount": 50,
+        "percentage": 16.666666666666664,
+        "totalCost": 300
+      }
+    },
+    {
+      "name": "[deposit-calc] Total: $500.00",
+      "status": "pass",
+      "expected": "15-30% of $500.00 ($75.00 - $150.00)",
+      "actual": "$150.00",
+      "data": {
+        "depositAmount": 150,
+        "percentage": 30,
+        "totalCost": 500
+      }
+    },
+    {
+      "name": "[deposit-calc] Total: $1000.00",
+      "status": "pass",
+      "expected": "15-30% of $1000.00 ($150.00 - $300.00)",
+      "actual": "$250.00",
+      "data": {
+        "depositAmount": 250,
+        "percentage": 25,
+        "totalCost": 1000
+      }
+    },
+    {
+      "name": "[deposit-calc] Total: $2000.00",
+      "status": "pass",
+      "expected": "15-30% of $2000.00 ($300.00 - $600.00)",
+      "actual": "$450.00",
+      "data": {
+        "depositAmount": 450,
+        "percentage": 22.5,
+        "totalCost": 2000
+      }
+    },
+    {
+      "name": "[deposit-calc] Total: $5000.00",
+      "status": "pass",
+      "expected": "15-30% of $5000.00 ($750.00 - $1500.00)",
+      "actual": "$1150.00",
+      "data": {
+        "depositAmount": 1150,
+        "percentage": 23,
+        "totalCost": 5000
+      }
+    },
+    {
+      "name": "[pricing-rates] 2026-02-13",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "hourlyRate": 50,
+        "isSpecialDate": false,
+        "specialLabel": null,
+        "totalCost": 600
+      }
+    },
+    {
+      "name": "[pricing-rates] 2026-12-25",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "hourlyRate": 50,
+        "isSpecialDate": true,
+        "specialLabel": "Christmas Day",
+        "totalCost": 1200
+      }
+    },
+    {
+      "name": "[pricing-rates] 2026-01-01",
+      "status": "pass",
+      "data": {
+        "baseRate": 300,
+        "hourlyRate": 50,
+        "isSpecialDate": true,
+        "specialLabel": "New Year's Day",
+        "totalCost": 1200
+      }
+    },
+    {
+      "name": "[email-template] Regular event, 30 days",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:00 PM - 5:30 PM. ",
+      "data": {
+        "daysUntilEvent": 30,
+        "htmlLength": 19777,
+        "urgencyLevel": "moderate"
+      }
+    },
+    {
+      "name": "[email-template] Urgent event, 3 days",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:00 PM - 5:30 PM. ",
+      "data": {
+        "daysUntilEvent": 3,
+        "htmlLength": 19744,
+        "urgencyLevel": "critical"
+      }
+    },
+    {
+      "name": "[email-template] High demand event, 15 days",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:00 PM - 5:30 PM. ",
+      "data": {
+        "daysUntilEvent": 15,
+        "htmlLength": 19777,
+        "urgencyLevel": "moderate"
+      }
+    },
+    {
+      "name": "[email-template] Returning client, 10 days",
+      "status": "pass",
+      "message": "Arrival time correctly calculated: 5:00 PM - 5:30 PM. ",
+      "data": {
+        "daysUntilEvent": 10,
+        "htmlLength": 20045,
+        "urgencyLevel": "high"
+      }
+    },
+    {
+      "name": "[weather-forecast] Service Availability",
+      "status": "warning",
+      "message": "Weather or geocoding service not available (API keys may not be set)"
+    },
+    {
+      "name": "[form-validation] Valid email",
+      "status": "pass",
+      "expected": true,
+      "actual": "validation check"
+    },
+    {
+      "name": "[form-validation] Invalid email",
+      "status": "warning",
+      "message": "Validation should fail but test framework needs implementation",
+      "expected": false,
+      "actual": "validation check"
+    },
+    {
+      "name": "[form-validation] Valid date",
+      "status": "pass",
+      "expected": true,
+      "actual": "validation check"
+    },
+    {
+      "name": "[form-validation] Invalid date",
+      "status": "warning",
+      "message": "Validation should fail but test framework needs implementation",
+      "expected": false,
+      "actual": "validation check"
+    },
+    {
+      "name": "[form-validation] Valid helpers",
+      "status": "pass",
+      "expected": true,
+      "actual": "validation check"
+    },
+    {
+      "name": "[form-validation] Invalid helpers (zero)",
+      "status": "warning",
+      "message": "Validation should fail but test framework needs implementation",
+      "expected": false,
+      "actual": "validation check"
+    },
+    {
+      "name": "[form-validation] Valid hours",
+      "status": "pass",
+      "expected": true,
+      "actual": "validation check"
+    },
+    {
+      "name": "[form-validation] Invalid hours (zero)",
+      "status": "warning",
+      "message": "Validation should fail but test framework needs implementation",
+      "expected": false,
+      "actual": "validation check"
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 56,
+    "total": 62,
+    "warnings": 6
+  },
+  "testName": "all-tests",
+  "timestamp": "2026-01-14T03:39:55-06:00"
+}

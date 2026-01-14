@@ -1,0 +1,9 @@
+well. not sure how deep i want to go. 
+here is a thing - the good i see is if i use the link when they click I can generate one on the fly, store it in firestore or whatever you recommend - and just 
+
+how about when I send a quote - I asynchronisly kick out a process that would generate the quote pdf or actually it does the pdf then stores it in the firestore then i have a link that is attached to Click Here to Download PDF of this Quote (sometime they need to submit it or send to someone, find a way to word it so they may better find their use case - most of our clients business need to submit to accounting so they can cut us a check.).  
+
+Then i could have some type of process (recommend the best way) - that runs and cleans up all PDFs that are expried. 
+
+Now that I am thinking about it the URL that should be under the Click Here to Download PDF of this Quote (expires on X) 
+That link as a param i think should have this token you recommending - then it calls the server - server if not expired redirects to the link (which is param on this url) so now they download it. If expired we need to come up with an decent looking HTML That The PDF Link is expired. Click Here to Get

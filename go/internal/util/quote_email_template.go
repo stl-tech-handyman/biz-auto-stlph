@@ -31,6 +31,7 @@ type QuoteEmailData struct {
 	IsReturningClient  bool   // Whether this client has booked with us before
 	WeatherForecast     *WeatherForecastData // Weather forecast (only for events < 10 days)
 	TravelFeeInfo      *TravelFeeData // Travel fee information (distance, fee, message)
+	PDFDownloadLink     string // PDF download link (token-based URL)
 }
 
 // TravelFeeData contains travel fee calculation details for email display
@@ -95,6 +96,26 @@ func GetFirstNameWithLastInitial(fullName string) string {
 		}
 	}
 	return firstName
+}
+
+// buildPDFDownloadHTML builds the PDF download link section for the email
+func buildPDFDownloadHTML(pdfDownloadLink string, expirationDate string) string {
+	if pdfDownloadLink == "" {
+		return ""
+	}
+
+	return fmt.Sprintf(`            <tr>
+              <td style="background-color: #fafafa; padding: 12px; margin-top: 8px; border-left: 3px solid rgb(38, 37, 120); text-align: center;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold; color: rgb(38, 37, 120);">Download PDF Quote</p>
+                <p style="margin: 0 0 8px 0; font-size: 12.5px; color: #666666; line-height: 1.5;">
+                  Many clients need to submit quotes to accounting for approval. Download your PDF quote below.
+                </p>
+                <p style="margin: 8px 0; text-align: center;">
+                  <a href="%s" style="display: inline-block; background-color: rgb(38, 37, 120); color: #ffffff; padding: 8px 16px; text-decoration: none; font-weight: bold; font-size: 14px; border-radius: 4px;">Download PDF Quote (for accounting/approval)</a>
+                </p>
+                <p style="margin: 6px 0 0 0; font-size: 11px; color: #999999; font-style: italic;">Expires: %s</p>
+              </td>
+            </tr>`, pdfDownloadLink, expirationDate)
 }
 
 // FormatDaysUntilEvent formats days until event in a clear, scannable way
@@ -262,33 +283,94 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
 	// Format as just time range (e.g., "7:00 PM - 7:30 PM") without date
 	recommendedArrivalTimeRange := ""
 	if data.EventTime != "" {
-		// Try to parse event time
+		// Try to parse event time with date
 		eventDateTimeStr := fmt.Sprintf("%s %s", data.EventDate, data.EventTime)
 		formats := []string{
-			"January 2, 2006 3:04 PM",
-			"Jan 2, 2006 3:04 PM",
+			"Mon, January 2, 2006 3:04 PM",    // "Mon, Jan 2, 2006 6:00 PM"
+			"Mon, Jan 2, 2006 3:04 PM",        // "Mon, Jan 2, 2006 6:00 PM"
+			"January 2, 2006 3:04 PM",         // "January 2, 2006 6:00 PM"
+			"Jan 2, 2006 3:04 PM",            // "Jan 2, 2006 6:00 PM"
+			"Mon, January 2, 2006 15:04",      // 24-hour format
+			"Mon, Jan 2, 2006 15:04",
 			"January 2, 2006 15:04",
+			"Jan 2, 2006 15:04",
 			"2006-01-02 3:04 PM",
 			"2006-01-02 15:04",
+			"Mon, January 2, 2006 3:04PM",    // Without space
+			"Mon, Jan 2, 2006 3:04PM",
+			"January 2, 2006 3:04PM",
+			"Jan 2, 2006 3:04PM",
 		}
 
+		var eventTime time.Time
+		parsed := false
 		for _, format := range formats {
-			if eventTime, err := time.Parse(format, eventDateTimeStr); err == nil {
-				// Calculate 1 hour before (earliest) and 30 minutes before (latest)
-				earliestArrival := eventTime.Add(-1 * time.Hour)
-				latestArrival := eventTime.Add(-30 * time.Minute)
-
-				// Format as just time range "7:00 PM - 7:30 PM" (no date)
-				recommendedArrivalTimeRange = fmt.Sprintf("%s - %s",
-					earliestArrival.Format("3:04 PM"),
-					latestArrival.Format("3:04 PM"))
+			if t, err := time.Parse(format, eventDateTimeStr); err == nil {
+				eventTime = t
+				parsed = true
 				break
 			}
 		}
 
-		// Fallback: if parsing failed, try to extract just time from EventTime
-		if recommendedArrivalTimeRange == "" && data.EventTime != "" {
-			recommendedArrivalTimeRange = data.EventTime // Use event time as fallback
+		// If parsing failed, try parsing just the time part
+		if !parsed && data.EventTime != "" {
+			timeFormats := []string{
+				"3:04 PM",
+				"15:04",
+				"3:04PM",
+				"15:04:00",
+			}
+			for _, format := range timeFormats {
+				if t, err := time.Parse(format, data.EventTime); err == nil {
+					// Parse the date separately to get the actual event date
+					dateFormats := []string{
+						"Mon, January 2, 2006",
+						"Mon, Jan 2, 2006",
+						"January 2, 2006",
+						"Jan 2, 2006",
+						"2006-01-02",
+					}
+					var eventDate time.Time
+					dateParsed := false
+					for _, dateFormat := range dateFormats {
+						if d, err := time.Parse(dateFormat, data.EventDate); err == nil {
+							eventDate = d
+							dateParsed = true
+							break
+						}
+					}
+					
+					if dateParsed {
+						// Combine parsed date with parsed time
+						eventTime = time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(),
+							t.Hour(), t.Minute(), t.Second(), 0, eventDate.Location())
+						parsed = true
+						break
+					} else {
+						// Use today's date as fallback
+						now := time.Now()
+						eventTime = time.Date(now.Year(), now.Month(), now.Day(),
+							t.Hour(), t.Minute(), t.Second(), 0, now.Location())
+						parsed = true
+						break
+					}
+				}
+			}
+		}
+
+		if parsed {
+			// Calculate 1 hour before (earliest) and 30 minutes before (latest)
+			earliestArrival := eventTime.Add(-1 * time.Hour)
+			latestArrival := eventTime.Add(-30 * time.Minute)
+
+			// Format as just time range "7:00 PM - 7:30 PM" (no date)
+			recommendedArrivalTimeRange = fmt.Sprintf("%s - %s",
+				earliestArrival.Format("3:04 PM"),
+				latestArrival.Format("3:04 PM"))
+		} else {
+			// Last resort fallback: try to manually subtract from event time string
+			// This should rarely happen, but provides a better fallback than using event time directly
+			recommendedArrivalTimeRange = data.EventTime + " (check time calculation)"
 		}
 	}
 
@@ -534,7 +616,7 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
                   </tr>
                 </table>
                 <p style="font-size: 13.5px; color: #666666; padding: 8px 30px 0 30px; margin: 0; text-align: center; font-style: italic;">
-                  To ensure everything runs smoothly and professionally — so you can enjoy your event and look great — we advise our staff start time to be %s. This allows for setup and walk-through with no rush or surprises.
+                  We advise our staff start time to be between %s to allow for setup and walk-through.
                 </p>
 %s
               </td>
@@ -647,6 +729,9 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
               <td style="padding-top: 8px;"></td>
             </tr>
 
+            <!-- PDF Download Link -->
+%s
+
             <!-- Secure Your Date - AIDA: Action (CTA right after pricing, capitalize on the moment) -->
             <tr>
               <td style="background-color: #f0f0f7; padding: 10px; margin-top: 8px; border-left: 5px solid rgb(38, 37, 120); border-top: 1px solid #e0e0e0; text-align: center;">
@@ -740,6 +825,7 @@ func GenerateQuoteEmailHTML(data QuoteEmailData) string {
 		getDepositDeadlineMessage(data.DaysUntilEvent), // (due in X days to secure your staffing reservation)
 		data.EventDate,                // Final payment due date: %s (the day of your event)
 		recommendedArrivalTimeRange,   // Staff arrival time: %s
+		buildPDFDownloadHTML(data.PDFDownloadLink, data.ExpirationDate), // PDF download link section
 		data.Occasion,                 // Ready to Secure Your %s? (occasion)
 		depositOptionsHTML,            // Deposit options message (returning vs new client)
 		data.DepositLink,              // Pay Deposit button link

@@ -1,0 +1,90 @@
+{
+  "results": [
+    {
+      "name": "Total: $100.00",
+      "status": "warning",
+      "message": "Deposit 50.00 is outside expected range (15-30% of 100.00)",
+      "expected": "15-30% of $100.00 ($15.00 - $30.00)",
+      "actual": "$50.00",
+      "data": {
+        "depositAmount": 50,
+        "percentage": 50,
+        "totalCost": 100
+      }
+    },
+    {
+      "name": "Total: $200.00",
+      "status": "pass",
+      "expected": "15-30% of $200.00 ($30.00 - $60.00)",
+      "actual": "$50.00",
+      "data": {
+        "depositAmount": 50,
+        "percentage": 25,
+        "totalCost": 200
+      }
+    },
+    {
+      "name": "Total: $300.00",
+      "status": "pass",
+      "expected": "15-30% of $300.00 ($45.00 - $90.00)",
+      "actual": "$50.00",
+      "data": {
+        "depositAmount": 50,
+        "percentage": 16.666666666666664,
+        "totalCost": 300
+      }
+    },
+    {
+      "name": "Total: $500.00",
+      "status": "pass",
+      "expected": "15-30% of $500.00 ($75.00 - $150.00)",
+      "actual": "$150.00",
+      "data": {
+        "depositAmount": 150,
+        "percentage": 30,
+        "totalCost": 500
+      }
+    },
+    {
+      "name": "Total: $1000.00",
+      "status": "pass",
+      "expected": "15-30% of $1000.00 ($150.00 - $300.00)",
+      "actual": "$250.00",
+      "data": {
+        "depositAmount": 250,
+        "percentage": 25,
+        "totalCost": 1000
+      }
+    },
+    {
+      "name": "Total: $2000.00",
+      "status": "pass",
+      "expected": "15-30% of $2000.00 ($300.00 - $600.00)",
+      "actual": "$450.00",
+      "data": {
+        "depositAmount": 450,
+        "percentage": 22.5,
+        "totalCost": 2000
+      }
+    },
+    {
+      "name": "Total: $5000.00",
+      "status": "pass",
+      "expected": "15-30% of $5000.00 ($750.00 - $1500.00)",
+      "actual": "$1150.00",
+      "data": {
+        "depositAmount": 1150,
+        "percentage": 23,
+        "totalCost": 5000
+      }
+    }
+  ],
+  "summary": {
+    "failed": 0,
+    "passed": 6,
+    "total": 7,
+    "warnings": 1
+  },
+  "testName": "deposit-calc",
+  "timestamp": "2026-01-14T03:45:34-06:00"
+}

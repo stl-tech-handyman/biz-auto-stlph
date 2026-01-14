@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Quote Feature - Documentation & Testing</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/admin-shared.css" rel="stylesheet">
+    <style>
+        /* Page-specific overrides */
+        body {
+            padding-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-star-fill me-2"></i>STL Party Helpers Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/pdf-feature-docs.html">PDF Feature Docs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/quote-preview.html">Quote Preview</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold mb-3">PDF Quote Feature</h1>
+            <p class="lead">Documentation, Testing, and Flow Overview</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Quick Links -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Quick Links</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Testing & Preview</h6>
+                                <ul class="link-list">
+                                    <li><a href="/quote-preview.html" target="_blank">Quote Email Preview</a> - Test quote emails with PDF links</li>
+                                    <li><a href="/api/health" target="_blank">Health Check</a> - Verify API is running</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>API Endpoints</h6>
+                                <ul class="link-list">
+                                    <li><code>POST /api/email/quote</code> - Send quote email (generates PDF token)</li>
+                                    <li><code>GET /api/quote/pdf?token=...</code> - Download PDF (public, no auth)</li>
+                                    <li><code>POST /api/quote/regenerate</code> - Regenerate expired quote (public form)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>How It Works - Complete Flow</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="flow-diagram">
+                            <div class="flow-step">
+                                <span class="flow-step-number">1</span>
+                                <strong>Quote Email Sent</strong>
+                                <p class="mb-0 mt-2">When a quote email is sent via <code>POST /api/email/quote</code>:</p>
+                                <ul class="mt-2">
+                                    <li>PDF token is generated (HMAC-signed with expiration)</li>
+                                    <li>Token is embedded in email as download link</li>
+                                    <li>Email includes: <code>"Download PDF Quote (for accounting/approval)"</code> button</li>
+                                    <li>Async job is queued to generate and store PDF</li>
+                                </ul>
+                            </div>
+
+                            <div class="flow-step">
+                                <span class="flow-step-number">2</span>
+                                <strong>Async PDF Generation</strong>
+                                <p class="mb-0 mt-2">Background process (non-blocking):</p>
+                                <ul class="mt-2">
+                                    <li>Generates PDF using existing <code>GenerateQuotePDF()</code> function</li>
+                                    <li>Uploads PDF to Cloud Storage: <code>quotes/{confirmationNumber}/quote-{confirmationNumber}.pdf</code></li>
+                                    <li>Stores token metadata in Firestore <code>pdf_tokens</code> collection</li>
+                                    <li>Creates quote record in Firestore <code>quotes</code> collection</li>
+                                </ul>
+                            </div>
+
+                            <div class="flow-step">
+                                <span class="flow-step-number">3</span>
+                                <strong>User Clicks PDF Link</strong>
+                                <p class="mb-0 mt-2">User clicks link in email: <code>https://api.stlpartyhelpers.com/api/quote/pdf?token={token}</code></p>
+                                <ul class="mt-2">
+                                    <li>Token signature is validated (HMAC verification)</li>
+                                    <li>Expiration date is checked</li>
+                                    <li>Token data is retrieved from Firestore</li>
+                                </ul>
+                            </div>
+
+                            <div class="flow-step">
+                                <span class="flow-step-number">4a</span>
+                                <strong>Valid Token → PDF Download</strong>
+                                <p class="mb-0 mt-2">If token is valid and not expired:</p>
+                                <ul class="mt-2">
+                                    <li>Signed URL is generated for Cloud Storage file (1-hour validity)</li>
+                                    <li>User is redirected to signed URL → PDF downloads</li>
+                                    <li>Access is logged: <code>accessCount++</code>, <code>accessedAt</code> timestamp</li>
+                                    <li>Quote status updated: <code>"sent"</code> → <code>"pdf_downloaded"</code></li>
+                                    <li><strong>Intent signal captured!</strong> 🎯</li>
+                                </ul>
+                            </div>
+
+                            <div class="flow-step">
+                                <span class="flow-step-number">4b</span>
+                                <strong>Expired Token → Regeneration Form</strong>
+                                <p class="mb-0 mt-2">If token is expired:</p>
+                                <ul class="mt-2">
+                                    <li>Beautiful HTML page is shown with expiration message</li>
+                                    <li>Pre-filled form with original quote data</li>
+                                    <li>User can modify details and generate new quote</li>
+                                    <li>Form submits to <code>POST /api/quote/regenerate</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-database me-2"></i>Firestore Collections</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6><code>pdf_tokens</code> Collection</h6>
+                        <p>Document ID: <code>{token}</code></p>
+                        <ul class="small">
+                            <li><code>token</code> - The token string</li>
+                            <li><code>confirmationNumber</code> - Quote ID</li>
+                            <li><code>clientEmail</code> - Client email</li>
+                            <li><code>storagePath</code> - Cloud Storage path</li>
+                            <li><code>storageURL</code> - Public Cloud Storage URL</li>
+                            <li><code>createdAt</code> - When token was created</li>
+                            <li><code>expiresAt</code> - Token expiration</li>
+                            <li><code>accessCount</code> - Number of times accessed</li>
+                            <li><code>accessedAt</code> - Last access timestamp</li>
+                            <li><code>originalQuoteData</code> - Full quote data for regeneration</li>
+                        </ul>
+
+                        <h6 class="mt-3"><code>quotes</code> Collection</h6>
+                        <p>Document ID: <code>{confirmationNumber}</code></p>
+                        <ul class="small">
+                            <li><code>confirmationNumber</code> - Quote ID</li>
+                            <li><code>clientEmail</code> - Client email</li>
+                            <li><code>clientName</code> - Client name</li>
+                            <li><code>pdfToken</code> - Reference to PDF token</li>
+                            <li><code>pdfGeneratedAt</code> - When PDF was generated</li>
+                            <li><code>status</code> - "sent", "pdf_downloaded", "expired"</li>
+                            <li><code>createdAt</code> - When quote was created</li>
+                            <li><code>lastActivityAt</code> - Last interaction timestamp</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-cloud me-2"></i>Cloud Storage Structure</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>Bucket Structure</h6>
+                        <div class="code-block">
+quotes/
+  {confirmationNumber}/
+    quote-{confirmationNumber}.pdf
+                        </div>
+                        
+                        <h6 class="mt-3">Example</h6>
+                        <div class="code-block">
+quotes/
+  ABC1/
+    quote-ABC1.pdf
+                        </div>
+
+                        <h6 class="mt-3">Access</h6>
+                        <ul class="small">
+                            <li>PDFs are stored with <code>public, max-age=3600</code> cache control</li>
+                            <li>Download uses signed URLs (1-hour validity)</li>
+                            <li>Direct public URLs also available</li>
+                        </ul>
+
+                        <h6 class="mt-3">Cleanup</h6>
+                        <p class="small">Set up Cloud Storage lifecycle policy to auto-delete files older than 90 days:</p>
+                        <div class="code-block small">
+lifecycle:
+  rule:
+    - action: Delete
+      condition:
+        age: 90
+        matchesPrefix: ["quotes/"]
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Endpoints -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-code-slash me-2"></i>API Endpoints</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card endpoint-card">
+                                    <div class="card-body">
+                                        <h6><code>GET /api/quote/pdf?token={token}</code></h6>
+                                        <p class="small mb-2"><span class="badge bg-success">Public</span> No authentication required</p>
+                                        <p class="small">Downloads PDF quote. Validates token signature and expiration.</p>
+                                        <p class="small mb-1"><strong>Query Parameters:</strong></p>
+                                        <ul class="small">
+                                            <li><code>token</code> (required) - PDF download token</li>
+                                        </ul>
+                                        <p class="small mb-1"><strong>Responses:</strong></p>
+                                        <ul class="small">
+                                            <li><code>302 Found</code> - Redirects to signed Cloud Storage URL</li>
+                                            <li><code>200 OK</code> - Shows expired quote page with regeneration form</li>
+                                            <li><code>400 Bad Request</code> - Invalid token format</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="card endpoint-card">
+                                    <div class="card-body">
+                                        <h6><code>POST /api/quote/regenerate</code></h6>
+                                        <p class="small mb-2"><span class="badge bg-success">Public</span> No authentication required</p>
+                                        <p class="small">Regenerates quote from expired PDF link form submission.</p>
+                                        <p class="small mb-1"><strong>Form Data:</strong></p>
+                                        <ul class="small">
+                                            <li><code>occasion</code>, <code>event_date</code>, <code>event_time</code></li>
+                                            <li><code>event_location</code>, <code>guest_count</code>, <code>helpers</code></li>
+                                            <li><code>hours</code>, <code>client_name</code>, <code>email</code></li>
+                                            <li><code>original_quote_id</code>, <code>token</code> (hidden fields)</li>
+                                        </ul>
+                                        <p class="small mb-1"><strong>Response:</strong></p>
+                                        <ul class="small">
+                                            <li><code>200 OK</code> - Success page (TODO: actually generate new quote)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Environment Variables -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Environment Variables</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Required</h6>
+                                <ul>
+                                    <li><span class="env-var">GCP_PROJECT_ID</span> - Google Cloud Project ID for Firestore</li>
+                                    <li><span class="env-var">GCS_BUCKET_NAME</span> - Cloud Storage bucket name for PDFs</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Optional</h6>
+                                <ul>
+                                    <li><span class="env-var">PDF_TOKEN_SECRET</span> - Secret for token signing (defaults to <code>SERVICE_API_KEY</code>)</li>
+                                    <li><span class="env-var">API_BASE_URL</span> - Base URL for PDF links (defaults to <code>https://api.stlpartyhelpers.com</code>)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="test-section mt-3">
+                            <strong>💡 Setup Instructions:</strong>
+                            <ol class="mb-0">
+                                <li>Create Firestore database (Native mode) in Google Cloud Console</li>
+                                <li>Create Cloud Storage bucket</li>
+                                <li>Set environment variables in your deployment</li>
+                                <li>Ensure service account has permissions:
+                                    <ul>
+                                        <li>Firestore: <code>roles/datastore.user</code></li>
+                                        <li>Storage: <code>roles/storage.objectAdmin</code></li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testing Guide -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-flask me-2"></i>Testing Guide</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>1. Test Quote Email with PDF Link</h6>
+                        <ol>
+                            <li>Go to <a href="/quote-preview.html" target="_blank">Quote Preview</a></li>
+                            <li>Fill in quote details and send</li>
+                            <li>Check email - should see "Download PDF Quote" button</li>
+                            <li>Click the button - should download PDF or show expired page</li>
+                        </ol>
+
+                        <h6 class="mt-4">2. Test PDF Download Endpoint</h6>
+                        <ol>
+                            <li>Send a quote email via API</li>
+                            <li>Extract token from email link or Firestore</li>
+                            <li>Test valid token:
+                                <div class="code-block mt-2">
+curl "https://api.stlpartyhelpers.com/api/quote/pdf?token=YOUR_TOKEN"
+                                </div>
+                            </li>
+                            <li>Test expired token (modify expiration in Firestore or wait)</li>
+                        </ol>
+
+                        <h6 class="mt-4">3. Test Intent Tracking</h6>
+                        <ol>
+                            <li>Download a PDF via token link</li>
+                            <li>Check Firestore <code>pdf_tokens</code> collection:
+                                <ul>
+                                    <li><code>accessCount</code> should increment</li>
+                                    <li><code>accessedAt</code> should be updated</li>
+                                </ul>
+                            </li>
+                            <li>Check Firestore <code>quotes</code> collection:
+                                <ul>
+                                    <li><code>status</code> should be <code>"pdf_downloaded"</code></li>
+                                    <li><code>lastActivityAt</code> should be updated</li>
+                                </ul>
+                            </li>
+                        </ol>
+
+                        <h6 class="mt-4">4. Test Expired Quote Flow</h6>
+                        <ol>
+                            <li>Manually expire a token in Firestore (set <code>expiresAt</code> to past date)</li>
+                            <li>Click PDF link - should show expired page</li>
+                            <li>Verify form is pre-filled with original quote data</li>
+                            <li>Submit form - should show success message</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Structure -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-folder me-2"></i>Code Structure</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Infrastructure</h6>
+                                <ul class="small">
+                                    <li><code>internal/infra/firestore/</code> - Firestore client wrapper</li>
+                                    <li><code>internal/infra/storage/</code> - Cloud Storage client wrapper</li>
+                                </ul>
+
+                                <h6 class="mt-3">Services</h6>
+                                <ul class="small">
+                                    <li><code>internal/services/pdf/</code> - PDF generation, storage, token management</li>
+                                </ul>
+
+                                <h6 class="mt-3">Utilities</h6>
+                                <ul class="small">
+                                    <li><code>internal/util/pdf_token.go</code> - Token generation & validation</li>
+                                    <li><code>internal/util/pdf_models.go</code> - Firestore data models</li>
+                                    <li><code>internal/util/quote_pdf.go</code> - PDF generation (existing)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Handlers</h6>
+                                <ul class="small">
+                                    <li><code>internal/http/handlers/pdf_handler.go</code> - PDF download endpoint</li>
+                                    <li><code>internal/http/handlers/regenerate_handler.go</code> - Regenerate quote endpoint</li>
+                                    <li><code>internal/http/handlers/email_handler.go</code> - Email handler (integrated PDF service)</li>
+                                </ul>
+
+                                <h6 class="mt-3">Templates</h6>
+                                <ul class="small">
+                                    <li><code>internal/util/quote_email_template.go</code> - Email template with PDF link</li>
+                                    <li>Expired quote HTML (in <code>pdf_handler.go</code>)</li>
+                                </ul>
+
+                                <h6 class="mt-3">Routes</h6>
+                                <ul class="small">
+                                    <li><code>internal/http/router.go</code> - Route registration</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Notes -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Security & Best Practices</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>Token Security</h6>
+                        <ul>
+                            <li>Tokens are HMAC-signed with secret key</li>
+                            <li>Tokens include expiration timestamp</li>
+                            <li>Signature verification prevents tampering</li>
+                            <li>Tokens are base64 URL-encoded for safe transmission</li>
+                        </ul>
+
+                        <h6 class="mt-3">Access Control</h6>
+                        <ul>
+                            <li>PDF endpoints are public (no auth required) - security via token</li>
+                            <li>Signed URLs for Cloud Storage (1-hour validity)</li>
+                            <li>Rate limiting recommended for production</li>
+                        </ul>
+
+                        <h6 class="mt-3">Data Privacy</h6>
+                        <ul>
+                            <li>Original quote data stored in Firestore for regeneration</li>
+                            <li>Access logs track intent signals</li>
+                            <li>Comply with data retention policies</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Troubleshooting</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>PDF Link Not Appearing in Email</h6>
+                        <ul>
+                            <li>Check <code>GCP_PROJECT_ID</code> and <code>GCS_BUCKET_NAME</code> are set</li>
+                            <li>Verify PDF service initialized (check logs for "PDF service initialized")</li>
+                            <li>Check token generation didn't fail (check logs)</li>
+                        </ul>
+
+                        <h6 class="mt-3">PDF Download Fails</h6>
+                        <ul>
+                            <li>Verify Firestore has token document</li>
+                            <li>Check Cloud Storage file exists at <code>storagePath</code></li>
+                            <li>Verify service account has Storage permissions</li>
+                            <li>Check token expiration hasn't passed</li>
+                        </ul>
+
+                        <h6 class="mt-3">Async PDF Generation Not Working</h6>
+                        <ul>
+                            <li>Check background goroutine isn't panicking (check logs)</li>
+                            <li>Verify Firestore and Storage clients are initialized</li>
+                            <li>Check Cloud Storage bucket exists and is accessible</li>
+                            <li>Verify Firestore database is created (Native mode)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">STL Party Helpers - PDF Quote Feature Documentation</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

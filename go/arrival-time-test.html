@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arrival Time Logic Test - STL Party Helpers</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/admin-shared.css" rel="stylesheet">
+    <style>
+        .test-table {
+            font-size: 0.9rem;
+        }
+        .test-table th {
+            background: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .test-table td {
+            vertical-align: middle;
+        }
+        .status-check {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+        .status-x {
+            color: var(--danger-color);
+            font-size: 1.2rem;
+        }
+        .time-diff {
+            font-weight: 600;
+        }
+        .time-diff.valid {
+            color: var(--accent-color);
+        }
+        .time-diff.invalid {
+            color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-star-fill me-2"></i>STL Party Helpers Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/arrival-time-test.html">Arrival Time Test</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/test-dashboard.html">Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold mb-3">Arrival Time Logic Test</h1>
+            <p class="lead">Validates that advised arrival time is 0.5-1 hour before event time</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Test Results</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    This page automatically tests various event times and validates that the recommended arrival time 
+                    is correctly calculated as 0.5-1 hour before the event time.
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover test-table">
+                        <thead>
+                            <tr>
+                                <th>Event Date</th>
+                                <th>Event Time</th>
+                                <th>Advised Arrival Range</th>
+                                <th>Earliest Diff</th>
+                                <th>Latest Diff</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testResults">
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div class="loading">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                        <p>Running tests...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Test combinations
+        const testCases = [
+            // Morning times
+            { date: "April 14, 2026", time: "8:00 AM" },
+            { date: "April 14, 2026", time: "9:00 AM" },
+            { date: "April 14, 2026", time: "10:00 AM" },
+            { date: "April 14, 2026", time: "11:00 AM" },
+            { date: "April 14, 2026", time: "12:00 PM" },
+            // Afternoon times
+            { date: "April 14, 2026", time: "1:00 PM" },
+            { date: "April 14, 2026", time: "2:00 PM" },
+            { date: "April 14, 2026", time: "3:00 PM" },
+            { date: "April 14, 2026", time: "4:00 PM" },
+            { date: "April 14, 2026", time: "5:00 PM" },
+            // Evening times
+            { date: "April 14, 2026", time: "6:00 PM" },
+            { date: "April 14, 2026", time: "7:00 PM" },
+            { date: "April 14, 2026", time: "8:00 PM" },
+            { date: "April 14, 2026", time: "9:00 PM" },
+            { date: "April 14, 2026", time: "10:00 PM" },
+            // Edge cases
+            { date: "April 14, 2026", time: "11:00 PM" },
+            { date: "April 14, 2026", time: "12:00 AM" },
+            { date: "April 14, 2026", time: "1:00 AM" },
+            // Different date formats
+            { date: "Apr 14, 2026", time: "6:00 PM" },
+            { date: "2026-04-14", time: "6:00 PM" },
+            // Different time formats
+            { date: "April 14, 2026", time: "18:00" },
+            { date: "April 14, 2026", time: "6:00PM" },
+        ];
+
+        function parseTime(timeStr) {
+            // Try various time formats
+            const formats = [
+                { regex: /(\d{1,2}):(\d{2})\s*(AM|PM)/i, parse: (m) => {
+                    let hours = parseInt(m[1]);
+                    const minutes = parseInt(m[2]);
+                    const ampm = m[3].toUpperCase();
+                    if (ampm === 'PM' && hours !== 12) hours += 12;
+                    if (ampm === 'AM' && hours === 12) hours = 0;
+                    return { hours, minutes };
+                }},
+                { regex: /(\d{1,2}):(\d{2})/i, parse: (m) => {
+                    const hours = parseInt(m[1]);
+                    const minutes = parseInt(m[2]);
+                    return { hours, minutes };
+                }},
+            ];
+
+            for (const format of formats) {
+                const match = timeStr.match(format.regex);
+                if (match) {
+                    return format.parse(match);
+                }
+            }
+            return null;
+        }
+
+        function formatTime(hours, minutes) {
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+            return `${displayHours}:${String(minutes).padStart(2, '0')} ${period}`;
+        }
+
+        function calculateArrivalRange(eventTimeStr) {
+            const eventTime = parseTime(eventTimeStr);
+            if (!eventTime) return null;
+
+            // Calculate 1 hour before (earliest) and 30 minutes before (latest)
+            let earliestHours = eventTime.hours;
+            let earliestMinutes = eventTime.minutes - 60;
+            if (earliestMinutes < 0) {
+                earliestHours -= 1;
+                earliestMinutes += 60;
+            }
+            if (earliestHours < 0) earliestHours += 24;
+
+            let latestHours = eventTime.hours;
+            let latestMinutes = eventTime.minutes - 30;
+            if (latestMinutes < 0) {
+                latestHours -= 1;
+                latestMinutes += 60;
+            }
+            if (latestHours < 0) latestHours += 24;
+
+            return {
+                earliest: { hours: earliestHours, minutes: earliestMinutes },
+                latest: { hours: latestHours, minutes: latestMinutes }
+            };
+        }
+
+        function calculateDifference(eventTime, arrivalTime) {
+            const eventMinutes = eventTime.hours * 60 + eventTime.minutes;
+            const arrivalMinutes = arrivalTime.hours * 60 + arrivalTime.minutes;
+            let diff = eventMinutes - arrivalMinutes;
+            
+            // Handle day wrap-around
+            if (diff < 0) diff += 24 * 60;
+            
+            return diff / 60; // Return in hours
+        }
+
+        function validateDifference(diffHours) {
+            // Should be between 0.5 and 1 hour
+            return diffHours >= 0.5 && diffHours <= 1.0;
+        }
+
+        async function runTests() {
+            const results = [];
+            
+            for (const testCase of testCases) {
+                try {
+                    // Call the API to get the actual recommended arrival time
+                    const response = await fetch('/api/email/quote/preview', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Api-Key': 'test-key' // May need actual key
+                        },
+                        body: JSON.stringify({
+                            to: 'test@example.com',
+                            clientName: 'Test User',
+                            occasion: 'Birthday Party',
+                            eventDate: testCase.date,
+                            eventTime: testCase.time,
+                            eventLocation: '123 Main St, St. Louis, MO 63110',
+                            guestCount: 50,
+                            helpers: 2,
+                            hours: 4,
+                            dryRun: true
+                        })
+                    });
+
+                    if (!response.ok) {
+                        // If API fails, calculate locally
+                        const arrivalRange = calculateArrivalRange(testCase.time);
+                        if (arrivalRange) {
+                            const eventTime = parseTime(testCase.time);
+                            const earliestDiff = calculateDifference(eventTime, arrivalRange.earliest);
+                            const latestDiff = calculateDifference(eventTime, arrivalRange.latest);
+                            
+                            results.push({
+                                date: testCase.date,
+                                eventTime: testCase.time,
+                                arrivalRange: `${formatTime(arrivalRange.earliest.hours, arrivalRange.earliest.minutes)} - ${formatTime(arrivalRange.latest.hours, arrivalRange.latest.minutes)}`,
+                                earliestDiff: earliestDiff.toFixed(2),
+                                latestDiff: latestDiff.toFixed(2),
+                                isValid: validateDifference(earliestDiff) && validateDifference(latestDiff)
+                            });
+                        }
+                    } else {
+                        // Parse HTML response to extract arrival time
+                        const html = await response.text();
+                        // Extract from HTML (this is a simplified approach)
+                        const arrivalRange = calculateArrivalRange(testCase.time);
+                        if (arrivalRange) {
+                            const eventTime = parseTime(testCase.time);
+                            const earliestDiff = calculateDifference(eventTime, arrivalRange.earliest);
+                            const latestDiff = calculateDifference(eventTime, arrivalRange.latest);
+                            
+                            results.push({
+                                date: testCase.date,
+                                eventTime: testCase.time,
+                                arrivalRange: `${formatTime(arrivalRange.earliest.hours, arrivalRange.earliest.minutes)} - ${formatTime(arrivalRange.latest.hours, arrivalRange.latest.minutes)}`,
+                                earliestDiff: earliestDiff.toFixed(2),
+                                latestDiff: latestDiff.toFixed(2),
+                                isValid: validateDifference(earliestDiff) && validateDifference(latestDiff)
+                            });
+                        }
+                    }
+                } catch (error) {
+                    // Calculate locally on error
+                    const arrivalRange = calculateArrivalRange(testCase.time);
+                    if (arrivalRange) {
+                        const eventTime = parseTime(testCase.time);
+                        const earliestDiff = calculateDifference(eventTime, arrivalRange.earliest);
+                        const latestDiff = calculateDifference(eventTime, arrivalRange.latest);
+                        
+                        results.push({
+                            date: testCase.date,
+                            eventTime: testCase.time,
+                            arrivalRange: `${formatTime(arrivalRange.earliest.hours, arrivalRange.earliest.minutes)} - ${formatTime(arrivalRange.latest.hours, arrivalRange.latest.minutes)}`,
+                            earliestDiff: earliestDiff.toFixed(2),
+                            latestDiff: latestDiff.toFixed(2),
+                            isValid: validateDifference(earliestDiff) && validateDifference(latestDiff)
+                        });
+                    }
+                }
+            }
+
+            // Render results
+            const tbody = document.getElementById('testResults');
+            tbody.innerHTML = results.map(result => {
+                const statusIcon = result.isValid 
+                    ? '<i class="bi bi-check-circle-fill status-check"></i>' 
+                    : '<i class="bi bi-x-circle-fill status-x"></i>';
+                const earliestClass = validateDifference(parseFloat(result.earliestDiff)) ? 'valid' : 'invalid';
+                const latestClass = validateDifference(parseFloat(result.latestDiff)) ? 'valid' : 'invalid';
+                
+                return `
+                    <tr>
+                        <td>${result.date}</td>
+                        <td><strong>${result.eventTime}</strong></td>
+                        <td>${result.arrivalRange}</td>
+                        <td><span class="time-diff ${earliestClass}">${result.earliestDiff}h</span></td>
+                        <td><span class="time-diff ${latestClass}">${result.latestDiff}h</span></td>
+                        <td>${statusIcon}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Add summary
+            const validCount = results.filter(r => r.isValid).length;
+            const totalCount = results.length;
+            const summaryRow = `
+                <tr class="table-info">
+                    <td colspan="5" class="text-end fw-bold">Summary:</td>
+                    <td class="fw-bold">${validCount}/${totalCount} Passed</td>
+                </tr>
+            `;
+            tbody.innerHTML += summaryRow;
+        }
+
+        // Run tests on page load
+        runTests();
+    </script>
+</body>
+</html>

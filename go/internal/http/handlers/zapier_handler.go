@@ -24,7 +24,7 @@ import (
 type ZapierHandler struct {
 	geocodingService *geo.GeocodingService
 	calendarService  *calendar.CalendarService
-	emailClient     *email.EmailServiceClient
+	emailClient      *email.EmailServiceClient
 	gmailSender      *email.GmailSender
 	logger           *slog.Logger
 }
@@ -86,7 +86,7 @@ func (h *ZapierHandler) HandleProcessLead(w http.ResponseWriter, r *http.Request
 		FirstName        string `json:"first_name"`
 		LastName         string `json:"last_name"`
 		EmailAddress     string `json:"email_address"`
-		PhoneNumber     string `json:"phone_number"`
+		PhoneNumber      string `json:"phone_number"`
 		EventDate        string `json:"event_date"`
 		EventTime        string `json:"event_time"`
 		EventLocation    string `json:"event_location"`
@@ -198,21 +198,48 @@ func (h *ZapierHandler) HandleProcessLead(w http.ResponseWriter, r *http.Request
 		depositCalc := stripe.CalculateDepositFromEstimate(estimateCents)
 		depositAmount := util.CentsToDollars(depositCalc.Value)
 
+		// Calculate days until event and urgency level
+		// Use calendar days (normalize to midnight for accurate day count)
+		now := time.Now()
+		location := now.Location()
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+		eventDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, location)
+		daysUntilEvent := int(eventDay.Sub(today).Hours() / 24)
+		if daysUntilEvent < 0 {
+			daysUntilEvent = 0
+		}
+
+		// Determine urgency level
+		urgencyLevel := util.CalculateUrgencyLevel(daysUntilEvent)
+
+		// Calculate expiration date dynamically based on days until event
+		_, expirationFormatted := util.CalculateExpirationDate(daysUntilEvent)
+
+		// Generate confirmation number
+		confirmationNumber := util.GenerateConfirmationNumber(email, payload.Occasion, eventDate)
+
 		// Generate email HTML
 		emailData := util.QuoteEmailData{
-			ClientName:    clientName,
-			EventDate:     formatDateForEmail(eventDate),
-			EventTime:     payload.EventTime,
-			EventLocation: payload.EventLocation,
-			Occasion:      payload.Occasion,
-			GuestCount:    guestCount,
-			Helpers:       numHelpers,
-			Hours:         duration,
-			BaseRate:      estimate.BasePerHelper,
-			HourlyRate:    estimate.ExtraPerHourPerHelper,
-			TotalCost:     estimate.TotalCost,
-			DepositAmount: depositAmount,
-			RateLabel:     rateLabel,
+			ClientName:         clientName,
+			EventDate:          formatDateForEmail(eventDate),
+			EventTime:          payload.EventTime,
+			EventLocation:      payload.EventLocation,
+			Occasion:           payload.Occasion,
+			GuestCount:         guestCount,
+			Helpers:            numHelpers,
+			Hours:              duration,
+			BaseRate:           estimate.BasePerHelper,
+			HourlyRate:         estimate.ExtraPerHourPerHelper,
+			TotalCost:          estimate.TotalCost,
+			DepositAmount:      depositAmount,
+			RateLabel:          rateLabel,
+			ExpirationDate:     expirationFormatted,
+			DepositLink:        "", // Will be generated when deposit invoice is created
+			ConfirmationNumber: confirmationNumber,
+			IsHighDemand:       estimate.IsSpecialDate, // High demand = special date (holiday/surge)
+			UrgencyLevel:       urgencyLevel,           // Urgency level based on days until event
+			DaysUntilEvent:     daysUntilEvent,         // Number of days until event
+			IsReturningClient:  false,                  // TODO: Check if client has booked before (query CRM/calendar)
 		}
 
 		htmlBody := util.GenerateQuoteEmailHTML(emailData)
@@ -278,12 +305,12 @@ func (h *ZapierHandler) HandleProcessLead(w http.ResponseWriter, r *http.Request
 
 	// Build response (matching Apps Script response format)
 	response := map[string]interface{}{
-		"referenceNumber":  referenceNumber,
+		"referenceNumber": referenceNumber,
 		"success":         true,
 		"emailSent":       emailSent,
 		"estimate":        estimate.TotalCost,
 		"calendarCreated": calendarError == "",
-		"calendarError":   func() interface{} {
+		"calendarError": func() interface{} {
 			if calendarError != "" {
 				return calendarError
 			}
@@ -368,7 +395,6 @@ func parseEventDate(dateStr string) (time.Time, error) {
 }
 
 func formatDateForEmail(date time.Time) string {
-	// Format as "January 2, 2006" for email
-	return date.Format("January 2, 2006")
+	// Format as "Fri, Jan 19, 2026" (day of week, short month, day, year)
+	return date.Format("Mon, Jan 2, 2006")
 }
-

@@ -78,6 +78,23 @@ func (h *HealthHandler) HandleLive(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// HandleTime handles GET /api/time - returns current server time
+func (h *HealthHandler) HandleTime(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		util.WriteError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	
+	now := time.Now()
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"timestamp": now.Format(time.RFC3339),
+		"unix":      now.Unix(),
+		"unixMilli": now.UnixMilli(),
+		"time":      now.Format("15:04:05"),
+		"date":      now.Format("2006-01-02"),
+	})
+}
+
 func getEnv(key, defaultValue string) string {
 	// This is a simple fallback - actual env vars are read via os.Getenv in config package
 	return defaultValue

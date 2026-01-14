@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STL Party Helpers - Admin Dashboard</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/admin-shared.css" rel="stylesheet">
+    <style>
+        #server-timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            z-index: 9999;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #server-timer .timer-icon {
+            font-size: 16px;
+        }
+        #server-timer .timer-time {
+            font-weight: bold;
+        }
+        #server-timer .timer-status {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-left: 5px;
+        }
+        #server-timer.error {
+            background: rgba(220, 53, 69, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Server Timer -->
+    <div id="server-timer">
+        <span class="timer-icon">🕐</span>
+        <span class="timer-time">--:--:--</span>
+        <span class="timer-status">Syncing...</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-star-fill me-2"></i>STL Party Helpers Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/test-dashboard.html">Tests</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/quote-preview.html">Quote Preview</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/quote-test-all.html">Quote Test All</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pdf-feature-docs.html">PDF Feature Docs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/docs/internal/">Documentation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/health">Health</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold mb-3">Quote Engine Admin Dashboard</h1>
+            <p class="lead">Manage, test, and monitor the quote engine system</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Quick Actions -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="section-title">Quick Actions</h2>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-center p-4">
+                    <i class="bi bi-lightning-charge-fill card-icon"></i>
+                    <h5 class="card-title">Run All Tests</h5>
+                    <p class="card-text">Execute complete test suite</p>
+                    <a href="/test-dashboard.html" class="btn btn-primary btn-sm">Go to Tests</a>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-center p-4">
+                    <i class="bi bi-envelope-fill card-icon"></i>
+                    <h5 class="card-title">Quote Preview</h5>
+                    <p class="card-text">Preview quote emails</p>
+                    <a href="/quote-preview.html" class="btn btn-primary btn-sm">Preview</a>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-center p-4">
+                    <i class="bi bi-file-earmark-text-fill card-icon"></i>
+                    <h5 class="card-title">Documentation</h5>
+                    <p class="card-text">View system docs</p>
+                    <a href="/docs/internal/" class="btn btn-primary btn-sm">View Docs</a>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card text-center p-4">
+                    <i class="bi bi-heart-pulse-fill card-icon"></i>
+                    <h5 class="card-title">System Health</h5>
+                    <p class="card-text">Check system status</p>
+                    <a href="/api/health" class="btn btn-primary btn-sm">Check Health</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tools & Resources -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="section-title">Tools & Resources</h2>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-clipboard-check-fill text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-0">Test Dashboard</h5>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                    <p class="card-text">Comprehensive testing suite for all quote engine features. Test date variations, expiration calculations, pricing, and more.</p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Date Variations Test</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Expiration Calculation</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Urgency Levels</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Deposit Calculation</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Pricing & Rates</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Email Template</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Weather Forecast</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Form Validation</li>
+                    </ul>
+                    <a href="/test-dashboard.html" class="btn btn-primary">Open Test Dashboard</a>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-envelope-paper-fill text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-0">Quote Preview</h5>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                    <p class="card-text">Preview quote emails with real pricing calculations. Test different scenarios and see how emails look to clients.</p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Real-time pricing</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Holiday/surge pricing</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Multiple scenarios</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Email HTML preview</li>
+                    </ul>
+                    <a href="/quote-preview.html" class="btn btn-primary">Open Quote Preview</a>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-file-earmark-text-fill text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-0">Internal Documentation</h5>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                    <p class="card-text">Comprehensive documentation of quote engine features, their benefits, and impact on business metrics.</p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Feature breakdown</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Impact analysis</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Multi-language support</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Business metrics</li>
+                    </ul>
+                    <a href="/docs/internal/" class="btn btn-primary">View Documentation</a>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-graph-up-arrow text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-0">Quote Test All</h5>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                    <p class="card-text">Test all urgency scenarios and high-demand dates. Validate banner text, colors, expiration dates, and more.</p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>All urgency levels</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>High-demand dates</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Visual validation</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Comprehensive testing</li>
+                    </ul>
+                    <a href="/quote-test-all.html" class="btn btn-primary">Open Quote Test</a>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-file-pdf-fill text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-0">PDF Feature Docs</h5>
+                            <span class="badge bg-success">New</span>
+                        </div>
+                    </div>
+                    <p class="card-text">Complete documentation and testing guide for the PDF quote download feature. Understand the flow, test endpoints, and troubleshoot issues.</p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Flow diagrams & architecture</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>API endpoint documentation</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Testing guide & examples</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Environment setup</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Troubleshooting tips</li>
+                    </ul>
+                    <a href="/pdf-feature-docs.html" class="btn btn-primary">View PDF Docs</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Endpoints -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="section-title">API Endpoints</h2>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card p-3">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-link-45deg me-2"></i>Test Endpoints</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><code>POST /api/test/run-all</code> - Run all tests</li>
+                        <li><code>POST /api/test/date-variations</code> - Date variations test</li>
+                        <li><code>POST /api/test/expiration-calc</code> - Expiration calculation</li>
+                        <li><code>POST /api/test/urgency-levels</code> - Urgency levels</li>
+                        <li><code>POST /api/test/deposit-calc</code> - Deposit calculation</li>
+                        <li><code>POST /api/test/pricing-rates</code> - Pricing & rates</li>
+                        <li><code>POST /api/test/email-template</code> - Email template</li>
+                        <li><code>POST /api/test/weather-forecast</code> - Weather forecast</li>
+                        <li><code>POST /api/test/form-validation</code> - Form validation</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card p-3">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-link-45deg me-2"></i>System Endpoints</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><code>GET /api/health</code> - System health check</li>
+                        <li><code>GET /api/health/ready</code> - Readiness check</li>
+                        <li><code>GET /api/health/live</code> - Liveness check</li>
+                        <li><code>POST /api/email/quote</code> - Send quote email</li>
+                        <li><code>POST /api/email/quote/preview</code> - Preview quote email</li>
+                        <li><code>POST /api/estimate</code> - Calculate estimate</li>
+                        <li><code>GET /api/estimate/special-dates</code> - Get special dates</li>
+                        <li><code>GET /api/quote/pdf?token=...</code> - Download PDF quote (public)</li>
+                        <li><code>POST /api/quote/regenerate</code> - Regenerate expired quote (public)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Tools -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="section-title">Additional Tools</h2>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-clock-history text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-0">Arrival Time Test</h5>
+                            <span class="badge bg-success">New</span>
+                        </div>
+                    </div>
+                    <p class="card-text">Test arrival time calculation logic - validates that advised time is 0.5-1 hour before event time.</p>
+                    <a href="/arrival-time-test.html" class="btn btn-primary">Open Arrival Test</a>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-clock-history text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-0">Arrival Time Test</h5>
+                            <span class="badge bg-success">New</span>
+                        </div>
+                    </div>
+                    <p class="card-text">Test arrival time calculation logic - validates 0.5-1 hour difference.</p>
+                    <a href="/arrival-time-test.html" class="btn btn-primary">Open Arrival Test</a>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-receipt-cutoff text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-0">Final Invoice Test</h5>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                    <p class="card-text">Test final invoice generation and email templates.</p>
+                    <a href="/test-final-invoice.html" class="btn btn-primary">Open Invoice Test</a>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-file-code text-primary me-3" style="font-size: 2rem;"></i>
+                        <div>
+                            <h5 class="card-title mb-0">Swagger API Docs</h5>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                    <p class="card-text">Interactive API documentation and testing interface.</p>
+                    <div class="d-flex gap-2">
+                        <a href="/swagger.html" class="btn btn-primary btn-sm">Swagger UI</a>
+                        <a href="/swagger-ui-simple.html" class="btn btn-primary btn-sm">Simple UI</a>
+                        <a href="/test-swagger.html" class="btn btn-primary btn-sm">Test</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>STL Party Helpers</h5>
+                    <p class="mb-0">Quote Engine Admin Dashboard</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        <a href="/api/health" class="text-white text-decoration-none me-3">Health</a>
+                        <a href="/docs/internal/" class="text-white text-decoration-none me-3">Docs</a>
+                        <span class="text-muted">v1.0</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            const timerEl = document.getElementById('server-timer');
+            const timeEl = timerEl.querySelector('.timer-time');
+            const statusEl = timerEl.querySelector('.timer-status');
+            const iconEl = timerEl.querySelector('.timer-icon');
+            
+            let serverTimeOffset = 0; // Offset between server time and client time
+            let lastSyncTime = 0;
+            
+            // Format time as HH:MM:SS
+            function formatTime(date) {
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${hours}:${minutes}:${seconds}`;
+            }
+            
+            // Sync time with server
+            async function syncServerTime() {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch('/api/time');
+                    const endTime = Date.now();
+                    const networkDelay = (endTime - startTime) / 2; // Approximate one-way delay
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    const serverTime = new Date(data.timestamp);
+                    const clientTime = new Date();
+                    
+                    // Calculate offset: server time - client time (accounting for network delay)
+                    serverTimeOffset = serverTime.getTime() - clientTime.getTime() - networkDelay;
+                    lastSyncTime = Date.now();
+                    
+                    // Update display
+                    timerEl.classList.remove('error');
+                    statusEl.textContent = '✓';
+                    statusEl.style.opacity = '0.7';
+                    
+                    // Update immediately
+                    updateDisplay();
+                } catch (error) {
+                    console.error('Failed to sync server time:', error);
+                    timerEl.classList.add('error');
+                    statusEl.textContent = '✗';
+                    statusEl.style.opacity = '1';
+                }
+            }
+            
+            // Update timer display
+            function updateDisplay() {
+                const now = new Date(Date.now() + serverTimeOffset);
+                timeEl.textContent = formatTime(now);
+            }
+            
+            // Initial sync
+            syncServerTime();
+            
+            // Update display every second
+            setInterval(updateDisplay, 1000);
+            
+            // Re-sync with server every 30 seconds
+            setInterval(syncServerTime, 30000);
+        })();
+    </script>
+</body>
+</html>

@@ -5,16 +5,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/bizops360/go-api/internal/config"
+	"github.com/bizops360/go-api/internal/domain"
 	"github.com/bizops360/go-api/internal/infra/email"
+	"github.com/bizops360/go-api/internal/infra/firestore"
+	"github.com/bizops360/go-api/internal/infra/geo"
+	"github.com/bizops360/go-api/internal/infra/storage"
 	"github.com/bizops360/go-api/internal/infra/stripe"
+	"github.com/bizops360/go-api/internal/infra/weather"
 	"github.com/bizops360/go-api/internal/ports"
 	emailService "github.com/bizops360/go-api/internal/services/email"
+	"github.com/bizops360/go-api/internal/services/pdf"
 	"github.com/bizops360/go-api/internal/services/pricing"
 	"github.com/bizops360/go-api/internal/util"
 )
@@ -29,22 +37,56 @@ func getStringFromMap(m map[string]interface{}, key string) string {
 
 // EmailHandler handles email-related endpoints
 type EmailHandler struct {
-	emailClient *email.EmailServiceClient
-	gmailSender *email.GmailSender
-	logger      *slog.Logger
+	emailClient          *email.EmailServiceClient
+	gmailSender          *email.GmailSender
+	geocodingService     *geo.GeocodingService
+	distanceMatrixService *geo.DistanceMatrixService
+	weatherService       *weather.WeatherService
+	businessLoader       *config.BusinessLoader
+	pdfService           *pdf.Service
+	logger               *slog.Logger
 }
 
 // NewEmailHandler creates a new email handler
 func NewEmailHandler(logger *slog.Logger) *EmailHandler {
+	return NewEmailHandlerWithBusinessLoader(logger, nil)
+}
+
+// NewEmailHandlerWithBusinessLoader creates a new email handler with business loader
+func NewEmailHandlerWithBusinessLoader(logger *slog.Logger, businessLoader *config.BusinessLoader) *EmailHandler {
 	handler := &EmailHandler{
-		logger: logger,
+		logger:         logger,
+		businessLoader: businessLoader,
 	}
 
 	// Try to use email service client first (if EMAIL_SERVICE_URL is set)
 	handler.emailClient = email.NewEmailServiceClient()
 	if handler.emailClient != nil {
 		logger.Info("Using email service API for email sending")
-		return handler
+	}
+
+	// Initialize geocoding service (optional - for weather)
+	if geoService, err := geo.NewGeocodingService(); err == nil {
+		handler.geocodingService = geoService
+		logger.Info("Geocoding service initialized for weather")
+	} else {
+		logger.Warn("Geocoding service not available", "error", err)
+	}
+
+	// Initialize distance matrix service (optional - for driving distance)
+	if distService, err := geo.NewDistanceMatrixService(); err == nil {
+		handler.distanceMatrixService = distService
+		logger.Info("Distance Matrix service initialized for driving distance")
+	} else {
+		logger.Warn("Distance Matrix service not available, will use Haversine formula as fallback", "error", err)
+	}
+
+	// Initialize weather service (optional)
+	if weatherService, err := weather.NewWeatherService(); err == nil {
+		handler.weatherService = weatherService
+		logger.Info("Weather service initialized")
+	} else {
+		logger.Warn("Weather service not available", "error", err)
 	}
 
 	// Fall back to Gmail sender (if credentials are available)
@@ -101,6 +143,36 @@ func NewEmailHandler(logger *slog.Logger) *EmailHandler {
 			logFile.Close()
 		}
 		// #endregion
+	}
+
+	// Initialize PDF service (optional - for async PDF generation and storage)
+	ctx := context.Background()
+	var firestoreClient *firestore.Client
+	var storageClient *storage.Client
+
+	if projectID := os.Getenv("GCP_PROJECT_ID"); projectID != "" {
+		if client, err := firestore.NewClient(ctx, projectID); err == nil {
+			firestoreClient = client
+			logger.Info("Firestore client initialized for PDF service")
+		} else {
+			logger.Warn("Firestore client not available for PDF service", "error", err)
+		}
+	}
+
+	if bucketName := os.Getenv("GCS_BUCKET_NAME"); bucketName != "" {
+		if client, err := storage.NewClient(ctx, bucketName); err == nil {
+			storageClient = client
+			logger.Info("Cloud Storage client initialized for PDF service")
+		} else {
+			logger.Warn("Cloud Storage client not available for PDF service", "error", err)
+		}
+	}
+
+	if firestoreClient != nil && storageClient != nil {
+		handler.pdfService = pdf.NewService(firestoreClient, storageClient, logger)
+		logger.Info("PDF service initialized")
+	} else {
+		logger.Warn("PDF service not available - GCP_PROJECT_ID and GCS_BUCKET_NAME must be set")
 	}
 
 	return handler
@@ -629,9 +701,22 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	// Calculate expiration date (72 hours from now = 3 days)
-	expirationDate := time.Now().Add(72 * time.Hour)
-	expirationFormatted := expirationDate.Format("January 2, 2006 at 3:04 PM")
+	// Calculate days until event and urgency level
+	// Use calendar days (normalize to midnight for accurate day count)
+	now := time.Now()
+	location := now.Location()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+	eventDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, location)
+	daysUntilEvent := int(eventDay.Sub(today).Hours() / 24)
+	if daysUntilEvent < 0 {
+		daysUntilEvent = 0
+	}
+
+	// Determine urgency level
+	urgencyLevel := util.CalculateUrgencyLevel(daysUntilEvent)
+
+	// Calculate expiration date dynamically based on days until event
+	expirationDate, expirationFormatted := util.CalculateExpirationDate(daysUntilEvent)
 
 	// TODO: Create deposit invoice via Stripe to get actual payment link
 	// For now, use placeholder - in production, create invoice and use HostedInvoiceURL
@@ -639,6 +724,183 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 
 	// Generate confirmation number
 	confirmationNumber := util.GenerateConfirmationNumber(body.To, body.Occasion, eventDate)
+
+	// Fetch weather forecast if event is < 10 days away
+	var weatherForecast *util.WeatherForecastData
+	if daysUntilEvent < 10 && h.weatherService != nil && h.geocodingService != nil && body.EventLocation != "" {
+		// Geocode address to get lat/lng
+		geoResult, err := h.geocodingService.GetLatLng(r.Context(), body.EventLocation)
+		if err == nil {
+			// Fetch weather forecast
+			forecast, err := h.weatherService.GetForecastForDate(r.Context(), geoResult.Lat, geoResult.Lng, eventDate)
+			if err == nil && forecast != nil {
+				// Determine if event is outdoor (simple heuristic - could be enhanced)
+				isOutdoor := strings.Contains(strings.ToLower(body.Occasion), "outdoor") ||
+					strings.Contains(strings.ToLower(body.EventLocation), "outdoor") ||
+					strings.Contains(strings.ToLower(body.EventLocation), "garden") ||
+					strings.Contains(strings.ToLower(body.EventLocation), "patio") ||
+					strings.Contains(strings.ToLower(body.EventLocation), "park")
+
+				recommendation := weather.GetWeatherRecommendation(forecast, isOutdoor)
+				weatherForecast = &util.WeatherForecastData{
+					Temperature:   forecast.Temperature,
+					Condition:     forecast.Condition,
+					Description:   forecast.Description,
+					Recommendation: recommendation,
+				}
+			} else if err != nil {
+				h.logger.Warn("Failed to fetch weather forecast", "error", err)
+			}
+		} else {
+			h.logger.Warn("Failed to geocode address for weather", "error", err)
+		}
+	}
+
+	// Calculate travel fee based on distance from office
+	var travelFeeInfo *util.TravelFeeData
+	var travelFeeAmount float64 = 0
+	if body.EventLocation != "" && h.geocodingService != nil {
+		// Get location info from business config (if available)
+		var originLat, originLng, radiusMiles float64
+		var originAddress string
+		
+		// Try to get business config if businessLoader is available
+		// Default to "stlpartyhelpers" if no business ID in request
+		businessID := "stlpartyhelpers" // Default business ID
+		if h.businessLoader != nil {
+			var businessConfig *domain.BusinessConfig
+			businessConfig, err := h.businessLoader.LoadBusiness(r.Context(), businessID)
+			if err == nil && businessConfig != nil {
+				// Get location from business config
+				lat, lng, radius, err := geo.LocationFromBusinessConfig(r.Context(), &businessConfig.Location, h.geocodingService)
+				if err == nil {
+					originLat = lat
+					originLng = lng
+					radiusMiles = radius
+					originAddress = businessConfig.Location.OfficeAddress
+					if originAddress == "" {
+						originAddress = businessConfig.Location.DistanceOrigin
+					}
+				} else {
+					h.logger.Warn("Failed to get location from business config, using defaults", "error", err)
+				}
+			}
+		}
+		
+		// Fallback to hardcoded defaults if business config not available
+		if originLat == 0 && originLng == 0 {
+			originLat = geo.OfficeLat
+			originLng = geo.OfficeLng
+			radiusMiles = geo.ServiceRadiusMiles
+			originAddress = geo.OfficeAddress
+		}
+		
+		var distanceMiles float64
+		var distanceSource string
+		
+		// Use Haversine formula for distance calculation (Distance Matrix API not implemented yet)
+		if h.geocodingService != nil {
+			// Geocode destination
+			geoResult, err := h.geocodingService.GetLatLng(r.Context(), body.EventLocation)
+			if err == nil {
+				distanceMiles = geo.CalculateDistanceFromOrigin(originLat, originLng, geoResult.Lat, geoResult.Lng)
+				distanceSource = "Haversine formula (straight-line distance)"
+				h.logger.Info("Using Haversine formula for distance calculation",
+					"distanceMiles", distanceMiles,
+					"origin", originAddress,
+					"originLat", originLat,
+					"originLng", originLng,
+				)
+			} else {
+				h.logger.Warn("Failed to geocode address for travel fee calculation", "error", err)
+			}
+		}
+		
+		// Calculate travel fee if we have a distance
+		if distanceMiles > 0 {
+			// Calculate travel fee - first check if within service area using config radius
+			var travelFeeResult *pricing.TravelFeeResult
+			if distanceMiles <= radiusMiles {
+				// Within service area - no fee
+				travelFeeResult = &pricing.TravelFeeResult{
+					IsWithinServiceArea: true,
+					DistanceMiles:       distanceMiles,
+					TravelFee:           0,
+					TravelFeePerHelper:  0,
+					TotalTravelFee:      0,
+					Message:             "within our service area - no travel fee",
+				}
+			} else {
+				// Outside service area - calculate fee
+				// Use standard calculation but adjust for custom radius
+				milesOverServiceArea := distanceMiles - radiusMiles
+				var feePerHelper float64
+				if milesOverServiceArea <= 10.0 {
+					feePerHelper = 40.0
+				} else {
+					milesBeyondFirst10 := milesOverServiceArea - 10.0
+					increments := math.Ceil(milesBeyondFirst10 / 10.0)
+					feePerHelper = 40.0 + (increments * 10.0)
+				}
+				feePerHelper = math.Round(feePerHelper)
+				totalTravelFee := feePerHelper * float64(body.Helpers)
+				
+				var message string
+				if body.Helpers == 1 {
+					message = fmt.Sprintf("outside of our area — $%.0f travel fee", totalTravelFee)
+				} else {
+					message = fmt.Sprintf("outside of our area — $%.0f travel fee (for %d helpers)", totalTravelFee, body.Helpers)
+				}
+				
+				travelFeeResult = &pricing.TravelFeeResult{
+					IsWithinServiceArea: false,
+					DistanceMiles:       distanceMiles,
+					TravelFee:           totalTravelFee,
+					TravelFeePerHelper:  feePerHelper,
+					TotalTravelFee:      totalTravelFee,
+					Message:             message,
+				}
+			}
+			
+			travelFeeAmount = travelFeeResult.TotalTravelFee
+			
+			// Add travel fee to total cost
+			totalCost += travelFeeAmount
+			
+			// Create travel fee data for email
+			travelFeeInfo = &util.TravelFeeData{
+				IsWithinServiceArea: travelFeeResult.IsWithinServiceArea,
+				DistanceMiles:       travelFeeResult.DistanceMiles,
+				TravelFee:           travelFeeResult.TotalTravelFee,
+				Message:             travelFeeResult.Message,
+			}
+			
+			h.logger.Info("Travel fee calculated",
+				"distanceMiles", distanceMiles,
+				"distanceSource", distanceSource,
+				"isWithinServiceArea", travelFeeResult.IsWithinServiceArea,
+				"travelFee", travelFeeAmount,
+				"helpers", body.Helpers,
+			)
+		}
+	}
+
+	// Generate PDF token and link (if PDF service is available)
+	pdfDownloadLink := ""
+	if h.pdfService != nil {
+		pdfToken, err := util.GeneratePDFToken(confirmationNumber, body.To, expirationDate)
+		if err == nil {
+			// Build PDF download URL - use environment variable for base URL or default
+			baseURL := os.Getenv("API_BASE_URL")
+			if baseURL == "" {
+				baseURL = "https://api.stlpartyhelpers.com"
+			}
+			pdfDownloadLink = fmt.Sprintf("%s/api/quote/pdf?token=%s", baseURL, pdfToken)
+			h.logger.Info("PDF download link generated", "confirmationNumber", confirmationNumber)
+		} else {
+			h.logger.Warn("Failed to generate PDF token", "error", err)
+		}
+	}
 
 	// Generate quote email HTML using rates from estimate
 	emailData := util.QuoteEmailData{
@@ -655,9 +917,16 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 		TotalCost:          totalCost,
 		DepositAmount:      depositAmount,
 		RateLabel:          rateLabel,
-		ExpirationDate:     expirationFormatted,
+		ExpirationDate:     expirationFormatted, // Email needs string
 		DepositLink:        depositLink,
 		ConfirmationNumber: confirmationNumber,
+		IsHighDemand:       estimate.IsSpecialDate, // High demand = special date (holiday/surge)
+		UrgencyLevel:       urgencyLevel,           // Urgency level based on days until event
+		DaysUntilEvent:     daysUntilEvent,         // Number of days until event
+		IsReturningClient:  false,                  // TODO: Check if client has booked before (query CRM/calendar)
+		WeatherForecast:    weatherForecast,        // Weather forecast (only for events < 10 days)
+		TravelFeeInfo:      travelFeeInfo,          // Travel fee information
+		PDFDownloadLink:    pdfDownloadLink,        // PDF download link
 	}
 
 	htmlBody := util.GenerateQuoteEmailHTML(emailData)
@@ -761,6 +1030,13 @@ func (h *EmailHandler) HandleQuoteEmail(w http.ResponseWriter, r *http.Request) 
 	draft := body.SaveAsDraft
 
 	h.logger.Info("quote email sent successfully", "messageId", emailResult.MessageID, "to", body.To, "draft", draft)
+
+	// Kick off async PDF generation and storage (if PDF service is available)
+	if h.pdfService != nil && !body.SaveAsDraft {
+		h.pdfService.GenerateAndStorePDFAsync(r.Context(), emailData, pdfData, expirationDate)
+		h.logger.Info("PDF generation task queued", "confirmationNumber", confirmationNumber)
+	}
+
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"ok":      true,
 		"message": "Quote email sent successfully",
@@ -884,9 +1160,22 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 	depositCalc := stripe.CalculateDepositFromEstimate(estimateCents)
 	depositAmount := util.CentsToDollars(depositCalc.Value)
 
-	// Calculate expiration date (72 hours from now)
-	expirationDate := time.Now().Add(72 * time.Hour)
-	expirationFormatted := expirationDate.Format("January 2, 2006 at 3:04 PM")
+	// Calculate days until event and urgency level
+	// Use calendar days (normalize to midnight for accurate day count)
+	now := time.Now()
+	location := now.Location()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+	eventDay := time.Date(parsedEventDate.Year(), parsedEventDate.Month(), parsedEventDate.Day(), 0, 0, 0, 0, location)
+	daysUntilEvent := int(eventDay.Sub(today).Hours() / 24)
+	if daysUntilEvent < 0 {
+		daysUntilEvent = 0
+	}
+
+	// Determine urgency level
+	urgencyLevel := util.CalculateUrgencyLevel(daysUntilEvent)
+
+	// Calculate expiration date dynamically based on days until event
+	expirationDate, expirationFormatted := util.CalculateExpirationDate(daysUntilEvent)
 
 	// Determine rate label
 	rateLabel := "Base Rate"
@@ -902,7 +1191,14 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 	confirmationNumber := util.GenerateTestQuoteID()
 
 	// Format event date for display
-	eventDateFormatted := parsedEventDate.Format("January 2, 2006")
+	// Format as "Fri, Jan 19, 2026" (day of week, short month, day, year)
+	eventDateFormatted := parsedEventDate.Format("Mon, Jan 2, 2006")
+
+	// Weather forecast not available in preview (would require API key and address)
+	var weatherForecast *util.WeatherForecastData = nil
+
+	// Travel fee not calculated in preview
+	var travelFeeInfo *util.TravelFeeData = nil
 
 	// Parse event time from HH:MM format to readable format (e.g., "18:00" -> "6:00 PM")
 	eventTimeFormatted := "6:00 PM" // Default
@@ -942,9 +1238,15 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 		TotalCost:          estimate.TotalCost,
 		DepositAmount:      depositAmount,
 		RateLabel:          rateLabel,
-		ExpirationDate:     expirationFormatted,
+		ExpirationDate:     expirationFormatted, // Email needs string
 		DepositLink:        depositLink,
 		ConfirmationNumber: confirmationNumber,
+		IsHighDemand:       estimate.IsSpecialDate, // High demand = special date (holiday/surge)
+		UrgencyLevel:       urgencyLevel,           // Urgency level based on days until event
+		DaysUntilEvent:     daysUntilEvent,         // Number of days until event
+		IsReturningClient:  false,                  // TODO: Check if client has booked before (query CRM/calendar)
+		WeatherForecast:    weatherForecast,        // Weather forecast (only for events < 10 days)
+		TravelFeeInfo:      travelFeeInfo,          // Travel fee information
 	}
 
 	htmlBody := util.GenerateQuoteEmailHTML(emailData)
@@ -967,7 +1269,7 @@ func (h *EmailHandler) HandleQuoteEmailPreview(w http.ResponseWriter, r *http.Re
 		Hours:              emailData.Hours,
 		TotalCost:          emailData.TotalCost,
 		DepositAmount:      emailData.DepositAmount,
-		ExpirationDate:     expirationDate,
+		ExpirationDate:     expirationDate, // PDF needs time.Time
 		DepositLink:        depositLink,
 		IssueDate:          time.Now(),
 	}

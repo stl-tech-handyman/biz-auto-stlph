@@ -30,11 +30,11 @@ type DepositCalculation struct {
 }
 
 // CalculateDepositFromEstimate calculates deposit from estimate
-// Rule: Try to stay between 25-40% and closest to 32.5%
+// Rule: Try to stay between 15-30% and closest to 22.5%
 func CalculateDepositFromEstimate(estimateCents int64) DepositCalculation {
-	minPercent := 0.25 // 25%
-	maxPercent := 0.40 // 40%
-	targetPercent := 0.325 // 32.5%
+	minPercent := 0.15 // 15% (reduced from 25%)
+	maxPercent := 0.30 // 30% (reduced from 40%)
+	targetPercent := 0.225 // 22.5% (reduced from 32.5%)
 
 	minRange := float64(estimateCents) * minPercent
 	maxRange := float64(estimateCents) * maxPercent
@@ -43,7 +43,7 @@ func CalculateDepositFromEstimate(estimateCents int64) DepositCalculation {
 	// Floor to nearest $0.50
 	flooredAmount := int64(math.Floor(target/50) * 50)
 
-	// Filter available amounts to those within 25-40% range
+	// Filter available amounts to those within 15-30% range
 	var inRange []int64
 	for _, amount := range professionalDepositAmounts {
 		if float64(amount) >= minRange && float64(amount) <= maxRange {

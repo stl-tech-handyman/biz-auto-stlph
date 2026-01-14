@@ -35,11 +35,14 @@ func isSwaggerRoute(path string) bool {
 		   path == "/swagger-simple"
 }
 
-// isPreviewRoute checks if the path is a preview/test page route
+// isPreviewRoute checks if the path is a preview/test page route that needs external CDN resources
 func isPreviewRoute(path string) bool {
-	return path == "/quote-preview.html" || path == "/test-final-invoice.html"
+	return path == "/" || 
+		   path == "/index.html" || 
+		   path == "/quote-preview.html" || 
+		   path == "/test-final-invoice.html" ||
+		   path == "/test-dashboard.html" ||
+		   path == "/quote-test-all.html" ||
+		   path == "/test-swagger.html"
 }
-
-// isPreviewRoute checks if the path is a preview/test page route
-
 

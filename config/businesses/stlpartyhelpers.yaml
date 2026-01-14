@@ -3,6 +3,30 @@ displayName: "STL Party Helpers"
 timezone: "America/Chicago"
 currency: "usd"
 
+# Location configuration for distance calculations
+location:
+  # Office address (for display purposes)
+  officeAddress: "4220 Duncan Ave., Ste. 201, St. Louis, MO 63110"
+  
+  # Distance origin - the starting point for all distance calculations
+  # This can be different from officeAddress if you want to calculate from
+  # a warehouse, depot, or other location. Can be:
+  # - An address: "4220 Duncan Ave Suite 201, St. Louis, MO 63110"
+  # - Coordinates: "38.6255,-90.2456" (lat,lng format)
+  # If not specified, defaults to officeAddress
+  # NOTE: If lat/lng are provided below, they take precedence over distanceOrigin
+  distanceOrigin: "4220 Duncan Ave., Ste. 201, St. Louis, MO 63110"
+  
+  # Latitude and Longitude of the distance origin (recommended for accuracy)
+  # If provided, these take precedence over distanceOrigin string
+  # These coordinates are used for all distance calculations (travel fees, service area checks)
+  lat: 38.6255   # Latitude of 4220 Duncan Ave., Ste. 201, St. Louis, MO 63110
+  lng: -90.2456  # Longitude of 4220 Duncan Ave., Ste. 201, St. Louis, MO 63110
+  
+  # Service radius in miles - locations within this radius have no travel fee
+  # Default: 15.0 miles
+  serviceRadiusMiles: 15.0
+
 monday:
   apiTokenEnv: "MONDAY_API_TOKEN_STL"
   boards:

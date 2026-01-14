@@ -252,6 +252,7 @@ func (p *Processor) sendQuoteEmail(ctx context.Context, data *util.TransformedLe
 
 // formatDateForEmail formats a date for email display
 func formatDateForEmail(date time.Time) string {
-	return date.Format("January 2, 2006")
+	// Format as "Fri, Jan 19, 2026" (day of week, short month, day, year)
+	return date.Format("Mon, Jan 2, 2006")
 }
 

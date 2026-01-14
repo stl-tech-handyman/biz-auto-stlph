@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quote Engine Test Dashboard</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/admin-shared.css" rel="stylesheet">
+    <style>
+        /* Test status indicator square */
+        .test-status-indicator {
+            width: 100%;
+            height: 8px;
+            border-radius: 0 0 12px 12px;
+            background-color: transparent;
+            transition: background-color 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .test-status-indicator.status-pass {
+            background-color: rgba(76, 175, 80, 0.2); /* 20% opacity of #4caf50 (green) */
+            box-shadow: none;
+        }
+        
+        .test-status-indicator.status-fail {
+            background-color: rgba(244, 67, 54, 0.2); /* 20% opacity of #f44336 (red) */
+            box-shadow: none;
+        }
+        
+        .test-status-indicator.status-warning {
+            background-color: rgba(255, 152, 0, 0.2); /* 20% opacity of #ff9800 (orange) */
+            box-shadow: none;
+        }
+        
+        /* Fix dark shadow on green badges */
+        .badge.bg-success {
+            box-shadow: none !important;
+            text-shadow: none;
+        }
+        
+        /* Ensure test cards don't have dark shadows on corners */
+        .test-card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
+        }
+        
+        .test-card:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.12) !important;
+        }
+        
+        .test-card .card-body {
+            position: relative;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-star-fill me-2"></i>STL Party Helpers
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/test-dashboard.html">Tests</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/quote-preview.html">Quote Preview</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/quote-test-all.html">Quote Test All</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pdf-feature-docs.html">PDF Feature Docs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/docs/internal/">Documentation</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Header -->
+    <div class="header-section">
+        <div class="container">
+            <h1 class="display-5 fw-bold mb-3">
+                <i class="bi bi-clipboard-check me-2"></i>Quote Engine Test Dashboard
+            </h1>
+            <p class="lead mb-0">Comprehensive testing suite for all quote engine features</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Configuration Info Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-info">
+                    <div class="card-header bg-info bg-opacity-10">
+                        <h5 class="mb-0">
+                            <i class="bi bi-gear-fill me-2"></i>Configuration Variables
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                            Location settings (office coordinates, service radius) are stored in business configuration files. 
+                            These settings control travel fee calculations and service area boundaries.
+                        </p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-2">Business Configuration</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        <i class="bi bi-file-earmark-code text-primary me-2"></i>
+                                        <strong>File:</strong> 
+                                        <code class="ms-1">config/businesses/stlpartyhelpers.yaml</code>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-geo-alt text-primary me-2"></i>
+                                        <strong>Location Section:</strong> <code>location</code>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-pin-map text-primary me-2"></i>
+                                        <strong>Fields:</strong> <code>lat</code>, <code>lng</code>, <code>serviceRadiusMiles</code>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-2">Code Implementation</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        <i class="bi bi-code-square text-primary me-2"></i>
+                                        <strong>Domain Model:</strong> 
+                                        <code class="ms-1">go/internal/domain/business.go</code>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-gear text-primary me-2"></i>
+                                        <strong>Helper Functions:</strong> 
+                                        <code class="ms-1">go/internal/infra/geo/geocoding.go</code>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-envelope text-primary me-2"></i>
+                                        <strong>Usage:</strong> 
+                                        <code class="ms-1">go/internal/http/handlers/email_handler.go</code>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-top">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>Note:</strong> Changes to configuration require server restart. 
+                                The system uses explicit <code>lat</code>/<code>lng</code> coordinates when provided (recommended for accuracy), 
+                                otherwise falls back to geocoding the <code>distanceOrigin</code> address.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <p class="text-muted">Click on any test to run it individually, or run all tests at once.</p>
+            </div>
+        </div>
+        
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('date-variations')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-calendar-event card-icon"></i>
+                        <h5 class="card-title">Date Variations Test</h5>
+                        <p class="card-text text-muted">Tests all date scenarios (today, tomorrow, 3 days, 7 days, 14 days, 30 days, etc.)</p>
+                        <span class="badge bg-primary">Date Logic</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="date-variations"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('expiration-calc')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-clock-history card-icon"></i>
+                        <h5 class="card-title">Expiration Calculation</h5>
+                        <p class="card-text text-muted">Tests expiration date calculations for different event dates</p>
+                        <span class="badge bg-primary">Expiration</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="expiration-calc"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('urgency-levels')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-exclamation-triangle card-icon"></i>
+                        <h5 class="card-title">Urgency Level Test</h5>
+                        <p class="card-text text-muted">Tests urgency level calculations (critical, urgent, high, moderate, normal)</p>
+                        <span class="badge bg-primary">Urgency</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="urgency-levels"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('deposit-calc')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-cash-coin card-icon"></i>
+                        <h5 class="card-title">Deposit Calculation</h5>
+                        <p class="card-text text-muted">Tests deposit amount calculations for different total costs</p>
+                        <span class="badge bg-primary">Pricing</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="deposit-calc"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('pricing-rates')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-currency-dollar card-icon"></i>
+                        <h5 class="card-title">Pricing & Rates</h5>
+                        <p class="card-text text-muted">Tests base rates, hourly rates, and special date pricing</p>
+                        <span class="badge bg-primary">Pricing</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="pricing-rates"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('email-template')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-envelope-fill card-icon"></i>
+                        <h5 class="card-title">Email Template</h5>
+                        <p class="card-text text-muted">Tests email HTML generation with various data combinations</p>
+                        <span class="badge bg-primary">Email</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="email-template"></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('arrival-time')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-clock-history card-icon"></i>
+                        <h5 class="card-title">Arrival Time</h5>
+                        <p class="card-text text-muted">Validates arrival time calculation (0.5-1 hour before event)</p>
+                        <span class="badge bg-success">New</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="arrival-time"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('weather-forecast')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-cloud-sun card-icon"></i>
+                        <h5 class="card-title">Weather Forecast</h5>
+                        <p class="card-text text-muted">Tests weather fetching for events < 10 days away</p>
+                        <span class="badge bg-primary">Weather</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="weather-forecast"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card test-card" onclick="runTest('form-validation')">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-check-circle card-icon"></i>
+                        <h5 class="card-title">Form Validation</h5>
+                        <p class="card-text text-muted">Tests all form field validations and edge cases</p>
+                        <span class="badge bg-primary">Validation</span>
+                    </div>
+                    <div class="test-status-indicator" data-test-name="form-validation"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mb-4">
+            <button class="btn btn-run-all text-white" onclick="runAllTests()">
+                <i class="bi bi-lightning-charge-fill me-2"></i>Run All Tests
+            </button>
+        </div>
+        
+        <div id="results-panel" class="results-panel">
+            <h2 class="mb-4">
+                <i class="bi bi-clipboard-data me-2"></i>Test Results
+            </h2>
+            <div id="summary"></div>
+            <div id="results"></div>
+        </div>
+    </div>
+    
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Load test status indicators when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTestStatusIndicators();
+        });
+    </script>
+    <script>
+        async function runTest(testName) {
+            const resultsPanel = document.getElementById('results-panel');
+            const resultsDiv = document.getElementById('results');
+            const summaryDiv = document.getElementById('summary');
+            
+            resultsPanel.classList.add('active');
+            resultsDiv.innerHTML = '<div class="loading"><i class="bi bi-arrow-repeat"></i><p class="mt-3">Running test... Please wait.</p></div>';
+            summaryDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch(`/api/test/${testName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        dateRange: 'all',
+                        detailed: true,
+                        generateReport: true
+                    })
+                });
+                
+                const data = await response.json();
+                displayResults(data, testName);
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <h5><i class="bi bi-x-circle me-2"></i>Error</h5>
+                        <p>Failed to run test: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function runAllTests() {
+            const resultsPanel = document.getElementById('results-panel');
+            const resultsDiv = document.getElementById('results');
+            const summaryDiv = document.getElementById('summary');
+            
+            resultsPanel.classList.add('active');
+            resultsDiv.innerHTML = '<div class="loading"><i class="bi bi-arrow-repeat"></i><p class="mt-3">Running all tests... This may take a moment.</p></div>';
+            summaryDiv.innerHTML = '';
+            
+            // List of all test names
+            const testNames = [
+                'date-variations',
+                'expiration-calc',
+                'urgency-levels',
+                'deposit-calc',
+                'pricing-rates',
+                'email-template',
+                'arrival-time',
+                'weather-forecast',
+                'form-validation'
+            ];
+            
+            try {
+                // Run all tests individually to store their results properly
+                const testPromises = testNames.map(async (testName) => {
+                    try {
+                        const response = await fetch(`/api/test/${testName}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                dateRange: 'all',
+                                detailed: true,
+                                generateReport: true
+                            })
+                        });
+                        const data = await response.json();
+                        // Store each test result immediately
+                        storeTestResult(testName, data);
+                        return data;
+                    } catch (error) {
+                        console.error(`Error running test ${testName}:`, error);
+                        // Store error result
+                        storeTestResult(testName, {
+                            passed: 0,
+                            failed: 1,
+                            warnings: 0,
+                            total: 1
+                        });
+                        return null;
+                    }
+                });
+                
+                // Wait for all tests to complete
+                const allResults = await Promise.all(testPromises);
+                
+                // Calculate combined totals
+                const combined = {
+                    total: 0,
+                    passed: 0,
+                    failed: 0,
+                    warnings: 0,
+                    results: []
+                };
+                
+                allResults.forEach(result => {
+                    if (result) {
+                        combined.total += result.total || 0;
+                        combined.passed += result.passed || 0;
+                        combined.failed += result.failed || 0;
+                        combined.warnings += result.warnings || 0;
+                        if (result.results) {
+                            combined.results = combined.results.concat(result.results);
+                        }
+                    }
+                });
+                
+                // Display combined results
+                displayResults(combined, 'All Tests');
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <h5><i class="bi bi-x-circle me-2"></i>Error</h5>
+                        <p>Failed to run tests: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Store test result in localStorage
+        function storeTestResult(testName, result) {
+            const testResult = {
+                testName: testName,
+                passed: result.passed || 0,
+                failed: result.failed || 0,
+                warnings: result.warnings || 0,
+                total: result.total || 0,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem(`test_result_${testName}`, JSON.stringify(testResult));
+            updateTestStatusIndicator(testName, testResult);
+        }
+        
+        // Update status indicator for a test
+        function updateTestStatusIndicator(testName, testResult) {
+            const indicator = document.querySelector(`.test-status-indicator[data-test-name="${testName}"]`);
+            if (!indicator) {
+                console.warn(`Status indicator not found for test: ${testName}`);
+                return;
+            }
+            
+            // Remove existing status classes
+            indicator.classList.remove('status-pass', 'status-fail', 'status-warning');
+            
+            // Determine status based on results (priority: failed > warnings > passed)
+            // If any tests failed, show red
+            if (testResult.failed > 0) {
+                indicator.classList.add('status-fail');
+            } 
+            // If no failures but warnings exist, show orange
+            else if (testResult.warnings > 0) {
+                indicator.classList.add('status-warning');
+            } 
+            // If only passed tests (or all passed), show green
+            else if (testResult.passed > 0 && testResult.total > 0) {
+                indicator.classList.add('status-pass');
+            }
+            // If no results yet, leave transparent
+        }
+        
+        // Load and display all test status indicators on page load
+        function loadTestStatusIndicators() {
+            const testNames = [
+                'date-variations',
+                'expiration-calc',
+                'urgency-levels',
+                'deposit-calc',
+                'pricing-rates',
+                'email-template',
+                'arrival-time',
+                'weather-forecast',
+                'form-validation'
+            ];
+            
+            testNames.forEach(testName => {
+                const stored = localStorage.getItem(`test_result_${testName}`);
+                if (stored) {
+                    try {
+                        const testResult = JSON.parse(stored);
+                        updateTestStatusIndicator(testName, testResult);
+                    } catch (e) {
+                        console.error(`Error parsing stored result for ${testName}:`, e);
+                    }
+                }
+            });
+        }
+        
+        function displayResults(data, testName) {
+            const resultsDiv = document.getElementById('results');
+            const summaryDiv = document.getElementById('summary');
+            
+            // Store test result
+            storeTestResult(testName, data);
+            
+            // Summary
+            const total = data.total || 0;
+            const passed = data.passed || 0;
+            const failed = data.failed || 0;
+            const warnings = data.warnings || 0;
+            
+            const summaryClass = failed > 0 ? 'error' : '';
+            const summaryIcon = failed > 0 ? 'bi-x-circle' : 'bi-check-circle';
+            summaryDiv.innerHTML = `
+                <div class="summary ${summaryClass}">
+                    <h3><i class="bi ${summaryIcon} me-2"></i>Test Summary: ${testName}</h3>
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <strong>Total:</strong> <span class="badge bg-secondary">${total}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong style="color: #4caf50;">Passed:</strong> <span class="badge bg-success">${passed}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong style="color: #f44336;">Failed:</strong> <span class="badge bg-danger">${failed}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong style="color: #ff9800;">Warnings:</strong> <span class="badge bg-warning">${warnings}</span>
+                        </div>
+                    </div>
+                    ${data.reportUrl ? `<p class="mt-3 mb-0"><a href="${data.reportUrl}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-text me-2"></i>View Detailed Report</a></p>` : ''}
+                </div>
+            `;
+            
+            // Results
+            let resultsHTML = '';
+            
+            if (data.results && data.results.length > 0) {
+                data.results.forEach(result => {
+                    const resultClass = result.status === 'error' || result.status === 'fail' ? 'error' : 
+                                      result.status === 'warning' ? 'warning' : '';
+                    const icon = result.status === 'error' || result.status === 'fail' ? 'bi-x-circle' :
+                               result.status === 'warning' ? 'bi-exclamation-triangle' : 'bi-check-circle';
+                    const iconColor = result.status === 'error' || result.status === 'fail' ? 'text-danger' :
+                                    result.status === 'warning' ? 'text-warning' : 'text-success';
+                    
+                    resultsHTML += `
+                        <div class="test-result ${resultClass}">
+                            <h5><i class="bi ${icon} ${iconColor} me-2"></i>${result.name || 'Test Case'}</h5>
+                            <p class="mb-2"><strong>Status:</strong> <span class="badge bg-${result.status === 'pass' ? 'success' : result.status === 'error' || result.status === 'fail' ? 'danger' : 'warning'}">${result.status}</span></p>
+                            ${result.message ? `<p class="mb-2">${result.message}</p>` : ''}
+                            ${result.expected ? `<p class="mb-1"><strong>Expected:</strong> ${result.expected}</p>` : ''}
+                            ${result.actual ? `<p class="mb-2"><strong>Actual:</strong> ${result.actual}</p>` : ''}
+                            ${result.data ? `<pre>${JSON.stringify(result.data, null, 2)}</pre>` : ''}
+                        </div>
+                    `;
+                });
+            } else if (data.error) {
+                resultsHTML = `
+                    <div class="test-result error">
+                        <h5><i class="bi bi-x-circle me-2"></i>Error</h5>
+                        <p>${data.error}</p>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = resultsHTML;
+        }
+    </script>
+</body>
+</html>

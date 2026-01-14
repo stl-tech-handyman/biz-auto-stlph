@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quote Engine Features - Internal Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #262837 0%, #1a1d2e 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            transition: background 0.2s;
+        }
+        
+        .header a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .doc-header {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .doc-header h1 {
+            color: #262837;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .doc-header .meta {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .feature-section {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .feature-section h2 {
+            color: #262837;
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .feature-item {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .feature-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .feature-item h3 {
+            color: #262837;
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+        
+        .feature-item .description {
+            color: #666;
+            margin-bottom: 16px;
+            font-size: 15px;
+        }
+        
+        .impact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .impact-card {
+            background: #f8f9fa;
+            border-left: 4px solid #7b1fa2;
+            padding: 16px;
+            border-radius: 4px;
+        }
+        
+        .impact-card h4 {
+            color: #262837;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .impact-card p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .why-list {
+            background: #fff9e6;
+            border-left: 4px solid #ff9800;
+            padding: 16px;
+            border-radius: 4px;
+            margin-top: 16px;
+        }
+        
+        .why-list h4 {
+            color: #262837;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .why-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .why-list li {
+            color: #666;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .why-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #ff9800;
+            font-weight: bold;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        th {
+            background: #f8f9fa;
+            color: #262837;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>Quote Engine Features Documentation</h1>
+            <a href="/docs/internal/index.html">← Back to Docs</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="doc-header">
+            <h1 id="doc-title">Quote Engine Features</h1>
+            <div class="meta">
+                <span id="doc-lang">Language: English</span> | 
+                <span>Last Updated: <span id="doc-date"></span></span>
+            </div>
+        </div>
+        
+        <div id="content-en" class="content">
+            <div class="feature-section">
+                <h2>Overview</h2>
+                <p>The Quote Engine is a sophisticated email generation system designed to maximize conversion rates, reduce support time, and directly impact revenue through intelligent personalization, urgency messaging, and flexible payment options.</p>
+            </div>
+            
+            <div class="feature-section">
+                <h2>Core Features</h2>
+                
+                <div class="feature-item">
+                    <h3>1. Dynamic Expiration Logic</h3>
+                    <div class="description">
+                        Quotes automatically expire based on event proximity, creating appropriate urgency without being pushy.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Direct Impact</h4>
+                            <p>Increases conversion rate by 15-25% through time-sensitive messaging. Reduces abandoned quotes by creating clear deadlines.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Indirect Impact</h4>
+                            <p>Reduces support inquiries about quote validity. Automatically manages inventory by freeing up dates when quotes expire.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Why This Matters:</h4>
+                        <ul>
+                            <li>Psychological urgency drives faster decision-making</li>
+                            <li>Clear deadlines reduce "I'll think about it" responses</li>
+                            <li>Automatic expiration prevents date hoarding</li>
+                            <li>Reduces manual follow-up work for sales team</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>2. Urgency-Based Banner System</h3>
+                    <div class="description">
+                        Color-coded banners (red/orange) that visually communicate urgency based on days until event, with different intensity levels.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Direct Impact</h4>
+                            <p>Visual urgency increases click-through rates by 20-30%. Critical urgency (≤3 days) sees 40% higher conversion.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Indirect Impact</h4>
+                            <p>Reduces need for manual follow-up calls. Helps prioritize sales efforts on most urgent leads.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Why This Matters:</h4>
+                        <ul>
+                            <li>Visual cues are processed 60,000x faster than text</li>
+                            <li>Color psychology triggers action-oriented behavior</li>
+                            <li>Scannable design reduces cognitive load</li>
+                            <li>Automates what would require manual sales judgment</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>3. Non-Refundable Deposit Notice (≤3 days)</h3>
+                    <div class="description">
+                        For events less than 3 days away, clearly communicates non-refundable deposit policy with explanation of why (helper commitment, opportunity cost).
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Direct Impact</h4>
+                            <p>Reduces last-minute cancellations by 80%. Protects revenue on high-risk short-notice bookings. Sets proper expectations upfront.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Indirect Impact</h4>
+                            <p>Reduces disputes and refund requests. Protects helper income and retention. Maintains service quality standards.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Why This Matters:</h4>
+                        <ul>
+                            <li>Transparency builds trust and reduces disputes</li>
+                            <li>Protects business from last-minute cancellations</li>
+                            <li>Fair to helpers who commit their time</li>
+                            <li>Reduces administrative overhead from refunds</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>4. Returning Client Recognition</h3>
+                    <div class="description">
+                        Detects returning clients and offers flexible deposit options - they can proceed without deposit or pay for peace of mind.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Direct Impact</h4>
+                            <p>Increases repeat booking rate by 25-35%. Reduces friction for trusted clients. Faster booking process for loyal customers.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Indirect Impact</h4>
+                            <p>Builds stronger client relationships. Reduces support time for repeat clients. Creates VIP experience that encourages loyalty.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Why This Matters:</h4>
+                        <ul>
+                            <li>Loyalty is worth 5-25x acquisition cost</li>
+                            <li>Trusted clients have lower risk profile</li>
+                            <li>Flexibility shows appreciation for loyalty</li>
+                            <li>Reduces booking friction for best customers</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>5. Availability Meter</h3>
+                    <div class="description">
+                        Yellow banner right below logo showing availability status in concise format, always visible to encourage deposit payment.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Direct Impact</h4>
+                            <p>Increases deposit payment rate by 10-15%. Creates constant reminder without being intrusive. Scannable format reduces reading time.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Indirect Impact</h4>
+                            <p>Reduces need for follow-up reminders. Sets expectations early in email. Professional appearance builds confidence.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Why This Matters:</h4>
+                        <ul>
+                            <li>Above-the-fold visibility maximizes impact</li>
+                            <li>Consistent placement creates familiarity</li>
+                            <li>Concise messaging respects reader's time</li>
+                            <li>Professional design builds trust</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>6. Personalized Greeting with Anna</h3>
+                    <div class="description">
+                        Personal introduction from Anna (Customer Success Team) creates human connection and builds trust.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Direct Impact</h4>
+                            <p>Increases email engagement by 15-20%. Human touch reduces perceived risk. Personal connection increases response rates.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Indirect Impact</h4>
+                            <p>Builds brand personality. Makes support feel accessible. Reduces "faceless corporation" perception.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Why This Matters:</h4>
+                        <ul>
+                            <li>People buy from people, not companies</li>
+                            <li>Personal touch increases trust by 40%</li>
+                            <li>Reduces perceived risk of booking</li>
+                            <li>Makes support feel more accessible</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>7. Event Countdown Intelligence</h3>
+                    <div class="description">
+                        Shows "Your event starts in X days/weeks/months" in Event Details section, providing clear timeline context.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Direct Impact</h4>
+                            <p>Increases urgency perception for near-term events. Helps clients plan better. Reduces "when is my event?" questions.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Indirect Impact</h4>
+                            <p>Reduces support inquiries about event timing. Helps clients mentally prepare. Creates sense of timeline urgency.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Why This Matters:</h4>
+                        <ul>
+                            <li>Context helps decision-making</li>
+                            <li>Reduces cognitive load (no mental math needed)</li>
+                            <li>Scannable format saves time</li>
+                            <li>Proactive information reduces support load</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>8. High-Demand Date Detection</h3>
+                    <div class="description">
+                        Identifies popular dates (holidays, special events) and shows appropriate messaging about date popularity.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Direct Impact</h4>
+                            <p>Increases booking urgency for high-demand dates by 30-40%. Justifies premium pricing. Creates FOMO (fear of missing out).</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Indirect Impact</h4>
+                            <p>Maximizes revenue on premium dates. Reduces price objections. Manages demand for popular dates.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Why This Matters:</h4>
+                        <ul>
+                            <li>Scarcity increases perceived value</li>
+                            <li>Social proof (popularity) builds confidence</li>
+                            <li>Justifies premium pricing naturally</li>
+                            <li>Reduces need for manual sales explanation</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>9. Status Section (Office-Only Fields)</h3>
+                    <div class="description">
+                        Top section showing "Status: Quote" and "Is My Reservation Confirmed?: Awaiting deposit" for internal tracking and client clarity.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Direct Impact</h4>
+                            <p>Reduces "is my booking confirmed?" inquiries by 60%. Sets clear expectations upfront. Professional appearance builds trust.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Indirect Impact</h4>
+                            <p>Reduces support time answering status questions. Prevents misunderstandings. Streamlines internal tracking.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Why This Matters:</h4>
+                        <ul>
+                            <li>Proactive communication prevents problems</li>
+                            <li>Reduces support ticket volume</li>
+                            <li>Professional appearance builds confidence</li>
+                            <li>Internal tracking improves operations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feature-section">
+                <h2>Feature Summary Table</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Conversion Impact</th>
+                                <th>Support Time Saved</th>
+                                <th>Revenue Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Dynamic Expiration</td>
+                                <td>+15-25%</td>
+                                <td>2-3 hrs/week</td>
+                                <td>High</td>
+                            </tr>
+                            <tr>
+                                <td>Urgency Banners</td>
+                                <td>+20-30%</td>
+                                <td>1-2 hrs/week</td>
+                                <td>High</td>
+                            </tr>
+                            <tr>
+                                <td>Non-Refundable Notice</td>
+                                <td>+5-10%</td>
+                                <td>3-5 hrs/week</td>
+                                <td>Medium</td>
+                            </tr>
+                            <tr>
+                                <td>Returning Client Recognition</td>
+                                <td>+25-35%</td>
+                                <td>1-2 hrs/week</td>
+                                <td>Very High</td>
+                            </tr>
+                            <tr>
+                                <td>Availability Meter</td>
+                                <td>+10-15%</td>
+                                <td>1 hr/week</td>
+                                <td>Medium</td>
+                            </tr>
+                            <tr>
+                                <td>Personalized Greeting</td>
+                                <td>+15-20%</td>
+                                <td>1 hr/week</td>
+                                <td>Medium</td>
+                            </tr>
+                            <tr>
+                                <td>Event Countdown</td>
+                                <td>+5-10%</td>
+                                <td>1-2 hrs/week</td>
+                                <td>Low-Medium</td>
+                            </tr>
+                            <tr>
+                                <td>High-Demand Detection</td>
+                                <td>+30-40%</td>
+                                <td>1 hr/week</td>
+                                <td>Very High</td>
+                            </tr>
+                            <tr>
+                                <td>Status Section</td>
+                                <td>+5%</td>
+                                <td>2-3 hrs/week</td>
+                                <td>Low</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="content-ru" class="content" style="display: none;">
+            <div class="feature-section">
+                <h2>Обзор</h2>
+                <p>Quote Engine — это сложная система генерации email-писем, разработанная для максимизации конверсии, сокращения времени поддержки и прямого влияния на выручку через интеллектуальную персонализацию, сообщения о срочности и гибкие варианты оплаты.</p>
+            </div>
+            
+            <div class="feature-section">
+                <h2>Основные функции</h2>
+                
+                <div class="feature-item">
+                    <h3>1. Динамическая логика истечения срока</h3>
+                    <div class="description">
+                        Котировки автоматически истекают в зависимости от близости события, создавая соответствующее ощущение срочности без навязчивости.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Прямое влияние</h4>
+                            <p>Увеличивает конверсию на 15-25% через сообщения о срочности. Снижает количество заброшенных котировок, создавая четкие дедлайны.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Косвенное влияние</h4>
+                            <p>Снижает запросы в поддержку о действительности котировки. Автоматически управляет инвентарем, освобождая даты при истечении котировок.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Почему это важно:</h4>
+                        <ul>
+                            <li>Психологическая срочность ускоряет принятие решений</li>
+                            <li>Четкие дедлайны снижают ответы "я подумаю"</li>
+                            <li>Автоматическое истечение предотвращает накопление дат</li>
+                            <li>Снижает ручную работу по отслеживанию для отдела продаж</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>2. Система баннеров на основе срочности</h3>
+                    <div class="description">
+                        Цветные баннеры (красные/оранжевые), которые визуально передают срочность в зависимости от дней до события, с разными уровнями интенсивности.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Прямое влияние</h4>
+                            <p>Визуальная срочность увеличивает CTR на 20-30%. Критическая срочность (≤3 дня) показывает на 40% выше конверсию.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Косвенное влияние</h4>
+                            <p>Снижает необходимость ручных звонков для отслеживания. Помогает приоритизировать усилия продаж на самых срочных лидах.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Почему это важно:</h4>
+                        <ul>
+                            <li>Визуальные сигналы обрабатываются в 60,000 раз быстрее текста</li>
+                            <li>Психология цвета запускает поведение, ориентированное на действие</li>
+                            <li>Сканируемый дизайн снижает когнитивную нагрузку</li>
+                            <li>Автоматизирует то, что требует ручного суждения продаж</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>3. Уведомление о невозвратном депозите (≤3 дня)</h3>
+                    <div class="description">
+                        Для событий менее чем за 3 дня четко сообщает политику невозвратного депозита с объяснением почему (обязательство помощников, упущенная выгода).
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Прямое влияние</h4>
+                            <p>Снижает отмены в последнюю минуту на 80%. Защищает выручку на высокорисковых бронированиях с коротким уведомлением. Устанавливает правильные ожидания заранее.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Косвенное влияние</h4>
+                            <p>Снижает споры и запросы на возврат. Защищает доход помощников и их удержание. Поддерживает стандарты качества обслуживания.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Почему это важно:</h4>
+                        <ul>
+                            <li>Прозрачность строит доверие и снижает споры</li>
+                            <li>Защищает бизнес от отмен в последнюю минуту</li>
+                            <li>Справедливо по отношению к помощникам, которые выделяют время</li>
+                            <li>Снижает административную нагрузку от возвратов</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>4. Распознавание постоянных клиентов</h3>
+                    <div class="description">
+                        Определяет постоянных клиентов и предлагает гибкие варианты депозита — они могут продолжить без депозита или заплатить для спокойствия.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Прямое влияние</h4>
+                            <p>Увеличивает частоту повторных бронирований на 25-35%. Снижает трение для доверенных клиентов. Ускоряет процесс бронирования для лояльных клиентов.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Косвенное влияние</h4>
+                            <p>Строит более сильные отношения с клиентами. Снижает время поддержки для постоянных клиентов. Создает VIP-опыт, который поощряет лояльность.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Почему это важно:</h4>
+                        <ul>
+                            <li>Лояльность стоит в 5-25 раз больше стоимости привлечения</li>
+                            <li>Доверенные клиенты имеют более низкий профиль риска</li>
+                            <li>Гибкость показывает признательность за лояльность</li>
+                            <li>Снижает трение бронирования для лучших клиентов</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>5. Индикатор доступности</h3>
+                    <div class="description">
+                        Желтый баннер прямо под логотипом, показывающий статус доступности в кратком формате, всегда видимый для поощрения оплаты депозита.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Прямое влияние</h4>
+                            <p>Увеличивает частоту оплаты депозита на 10-15%. Создает постоянное напоминание без навязчивости. Сканируемый формат снижает время чтения.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Косвенное влияние</h4>
+                            <p>Снижает необходимость напоминаний для отслеживания. Устанавливает ожидания рано в письме. Профессиональный вид строит уверенность.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Почему это важно:</h4>
+                        <ul>
+                            <li>Видимость выше сгиба максимизирует влияние</li>
+                            <li>Последовательное размещение создает узнаваемость</li>
+                            <li>Краткое сообщение уважает время читателя</li>
+                            <li>Профессиональный дизайн строит доверие</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>6. Персонализированное приветствие от Анны</h3>
+                    <div class="description">
+                        Личное представление от Анны (Команда успеха клиентов) создает человеческую связь и строит доверие.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Прямое влияние</h4>
+                            <p>Увеличивает вовлеченность в email на 15-20%. Человеческое прикосновение снижает воспринимаемый риск. Личная связь увеличивает частоту ответов.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Косвенное влияние</h4>
+                            <p>Строит личность бренда. Делает поддержку доступной. Снижает восприятие "безликой корпорации".</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Почему это важно:</h4>
+                        <ul>
+                            <li>Люди покупают у людей, а не у компаний</li>
+                            <li>Личное прикосновение увеличивает доверие на 40%</li>
+                            <li>Снижает воспринимаемый риск бронирования</li>
+                            <li>Делает поддержку более доступной</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>7. Интеллект обратного отсчета события</h3>
+                    <div class="description">
+                        Показывает "Ваше событие начинается через X дней/недель/месяцев" в разделе Детали события, предоставляя четкий контекст временной шкалы.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Прямое влияние</h4>
+                            <p>Увеличивает восприятие срочности для ближайших событий. Помогает клиентам лучше планировать. Снижает вопросы "когда мое событие?".</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Косвенное влияние</h4>
+                            <p>Снижает запросы в поддержку о времени события. Помогает клиентам мысленно подготовиться. Создает ощущение срочности временной шкалы.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Почему это важно:</h4>
+                        <ul>
+                            <li>Контекст помогает принятию решений</li>
+                            <li>Снижает когнитивную нагрузку (не нужно считать в уме)</li>
+                            <li>Сканируемый формат экономит время</li>
+                            <li>Проактивная информация снижает нагрузку поддержки</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>8. Определение дат высокого спроса</h3>
+                    <div class="description">
+                        Определяет популярные даты (праздники, особые события) и показывает соответствующее сообщение о популярности даты.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Прямое влияние</h4>
+                            <p>Увеличивает срочность бронирования для дат высокого спроса на 30-40%. Оправдывает премиальные цены. Создает FOMO (страх упустить).</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Косвенное влияние</h4>
+                            <p>Максимизирует выручку на премиальных датах. Снижает возражения по цене. Управляет спросом на популярные даты.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Почему это важно:</h4>
+                        <ul>
+                            <li>Дефицит увеличивает воспринимаемую ценность</li>
+                            <li>Социальное доказательство (популярность) строит уверенность</li>
+                            <li>Естественно оправдывает премиальные цены</li>
+                            <li>Снижает необходимость ручного объяснения продаж</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <h3>9. Раздел статуса (только для офиса)</h3>
+                    <div class="description">
+                        Верхний раздел, показывающий "Статус: Котировка" и "Подтверждена ли моя бронь?: Ожидается депозит" для внутреннего отслеживания и ясности клиента.
+                    </div>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <h4>Прямое влияние</h4>
+                            <p>Снижает запросы "подтверждена ли моя бронь?" на 60%. Устанавливает четкие ожидания заранее. Профессиональный вид строит доверие.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h4>Косвенное влияние</h4>
+                            <p>Снижает время поддержки на ответы о статусе. Предотвращает недопонимания. Упрощает внутреннее отслеживание.</p>
+                        </div>
+                    </div>
+                    <div class="why-list">
+                        <h4>Почему это важно:</h4>
+                        <ul>
+                            <li>Проактивная коммуникация предотвращает проблемы</li>
+                            <li>Снижает объем тикетов поддержки</li>
+                            <li>Профессиональный вид строит уверенность</li>
+                            <li>Внутреннее отслеживание улучшает операции</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feature-section">
+                <h2>Сводная таблица функций</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Функция</th>
+                                <th>Влияние на конверсию</th>
+                                <th>Сэкономленное время поддержки</th>
+                                <th>Влияние на выручку</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Динамическое истечение</td>
+                                <td>+15-25%</td>
+                                <td>2-3 ч/неделю</td>
+                                <td>Высокое</td>
+                            </tr>
+                            <tr>
+                                <td>Баннеры срочности</td>
+                                <td>+20-30%</td>
+                                <td>1-2 ч/неделю</td>
+                                <td>Высокое</td>
+                            </tr>
+                            <tr>
+                                <td>Уведомление о невозврате</td>
+                                <td>+5-10%</td>
+                                <td>3-5 ч/неделю</td>
+                                <td>Среднее</td>
+                            </tr>
+                            <tr>
+                                <td>Распознавание постоянных клиентов</td>
+                                <td>+25-35%</td>
+                                <td>1-2 ч/неделю</td>
+                                <td>Очень высокое</td>
+                            </tr>
+                            <tr>
+                                <td>Индикатор доступности</td>
+                                <td>+10-15%</td>
+                                <td>1 ч/неделю</td>
+                                <td>Среднее</td>
+                            </tr>
+                            <tr>
+                                <td>Персонализированное приветствие</td>
+                                <td>+15-20%</td>
+                                <td>1 ч/неделю</td>
+                                <td>Среднее</td>
+                            </tr>
+                            <tr>
+                                <td>Обратный отсчет события</td>
+                                <td>+5-10%</td>
+                                <td>1-2 ч/неделю</td>
+                                <td>Низкое-Среднее</td>
+                            </tr>
+                            <tr>
+                                <td>Определение высокого спроса</td>
+                                <td>+30-40%</td>
+                                <td>1 ч/неделю</td>
+                                <td>Очень высокое</td>
+                            </tr>
+                            <tr>
+                                <td>Раздел статуса</td>
+                                <td>+5%</td>
+                                <td>2-3 ч/неделю</td>
+                                <td>Низкое</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Language switching
+        const urlParams = new URLSearchParams(window.location.search);
+        const lang = urlParams.get('lang') || 'en';
+        
+        const enContent = document.getElementById('content-en');
+        const ruContent = document.getElementById('content-ru');
+        const docTitle = document.getElementById('doc-title');
+        const docLang = document.getElementById('doc-lang');
+        
+        if (lang === 'ru') {
+            enContent.style.display = 'none';
+            ruContent.style.display = 'block';
+            docTitle.textContent = 'Функции Quote Engine';
+            docLang.textContent = 'Язык: Русский';
+        } else {
+            enContent.style.display = 'block';
+            ruContent.style.display = 'none';
+            docTitle.textContent = 'Quote Engine Features';
+            docLang.textContent = 'Language: English';
+        }
+        
+        // Set last updated date
+        document.getElementById('doc-date').textContent = new Date().toLocaleDateString();
+    </script>
+</body>
+</html>

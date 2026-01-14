@@ -17,7 +17,7 @@ type BaseRate struct {
 // Base rates by year
 var baseRateByYear = map[int]BaseRate{
 	2025: {BasePerHelper: 275, ExtraPerHourPerHelper: 45},
-	2026: {BasePerHelper: 275, ExtraPerHourPerHelper: 50},
+	2026: {BasePerHelper: 300, ExtraPerHourPerHelper: 50},
 	2027: {BasePerHelper: 325, ExtraPerHourPerHelper: 55},
 	2028: {BasePerHelper: 400, ExtraPerHourPerHelper: 60},
 	2029: {BasePerHelper: 475, ExtraPerHourPerHelper: 65},
@@ -380,3 +380,73 @@ func GetAllSpecialDates(yearsAhead int, startYear *int) map[int]YearSpecialDates
 	return result
 }
 
+
+// TravelFeeResult contains travel fee calculation details
+type TravelFeeResult struct {
+	IsWithinServiceArea bool    // True if within 15 miles
+	DistanceMiles       float64 // Distance from office in miles
+	TravelFee           float64 // Calculated travel fee (0 if within service area)
+	TravelFeePerHelper  float64 // Travel fee per helper
+	TotalTravelFee      float64 // Total travel fee (per helper * num helpers)
+	Message             string  // Message to display (e.g., "within our service area - no travel fee")
+}
+
+// CalculateTravelFee calculates travel fee based on distance from office
+// Rules:
+// - Within 15 miles: $0 (no travel fee)
+// - Outside 15 miles: Minimum $40 per helper, increases in $10 increments
+// - Fee is per helper, so total = fee per helper * num helpers
+// - Always rounds to avoid dealing with dimes and nickels
+func CalculateTravelFee(distanceMiles float64, numHelpers int) *TravelFeeResult {
+	result := &TravelFeeResult{
+		DistanceMiles: distanceMiles,
+	}
+
+	// Round distance to 1 decimal place for display
+	result.DistanceMiles = math.Round(distanceMiles*10) / 10
+
+	// Check if within service area (15 miles)
+	if distanceMiles <= 15.0 {
+		result.IsWithinServiceArea = true
+		result.TravelFee = 0
+		result.TravelFeePerHelper = 0
+		result.TotalTravelFee = 0
+		result.Message = "within our service area - no travel fee"
+		return result
+	}
+
+	// Outside service area - calculate fee
+	// Minimum $40 per helper, increases in $10 increments based on distance
+	// For every 10 miles beyond 15, add $10
+	// Formula: $40 base + ($10 per 10 miles over 15)
+	milesOverServiceArea := distanceMiles - 15.0
+	
+	// Calculate base fee per helper: $40 minimum
+	// Add $10 for each 10-mile increment beyond 15 miles
+	// Round up to nearest 10-mile increment
+	var feePerHelper float64
+	if milesOverServiceArea <= 10.0 {
+		feePerHelper = 40.0
+	} else {
+		milesBeyondFirst10 := milesOverServiceArea - 10.0
+		increments := math.Ceil(milesBeyondFirst10 / 10.0)
+		feePerHelper = 40.0 + (increments * 10.0)
+	}
+	
+	// Round to nearest dollar (no cents)
+	feePerHelper = math.Round(feePerHelper)
+
+	result.IsWithinServiceArea = false
+	result.TravelFeePerHelper = feePerHelper
+	result.TotalTravelFee = feePerHelper * float64(numHelpers)
+	result.TravelFee = result.TotalTravelFee
+
+	// Build message
+	if numHelpers == 1 {
+		result.Message = fmt.Sprintf("outside of our area — $%.0f travel fee", result.TotalTravelFee)
+	} else {
+		result.Message = fmt.Sprintf("outside of our area — $%.0f travel fee (for %d helpers)", result.TotalTravelFee, numHelpers)
+	}
+
+	return result
+}

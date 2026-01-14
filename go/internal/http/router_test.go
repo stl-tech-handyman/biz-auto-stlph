@@ -37,7 +37,7 @@ func TestRouter_AllEndpoints(t *testing.T) {
 	formEventsService := app.NewFormEventsService(businessLoader, pipelineRunner, jobsRepo)
 	triggersService := app.NewTriggersService(businessLoader, pipelineRunner, jobsRepo)
 
-	router := NewRouter(formEventsService, triggersService, log, "dev")
+	router := NewRouter(formEventsService, triggersService, businessLoader, log, "dev")
 	handler := router.Handler()
 
 	tests := []struct {
