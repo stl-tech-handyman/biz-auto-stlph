@@ -395,7 +395,7 @@
                                 <h5 class="mb-0">
                                     <i class="bi bi-people"></i> Active Agents
                                 </h5>
-                                <span class="badge bg-light text-dark">${stats.active_agents.length}</span>
+                                <span class="badge bg-light text-dark">${(stats.active_agents && stats.active_agents.length) || 0}</span>
                             </div>
                             <div class="card-body">
                                 ${stats.active_agents.length > 0 ? `
