@@ -1850,6 +1850,22 @@ func writeBatch(ctx context.Context, service *sheets.Service, spreadsheetID stri
 	rowsUpdated := resp.Updates.UpdatedRows
 	if rowsUpdated != int64(len(batch)) {
 		fmt.Printf("  ⚠️  Warning: Expected %d rows, but %d rows were updated\n", len(batch), rowsUpdated)
+	} else {
+		fmt.Printf("  ✅ Confirmed: %d rows written to spreadsheet\n", rowsUpdated)
+	}
+	
+	// Get total row count for verification (shows data is accumulating)
+	if len(batch) > 0 {
+		time.Sleep(200 * time.Millisecond) // Small delay for write to commit
+		readResp, readErr := service.Spreadsheets.Values.Get(spreadsheetID, "Raw Data!A:A").Context(ctx).Do()
+		if readErr == nil {
+			totalRows := len(readResp.Values)
+			// Subtract 1 for header row
+			if totalRows > 0 {
+				dataRows := totalRows - 1
+				fmt.Printf("  📊 Sheet now has %d total data rows (excluding header)\n", dataRows)
+			}
+		}
 	}
 	
 	// Additional verification: read back the last row to confirm it was written
