@@ -34,6 +34,7 @@ func main() {
 		query         = flag.String("query", "", "Gmail search query (default: searches for form submissions)")
 		spreadsheetID = flag.String("spreadsheet", "", "Existing spreadsheet ID (creates new if empty)")
 		resume        = flag.Bool("resume", false, "Resume from last position")
+		rebuild       = flag.Bool("rebuild", false, "Rebuild derived sheets (Email Mapping, State) from Raw Data without reading Gmail")
 		verbose       = flag.Bool("v", false, "Verbose logging")
 		batchSize     = flag.Int("batch", 50, "Batch size for processing")
 		delay         = flag.Int("delay", 200, "Delay between batches in milliseconds")
@@ -78,6 +79,9 @@ func main() {
 
 	// Get or create spreadsheet
 	if *spreadsheetID == "" {
+		if *rebuild {
+			log.Fatalf("rebuild mode requires -spreadsheet ID")
+		}
 		spreadsheet, err := sheetsService.Spreadsheets.Create(&sheets.Spreadsheet{
 			Properties: &sheets.SpreadsheetProperties{
 				Title: fmt.Sprintf("Email Analysis - %s", time.Now().Format("2006-01-02 15:04")),
@@ -113,6 +117,16 @@ func main() {
 	// Initialize sheets
 	if err := initializeSheets(ctx, sheetsService, *spreadsheetID, *idempotent); err != nil {
 		log.Fatalf("Failed to initialize sheets: %v", err)
+	}
+
+	// Rebuild mode: recompute derived sheets from Raw Data and exit
+	if *rebuild {
+		fmt.Printf("🔧 Rebuild mode: recomputing derived sheets from Raw Data...\n")
+		if err := rebuildDerivedFromRawData(ctx, sheetsService, *spreadsheetID); err != nil {
+			log.Fatalf("Failed to rebuild derived sheets: %v", err)
+		}
+		fmt.Printf("✅ Rebuild complete.\n")
+		return
 	}
 
 	// Get state
@@ -535,16 +549,10 @@ func initializeSheets(ctx context.Context, service *sheets.Service, spreadsheetI
 		}
 		
 		// If idempotent mode, clear existing data
-		if idempotent && sheetName != "State" && sheetName != "Locks" {
-			// Clear all data except header
-			resp, err := service.Spreadsheets.Values.Get(spreadsheetID, fmt.Sprintf("%s!A2:Z", sheetName)).Context(ctx).Do()
-			if err == nil && len(resp.Values) > 0 {
-				// Clear all rows
-				vr := &sheets.ValueRange{Values: [][]interface{}{}}
-				rangeStr := fmt.Sprintf("%s!A2:Z%d", sheetName, len(resp.Values)+1)
-				service.Spreadsheets.Values.Update(spreadsheetID, rangeStr, vr).ValueInputOption("RAW").Context(ctx).Do()
-				fmt.Printf("🗑️  Cleared existing data in %s sheet (idempotent mode)\n", sheetName)
-			}
+		// NOTE: Use Values.Clear (Update with empty values does NOT reliably clear).
+		if idempotent && sheetName != "Locks" {
+			_, _ = service.Spreadsheets.Values.Clear(spreadsheetID, fmt.Sprintf("%s!A2:Z", sheetName), &sheets.ClearValuesRequest{}).Context(ctx).Do()
+			fmt.Printf("🗑️  Cleared existing data in %s sheet (idempotent mode)\n", sheetName)
 		}
 		
 		// Set headers
@@ -591,6 +599,7 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 	var skippedCount int
 	var batch [][]interface{}
 	emailMapping := make(map[string]string) // original -> normalized
+	mappingAgg := make(map[string]*mappingAggregate) // derived mapping rows (client->normalized)
 
 	// Channel for distributing message IDs to workers
 	messageChan := make(chan *gmail.Message, workers*2) // Buffered channel
@@ -643,6 +652,28 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 
 				// Thread-safe batch accumulation
 				mu.Lock()
+				// Track mapping (client -> normalized) when normalization changes the email
+				if emailData.ClientEmail != "" && emailData.NormalizedClientEmail != "" && emailData.ClientEmail != emailData.NormalizedClientEmail {
+					key := emailData.ClientEmail + "->" + emailData.NormalizedClientEmail
+					agg := mappingAgg[key]
+					if agg == nil {
+						agg = &mappingAggregate{
+							Original:   emailData.ClientEmail,
+							Normalized: emailData.NormalizedClientEmail,
+							FirstSeen:  emailData.Date,
+							LastSeen:   emailData.Date,
+							Count:      0,
+						}
+						mappingAgg[key] = agg
+					}
+					agg.Count++
+					if emailData.Date.Before(agg.FirstSeen) {
+						agg.FirstSeen = emailData.Date
+					}
+					if emailData.Date.After(agg.LastSeen) {
+						agg.LastSeen = emailData.Date
+					}
+				}
 				batch = append(batch, emailData.ToRow())
 				*processedIDsList = append(*processedIDsList, msg.Id)
 				processedIDsSet[msg.Id] = true
@@ -688,6 +719,12 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 							CurrentJobID:   jobID,
 							CurrentJobName: jobName,
 						}
+						// Snapshot mapping agg for writing without holding the lock
+						mappingSnapshot := make([]*mappingAggregate, 0, len(mappingAgg))
+						for _, v := range mappingAgg {
+							c := *v
+							mappingSnapshot = append(mappingSnapshot, &c)
+						}
 						processedIDsCopy := make([]string, len(*processedIDsList))
 						copy(processedIDsCopy, *processedIDsList)
 						mu.Unlock()
@@ -701,6 +738,8 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 
 						// Update job stats
 						updateJobStats(ctx, sheetsService, spreadsheetID, jobID, jobName, agentID, currentProcessed, currentSkipped, false)
+						// Update mapping snapshot (small table, safe to overwrite)
+						writeEmailMappingSnapshot(ctx, sheetsService, spreadsheetID, mappingSnapshot)
 					} else {
 						mu.Unlock()
 					}
@@ -805,6 +844,11 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 					CurrentJobID:   jobID,
 					CurrentJobName: jobName,
 				}
+				mappingSnapshot := make([]*mappingAggregate, 0, len(mappingAgg))
+				for _, v := range mappingAgg {
+					c := *v
+					mappingSnapshot = append(mappingSnapshot, &c)
+				}
 				processedIDsCopy := make([]string, len(*processedIDsList))
 				copy(processedIDsCopy, *processedIDsList)
 				p := processedCount
@@ -822,6 +866,7 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 
 				// Update job stats
 				updateJobStats(ctx, sheetsService, spreadsheetID, jobID, jobName, agentID, p, s, false)
+				writeEmailMappingSnapshot(ctx, sheetsService, spreadsheetID, mappingSnapshot)
 			}
 
 			// Rate limiting delay
@@ -865,10 +910,25 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 		saveState(ctx, sheetsService, spreadsheetID, state)
 	}
 
-	// Write email mapping
-	writeEmailMapping(ctx, sheetsService, spreadsheetID, emailMapping)
+	// Final mapping snapshot (derived from processed rows)
+	mu.Lock()
+	finalMappingSnapshot := make([]*mappingAggregate, 0, len(mappingAgg))
+	for _, v := range mappingAgg {
+		c := *v
+		finalMappingSnapshot = append(finalMappingSnapshot, &c)
+	}
+	mu.Unlock()
+	writeEmailMappingSnapshot(ctx, sheetsService, spreadsheetID, finalMappingSnapshot)
 
 	return finalProcessed, finalSkipped, nil
+}
+
+type mappingAggregate struct {
+	Original   string
+	Normalized string
+	FirstSeen  time.Time
+	LastSeen   time.Time
+	Count      int
 }
 
 type EmailData struct {
@@ -1238,20 +1298,32 @@ func writeBatch(ctx context.Context, service *sheets.Service, spreadsheetID stri
 	return err
 }
 
-func writeEmailMapping(ctx context.Context, service *sheets.Service, spreadsheetID string, mapping map[string]string) {
-	if len(mapping) == 0 {
+func writeEmailMappingSnapshot(ctx context.Context, service *sheets.Service, spreadsheetID string, rows []*mappingAggregate) {
+	// Overwrite snapshot (avoids duplicate rows)
+	_ = createSheetIfNotExists(ctx, service, spreadsheetID, "Email Mapping")
+	// Ensure header row
+	header := &sheets.ValueRange{Values: [][]interface{}{convertHeaders([]string{"Original Email", "Normalized Email", "First Seen", "Last Seen", "Count"})}}
+	_, _ = service.Spreadsheets.Values.Update(spreadsheetID, "Email Mapping!A1", header).ValueInputOption("RAW").Context(ctx).Do()
+
+	// Clear old values (keep header)
+	_, _ = service.Spreadsheets.Values.Clear(spreadsheetID, "Email Mapping!A2:Z", &sheets.ClearValuesRequest{}).Context(ctx).Do()
+
+	if len(rows) == 0 {
 		return
 	}
 
-	values := [][]interface{}{}
-	for original, normalized := range mapping {
-		values = append(values, []interface{}{original, normalized, time.Now().Format(time.RFC3339), time.Now().Format(time.RFC3339), 1})
+	values := make([][]interface{}, 0, len(rows))
+	for _, r := range rows {
+		values = append(values, []interface{}{
+			r.Original,
+			r.Normalized,
+			r.FirstSeen.Format(time.RFC3339),
+			r.LastSeen.Format(time.RFC3339),
+			r.Count,
+		})
 	}
-
-	vr := &sheets.ValueRange{
-		Values: values,
-	}
-	service.Spreadsheets.Values.Append(spreadsheetID, "Email Mapping", vr).ValueInputOption("RAW").InsertDataOption("INSERT_ROWS").Context(ctx).Do()
+	vr := &sheets.ValueRange{Values: values}
+	_, _ = service.Spreadsheets.Values.Update(spreadsheetID, "Email Mapping!A2", vr).ValueInputOption("RAW").Context(ctx).Do()
 }
 
 func getState(ctx context.Context, service *sheets.Service, spreadsheetID string) *State {
@@ -1383,9 +1455,10 @@ func updateJobStats(ctx context.Context, service *sheets.Service, spreadsheetID,
 		rowIndex = len(resp.Values) + 2
 	}
 	
-	// Update totals
-	totalProcessed += processed
-	totalSkipped += skipped
+	// IMPORTANT: `processed`/`skipped` passed in are ABSOLUTE counters from the current run,
+	// so we should set totals, not add (adding would double-count on every update).
+	totalProcessed = processed
+	totalSkipped = skipped
 	
 	// Update agent IDs
 	if agentIDs == "" {
@@ -1423,4 +1496,86 @@ func updateJobStats(ctx context.Context, service *sheets.Service, spreadsheetID,
 		// Append new row
 		service.Spreadsheets.Values.Append(spreadsheetID, "Job Stats", vr).ValueInputOption("RAW").InsertDataOption("INSERT_ROWS").Context(ctx).Do()
 	}
+}
+
+// rebuildDerivedFromRawData recomputes derived sheets without reading Gmail.
+// Useful when you want to "re-run checks" purely from what is already stored in the spreadsheet.
+func rebuildDerivedFromRawData(ctx context.Context, service *sheets.Service, spreadsheetID string) error {
+	// Read Raw Data columns:
+	// A: Email ID, C: Date, J: Client Email, K: Normalized Client Email
+	resp, err := service.Spreadsheets.Values.Get(spreadsheetID, "Raw Data!A2:K").Context(ctx).Do()
+	if err != nil {
+		return err
+	}
+
+	processedIDsSet := make(map[string]bool)
+	mapping := make(map[string]*mappingAggregate)
+	var rowCount int
+	for _, row := range resp.Values {
+		if len(row) == 0 {
+			continue
+		}
+		rowCount++
+
+		// Email ID
+		if len(row) > 0 {
+			id := fmt.Sprintf("%v", row[0])
+			if id != "" {
+				processedIDsSet[id] = true
+			}
+		}
+
+		// Date
+		var dt time.Time
+		if len(row) > 2 {
+			if t, err := time.Parse(time.RFC3339, fmt.Sprintf("%v", row[2])); err == nil {
+				dt = t
+			}
+		}
+
+		// Client Email / Normalized Client Email
+		if len(row) > 10 {
+			client := fmt.Sprintf("%v", row[9])
+			normalized := fmt.Sprintf("%v", row[10])
+			if client != "" && normalized != "" && client != normalized {
+				key := client + "->" + normalized
+				agg := mapping[key]
+				if agg == nil {
+					agg = &mappingAggregate{Original: client, Normalized: normalized, FirstSeen: dt, LastSeen: dt, Count: 0}
+					mapping[key] = agg
+				}
+				agg.Count++
+				if !dt.IsZero() {
+					if agg.FirstSeen.IsZero() || dt.Before(agg.FirstSeen) {
+						agg.FirstSeen = dt
+					}
+					if agg.LastSeen.IsZero() || dt.After(agg.LastSeen) {
+						agg.LastSeen = dt
+					}
+				}
+			}
+		}
+	}
+
+	// Write Email Mapping snapshot
+	snap := make([]*mappingAggregate, 0, len(mapping))
+	for _, v := range mapping {
+		c := *v
+		snap = append(snap, &c)
+	}
+	writeEmailMappingSnapshot(ctx, service, spreadsheetID, snap)
+
+	// Update State (counts only)
+	st := &State{
+		LastIndex:      rowCount,
+		TotalProcessed: rowCount,
+		LastRun:        time.Now(),
+		ProcessedIDs:   make([]string, 0, len(processedIDsSet)),
+		CurrentJobID:   "",
+		CurrentJobName: "rebuild",
+	}
+	for id := range processedIDsSet {
+		st.ProcessedIDs = append(st.ProcessedIDs, id)
+	}
+	return saveState(ctx, service, spreadsheetID, st)
 }
