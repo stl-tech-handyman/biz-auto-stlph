@@ -325,7 +325,7 @@
                                 <h5 class="card-title">
                                     <i class="bi bi-people text-success"></i> Active Agents
                                 </h5>
-                                <h2 class="display-4 text-success">${stats.active_agents.length}</h2>
+                                <h2 class="display-4 text-success">${(stats.active_agents && stats.active_agents.length) || 0}</h2>
                                 <p class="text-muted mb-0">
                                     <small>Currently processing</small>
                                 </p>
@@ -446,7 +446,7 @@
                                 </h5>
                             </div>
                             <div class="card-body">
-                                ${stats.jobs && stats.jobs.length > 0 ? `
+                                ${stats.jobs && Array.isArray(stats.jobs) && stats.jobs.length > 0 ? `
                                     <div class="table-responsive">
                                         <table class="table table-hover">
                                             <thead>
