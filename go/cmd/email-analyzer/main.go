@@ -27,6 +27,10 @@ var (
 	// Job configuration
 	defaultJobID   = "JOB-1-INITIAL-INDEXING"
 	defaultJobName = "Initial Indexing and Classification Systematization"
+	
+	// Verification tracking
+	writeBatchCounter int64
+	lastVerificationTime time.Time
 )
 
 func main() {
@@ -100,7 +104,7 @@ func main() {
 		}
 		spreadsheet, err := sheetsService.Spreadsheets.Create(&sheets.Spreadsheet{
 			Properties: &sheets.SpreadsheetProperties{
-				Title: fmt.Sprintf("Email Analysis - %s", time.Now().Format("2006-01-02 15:04")),
+				Title: "90K email historic analysis and classification",
 			},
 		}).Context(ctx).Do()
 		if err != nil {
@@ -109,7 +113,40 @@ func main() {
 		*spreadsheetID = spreadsheet.SpreadsheetId
 		fmt.Printf("\n✅ Created spreadsheet: %s\n", spreadsheet.SpreadsheetUrl)
 		fmt.Printf("📊 Spreadsheet ID: %s\n", *spreadsheetID)
+		fmt.Printf("📋 Spreadsheet Name: 90K email historic analysis and classification\n")
 		fmt.Printf("🌐 Dashboard URL: http://localhost:8080/email-analysis-dashboard.html?spreadsheet_id=%s\n\n", *spreadsheetID)
+	} else {
+		// Verify spreadsheet exists and is accessible
+		fmt.Printf("🔍 Verifying spreadsheet access...\n")
+		spreadsheet, err := sheetsService.Spreadsheets.Get(*spreadsheetID).Context(ctx).Do()
+		if err != nil {
+			log.Fatalf("❌ Cannot access spreadsheet %s: %v\n   Please verify the spreadsheet ID is correct and the service account has access.", *spreadsheetID, err)
+		}
+		fmt.Printf("✅ Spreadsheet verified: %s\n", spreadsheet.Properties.Title)
+		fmt.Printf("📊 Spreadsheet ID: %s\n", *spreadsheetID)
+		fmt.Printf("🔗 URL: https://docs.google.com/spreadsheets/d/%s\n\n", *spreadsheetID)
+		
+		// Update spreadsheet name if it's not correct
+		if spreadsheet.Properties.Title != "90K email historic analysis and classification" {
+			fmt.Printf("📝 Updating spreadsheet name to '90K email historic analysis and classification'...\n")
+			_, err := sheetsService.Spreadsheets.BatchUpdate(*spreadsheetID, &sheets.BatchUpdateSpreadsheetRequest{
+				Requests: []*sheets.Request{
+					{
+						UpdateSpreadsheetProperties: &sheets.UpdateSpreadsheetPropertiesRequest{
+							Properties: &sheets.SpreadsheetProperties{
+								Title: "90K email historic analysis and classification",
+							},
+							Fields: "title",
+						},
+					},
+				},
+			}).Context(ctx).Do()
+			if err != nil {
+				fmt.Printf("⚠️  Warning: Could not update spreadsheet name: %v\n", err)
+			} else {
+				fmt.Printf("✅ Spreadsheet name updated\n\n")
+			}
+		}
 	}
 
 	// Acquire lock before processing
@@ -1831,6 +1868,13 @@ func writeBatch(ctx context.Context, service *sheets.Service, spreadsheetID stri
 		return fmt.Errorf("cannot write empty batch")
 	}
 	
+	// Get current row count BEFORE write
+	beforeResp, beforeErr := service.Spreadsheets.Values.Get(spreadsheetID, "Raw Data!A:A").Context(ctx).Do()
+	beforeCount := 0
+	if beforeErr == nil && len(beforeResp.Values) > 0 {
+		beforeCount = len(beforeResp.Values) - 1 // Exclude header
+	}
+	
 	vr := &sheets.ValueRange{
 		Values: batch,
 	}
@@ -1849,24 +1893,68 @@ func writeBatch(ctx context.Context, service *sheets.Service, spreadsheetID stri
 	// Log verification details
 	rowsUpdated := resp.Updates.UpdatedRows
 	if rowsUpdated != int64(len(batch)) {
-		fmt.Printf("  ⚠️  Warning: Expected %d rows, but %d rows were updated\n", len(batch), rowsUpdated)
-	} else {
-		fmt.Printf("  ✅ Confirmed: %d rows written to spreadsheet\n", rowsUpdated)
+		return fmt.Errorf("expected %d rows, but %d rows were updated", len(batch), rowsUpdated)
 	}
 	
-	// Get total row count for verification (shows data is accumulating)
-	if len(batch) > 0 {
-		time.Sleep(200 * time.Millisecond) // Small delay for write to commit
-		readResp, readErr := service.Spreadsheets.Values.Get(spreadsheetID, "Raw Data!A:A").Context(ctx).Do()
-		if readErr == nil {
-			totalRows := len(readResp.Values)
-			// Subtract 1 for header row
-			if totalRows > 0 {
-				dataRows := totalRows - 1
-				fmt.Printf("  📊 Sheet now has %d total data rows (excluding header)\n", dataRows)
+	// CRITICAL VERIFICATION: Read back from sheet to confirm data is actually there
+	// Wait a moment for write to commit
+	time.Sleep(500 * time.Millisecond)
+	
+	// Get first message ID from batch for verification
+	firstMessageID := ""
+	if len(batch) > 0 && len(batch[0]) > 0 {
+		firstMessageID = fmt.Sprintf("%v", batch[0][0])
+	}
+	
+	// Read back from Raw Data to verify
+	readResp, readErr := service.Spreadsheets.Values.Get(spreadsheetID, "Raw Data!A:A").Context(ctx).Do()
+	if readErr != nil {
+		return fmt.Errorf("write appeared successful but cannot read back from sheet: %w", readErr)
+	}
+	
+	afterCount := 0
+	if len(readResp.Values) > 0 {
+		afterCount = len(readResp.Values) - 1 // Exclude header
+	}
+	
+	// Verify row count increased
+	if afterCount <= beforeCount {
+		return fmt.Errorf("VERIFICATION FAILED: Row count did not increase. Before: %d, After: %d. Data may not have been written!", beforeCount, afterCount)
+	}
+	
+	// Verify specific message ID is in the sheet
+	if firstMessageID != "" {
+		found := false
+		// Check last 50 rows (where our new data should be)
+		checkRows := 50
+		if len(readResp.Values) < checkRows {
+			checkRows = len(readResp.Values)
+		}
+		startIdx := len(readResp.Values) - checkRows
+		if startIdx < 0 {
+			startIdx = 0
+		}
+		
+		for i := startIdx; i < len(readResp.Values); i++ {
+			if len(readResp.Values[i]) > 0 {
+				if fmt.Sprintf("%v", readResp.Values[i][0]) == firstMessageID {
+					found = true
+					break
+				}
 			}
 		}
+		
+		if !found {
+			fmt.Printf("  ⚠️  Warning: Message ID %s not found in verification read (may be timing issue)\n", firstMessageID)
+			fmt.Printf("  📊 But row count increased from %d to %d, so write likely succeeded\n", beforeCount, afterCount)
+		} else {
+			fmt.Printf("  ✅ VERIFIED: Message ID %s confirmed in sheet\n", firstMessageID)
+		}
 	}
+	
+	fmt.Printf("  ✅ Confirmed: %d rows written (sheet now has %d total data rows, was %d)\n", rowsUpdated, afterCount, beforeCount)
+	
+	return nil
 	
 	// Additional verification: read back the last row to confirm it was written
 	// Get the first message ID from the batch (column A, first row)
