@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -525,11 +526,22 @@ func initializeSheets(ctx context.Context, service *sheets.Service, spreadsheetI
 	// Set headers - sheets will be created automatically when we write
 	headers := map[string][]string{
 		"Raw Data": {
-			"Email ID", "Thread ID", "Date", "From Email", "To Email", "Subject", "Body Preview",
-			"Is Test", "Is Confirmation", "Client Email", "Normalized Client Email",
-			"Event Date", "Total Cost", "Rate", "Hours", "Helpers", "Occasion", "Status",
-			"Guests", "Deposit", "Email Type", "Conversation ID", "Message Number",
-			"Forwarded From", "Migration Detected", "Job ID", "Job Name",
+			// Core email metadata
+			"Email ID", "Thread ID", "Date", "From Email", "To Email", "Subject", "Body Preview", "Body Full",
+			// Classification & Detection
+			"Is Test", "Is Confirmation", "Is Form Submission", "Is Reply",
+			"Email Type", "Email Type Confidence", "Source", "Source Page",
+			// Client Information
+			"Client Email", "Normalized Client Email", "Client Domain", "Client Name",
+			// Event Details
+			"Event Date", "Event Date Parsed", "Event Start Time", "Event End Time",
+			"Event Type", "Hours", "Helpers", "Helper Amount", "Occasion", "Guests", "Event Notes",
+			// Pricing Information
+			"Total Cost", "Rate", "Deposit", "Payout Amount", "Self Payout Amount",
+			// Status & Tracking
+			"Status", "Conversation ID", "Message Number", "Forwarded From", "Migration Detected",
+			// Job Tracking
+			"Job ID", "Job Name",
 		},
 		"Email Mapping": {
 			"Original Email", "Normalized Email", "First Seen", "Last Seen", "Count",
@@ -897,6 +909,7 @@ type mappingAggregate struct {
 }
 
 type EmailData struct {
+	// Core email metadata
 	EmailID            string
 	ThreadID          string
 	Date              time.Time
@@ -904,24 +917,52 @@ type EmailData struct {
 	ToEmail           string
 	Subject           string
 	BodyPreview       string
+	BodyFull          string // Full body for later analysis
+	
+	// Classification & Detection
 	IsTest            bool
 	IsConfirmation    bool
+	IsFormSubmission  bool   // Detected as form submission (Zapier, Google Forms, etc.)
+	IsReply           bool   // Is this a reply to a previous email
+	EmailType         string // STLPH, Marketing, School, Other
+	EmailTypeConfidence float64 // 0.0-1.0 confidence in classification
+	Source            string // Form source: "Zapier", "Google Forms", "Website", "Direct", "Unknown"
+	SourcePage        string // Which page/form: extracted from subject or body
+	
+	// Client Information
 	ClientEmail       string
 	NormalizedClientEmail string
-	EventDate         string
+	ClientDomain      string // Extracted domain for organization grouping
+	ClientName        string // Extracted client name if available
+	
+	// Event Details
+	EventDate         string // Raw extracted date string
+	EventDateParsed   time.Time // Parsed event date (if successful)
+	EventStartTime    string // Start time (e.g., "2:00 PM")
+	EventEndTime      string // End time (e.g., "6:00 PM")
+	EventType         string // Birthday, Corporate, Wedding, etc.
+	Hours             string // Duration in hours
+	Helpers           string // Number of helpers
+	HelperAmount      float64 // Helper amount (if specified)
+	Occasion          string // Event occasion/type
+	Guests            string // Number of guests
+	EventNotes        string // Specific notes about the event
+	
+	// Pricing Information
 	TotalCost         float64
-	Rate              float64
-	Hours             string
-	Helpers           string
-	Occasion          string
-	Status            string
-	Guests            string
+	Rate              float64 // Rate per hour/helper
 	Deposit           float64
-	EmailType         string
+	PayoutAmount      float64 // Calculated: TotalCost * 0.45
+	SelfPayoutAmount  float64 // Calculated: PayoutAmount * 0.10
+	
+	// Status & Tracking
+	Status            string // Test, Confirmed, Pending, etc.
 	ConversationID    string
 	MessageNumber     int
 	ForwardedFrom     string
 	MigrationDetected bool
+	
+	// Job Tracking
 	JobID             string // Job ID that processed this email
 	JobName           string // Job name/description
 }
@@ -981,23 +1022,39 @@ func processMessage(ctx context.Context, service *gmail.Service, userEmail, mess
 		date = time.Unix(msg.InternalDate/1000, 0)
 	}
 
-	// Extract body
+	// Extract body (full and preview)
 	body := extractBody(msg.Payload)
 	bodyPreview := body
-	if len(bodyPreview) > 300 {
-		bodyPreview = bodyPreview[:300]
+	if len(bodyPreview) > 500 {
+		bodyPreview = bodyPreview[:500] + "..."
+	}
+	// Store full body (truncate if too long for Sheets - max ~50k chars per cell)
+	bodyFull := body
+	if len(bodyFull) > 10000 {
+		bodyFull = bodyFull[:10000] + "... [truncated]"
 	}
 
 	// Extract data
 	combined := strings.ToLower(subject + " " + body)
 	isTest := detectTest(combined)
 	isConfirmation := detectConfirmation(combined)
+	isReply := detectReply(subject)
+	
+	// Form submission detection
+	isFormSubmission, source, sourcePage := detectFormSubmission(from, subject, body)
+	
+	// Client information
 	clientEmail := extractClientEmail(normalizedFrom, normalizedTo, body)
 	normalizedClientEmail := normalizeEmail(clientEmail)
+	clientDomain := extractDomain(normalizedClientEmail)
+	clientName := extractClientName(from, body)
 	
+	// Event and pricing data
 	eventData := extractEventData(body, subject)
 	pricingData := extractPricingData(body, subject)
-	emailType := classifyEmailType(subject, body, normalizedFrom)
+	
+	// Email classification with confidence
+	emailType, emailTypeConfidence := classifyEmailType(subject, body, normalizedFrom)
 
 	// Use thread ID + normalized client email for conversation grouping
 	// Gmail thread ID groups all replies/forwards in same conversation
@@ -1016,6 +1073,7 @@ func processMessage(ctx context.Context, service *gmail.Service, userEmail, mess
 	}
 	
 	return &EmailData{
+		// Core email metadata
 		EmailID:              messageID,
 		ThreadID:            msg.ThreadId,
 		Date:                date,
@@ -1023,24 +1081,52 @@ func processMessage(ctx context.Context, service *gmail.Service, userEmail, mess
 		ToEmail:             to,
 		Subject:             subject,
 		BodyPreview:         bodyPreview,
+		BodyFull:            bodyFull,
+		
+		// Classification & Detection
 		IsTest:              isTest,
 		IsConfirmation:      isConfirmation,
+		IsFormSubmission:    isFormSubmission,
+		IsReply:             isReply,
+		EmailType:           emailType,
+		EmailTypeConfidence: emailTypeConfidence,
+		Source:              source,
+		SourcePage:          sourcePage,
+		
+		// Client Information
 		ClientEmail:         clientEmail,
 		NormalizedClientEmail: normalizedClientEmail,
+		ClientDomain:        clientDomain,
+		ClientName:           clientName,
+		
+		// Event Details
 		EventDate:           eventData.EventDate,
-		TotalCost:           pricingData.TotalCost,
-		Rate:                pricingData.Rate,
+		EventDateParsed:     eventData.EventDateParsed,
+		EventStartTime:      eventData.EventStartTime,
+		EventEndTime:        eventData.EventEndTime,
+		EventType:           eventData.EventType,
 		Hours:               eventData.Hours,
 		Helpers:             eventData.Helpers,
+		HelperAmount:        eventData.HelperAmount,
 		Occasion:            eventData.Occasion,
-		Status:              getStatus(isConfirmation, isTest),
 		Guests:              eventData.Guests,
+		EventNotes:          eventData.EventNotes,
+		
+		// Pricing Information
+		TotalCost:           pricingData.TotalCost,
+		Rate:                pricingData.Rate,
 		Deposit:             pricingData.Deposit,
-		EmailType:           emailType,
+		PayoutAmount:        pricingData.PayoutAmount,
+		SelfPayoutAmount:    pricingData.SelfPayoutAmount,
+		
+		// Status & Tracking
+		Status:              getStatus(isConfirmation, isTest),
 		ConversationID:      conversationID,
 		MessageNumber:       1,
 		ForwardedFrom:       forwardedFrom,
 		MigrationDetected:   migrationDetected,
+		
+		// Job Tracking
 		JobID:               "", // Will be set in processEmails
 		JobName:             "", // Will be set in processEmails
 	}, nil
@@ -1146,54 +1232,256 @@ func extractClientEmail(from, to, body string) string {
 }
 
 type EventData struct {
-	EventDate string
-	Hours     string
-	Helpers   string
-	Occasion  string
-	Guests    string
+	EventDate      string
+	EventDateParsed time.Time
+	EventStartTime string
+	EventEndTime   string
+	EventType      string
+	Hours          string
+	Helpers        string
+	HelperAmount   float64
+	Occasion       string
+	Guests         string
+	EventNotes     string
 }
 
 func extractEventData(body, subject string) EventData {
+	combined := body + " " + subject
+	lower := strings.ToLower(combined)
+	
+	// Extract event date (multiple patterns)
 	datePatterns := []string{
 		`(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})`,
+		`(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}`,
 		`(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}`,
+		`\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b`,
 	}
-
+	
 	var eventDate string
+	var eventDateParsed time.Time
 	for _, pattern := range datePatterns {
-		re := regexp.MustCompile(pattern)
-		matches := re.FindStringSubmatch(body + " " + subject)
+		re := regexp.MustCompile(`(?i)` + pattern)
+		matches := re.FindStringSubmatch(combined)
 		if len(matches) > 0 {
 			eventDate = matches[0]
+			// Try to parse it
+			if parsed, err := parseEventDate(eventDate); err == nil {
+				eventDateParsed = parsed
+			}
 			break
 		}
 	}
+	
+	// Extract start/end time
+	timePattern := regexp.MustCompile(`(?i)(\d{1,2}):?(\d{2})?\s*(am|pm|AM|PM)`)
+	timeMatches := timePattern.FindAllString(combined, 2)
+	var startTime, endTime string
+	if len(timeMatches) > 0 {
+		startTime = timeMatches[0]
+	}
+	if len(timeMatches) > 1 {
+		endTime = timeMatches[1]
+	}
+	
+	// Extract event type
+	eventType := ""
+	eventTypePatterns := map[string]string{
+		"birthday":     "Birthday",
+		"corporate":    "Corporate",
+		"wedding":      "Wedding",
+		"anniversary":  "Anniversary",
+		"graduation":   "Graduation",
+		"holiday":      "Holiday",
+		"fundraiser":   "Fundraiser",
+		"school":       "School",
+		"party":        "Party",
+	}
+	for keyword, etype := range eventTypePatterns {
+		if strings.Contains(lower, keyword) {
+			eventType = etype
+			break
+		}
+	}
+	
+	// Extract hours/duration
+	var hours string
+	hoursPattern := regexp.MustCompile(`(?i)(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)`)
+	if matches := hoursPattern.FindStringSubmatch(combined); len(matches) > 0 {
+		hours = matches[1]
+	}
+	
+	// Extract helpers count
+	helpersPattern := regexp.MustCompile(`(?i)(\d+)\s*(?:helpers?|staff|people|workers?)`)
+	var helpers string
+	var helperAmount float64
+	if matches := helpersPattern.FindStringSubmatch(combined); len(matches) > 0 {
+		helpers = matches[1]
+		// Try to extract helper amount (e.g., "$50 per helper")
+		helperAmountPattern := regexp.MustCompile(`(?i)(?:per helper|helper rate|each helper).*?\$?(\d+(?:\.\d+)?)`)
+		if amtMatches := helperAmountPattern.FindStringSubmatch(combined); len(amtMatches) > 0 {
+			if amt, err := parseDollarAmount(amtMatches[1]); err == nil {
+				helperAmount = amt
+			}
+		}
+	}
+	
+	// Extract guests
+	guestsPattern := regexp.MustCompile(`(?i)(\d+)\s*(?:guests?|people|attendees?)`)
+	var guests string
+	if matches := guestsPattern.FindStringSubmatch(combined); len(matches) > 0 {
+		guests = matches[1]
+	}
+	
+	// Extract occasion/notes (look for common phrases)
+	var eventNotes string
+	notesPatterns := []string{
+		`(?i)notes?[:\s]+([^\n]{10,200})`,
+		`(?i)special\s+requests?[:\s]+([^\n]{10,200})`,
+		`(?i)additional\s+info[:\s]+([^\n]{10,200})`,
+	}
+	for _, pattern := range notesPatterns {
+		re := regexp.MustCompile(pattern)
+		if matches := re.FindStringSubmatch(combined); len(matches) > 1 {
+			eventNotes = strings.TrimSpace(matches[1])
+			if len(eventNotes) > 500 {
+				eventNotes = eventNotes[:500] + "..."
+			}
+			break
+		}
+	}
+	
+	return EventData{
+		EventDate:      eventDate,
+		EventDateParsed: eventDateParsed,
+		EventStartTime: startTime,
+		EventEndTime:   endTime,
+		EventType:      eventType,
+		Hours:          hours,
+		Helpers:        helpers,
+		HelperAmount:   helperAmount,
+		Occasion:       eventType, // Use event type as occasion if no specific occasion found
+		Guests:         guests,
+		EventNotes:     eventNotes,
+	}
+}
 
-	return EventData{EventDate: eventDate}
+func parseEventDate(dateStr string) (time.Time, error) {
+	formats := []string{
+		"1/2/2006",
+		"01/02/2006",
+		"1-2-2006",
+		"01-02-2006",
+		"January 2, 2006",
+		"January 2nd, 2006",
+		"Jan 2, 2006",
+		"1/2/06",
+		"01/02/06",
+	}
+	
+	for _, format := range formats {
+		if t, err := time.Parse(format, dateStr); err == nil {
+			return t, nil
+		}
+	}
+	
+	return time.Time{}, fmt.Errorf("unable to parse date: %s", dateStr)
 }
 
 type PricingData struct {
-	TotalCost float64
-	Rate      float64
-	Deposit   float64
+	TotalCost        float64
+	Rate             float64
+	Deposit          float64
+	PayoutAmount     float64 // Calculated: TotalCost * 0.45
+	SelfPayoutAmount float64 // Calculated: PayoutAmount * 0.10
 }
 
 func extractPricingData(body, subject string) PricingData {
-	dollarRegex := regexp.MustCompile(`\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)`)
-	matches := dollarRegex.FindAllString(body+" "+subject, -1)
-
+	combined := body + " " + subject
+	
+	// More intelligent pricing extraction with context
 	var totalCost, rate, deposit float64
-	if len(matches) > 0 {
-		totalCost, _ = parseDollarAmount(matches[0])
+	
+	// Extract total cost (look for "total", "amount", "cost", "$X")
+	totalPatterns := []string{
+		`(?i)total[:\s]+\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)`,
+		`(?i)amount[:\s]+\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)`,
+		`(?i)cost[:\s]+\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)`,
+		`(?i)\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s*(?:total|amount)`,
 	}
-	if len(matches) > 1 {
-		rate, _ = parseDollarAmount(matches[1])
+	for _, pattern := range totalPatterns {
+		re := regexp.MustCompile(pattern)
+		if matches := re.FindStringSubmatch(combined); len(matches) > 1 {
+			if val, err := parseDollarAmount(matches[1]); err == nil {
+				totalCost = val
+				break
+			}
+		}
 	}
-	if len(matches) > 2 {
-		deposit, _ = parseDollarAmount(matches[2])
+	
+	// Extract rate (look for "rate", "per hour", "$X/hour")
+	ratePatterns := []string{
+		`(?i)rate[:\s]+\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)`,
+		`(?i)\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s*(?:per hour|/hour|per hr)`,
+		`(?i)hourly[:\s]+\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)`,
 	}
-
-	return PricingData{TotalCost: totalCost, Rate: rate, Deposit: deposit}
+	for _, pattern := range ratePatterns {
+		re := regexp.MustCompile(pattern)
+		if matches := re.FindStringSubmatch(combined); len(matches) > 1 {
+			if val, err := parseDollarAmount(matches[1]); err == nil {
+				rate = val
+				break
+			}
+		}
+	}
+	
+	// Extract deposit (look for "deposit", "down payment")
+	depositPatterns := []string{
+		`(?i)deposit[:\s]+\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)`,
+		`(?i)down payment[:\s]+\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)`,
+	}
+	for _, pattern := range depositPatterns {
+		re := regexp.MustCompile(pattern)
+		if matches := re.FindStringSubmatch(combined); len(matches) > 1 {
+			if val, err := parseDollarAmount(matches[1]); err == nil {
+				deposit = val
+				break
+			}
+		}
+	}
+	
+	// Fallback: if no context found, try simple dollar amounts (largest is usually total)
+	if totalCost == 0 {
+		dollarRegex := regexp.MustCompile(`\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)`)
+		matches := dollarRegex.FindAllString(combined, -1)
+		if len(matches) > 0 {
+			// Find the largest amount (likely total)
+			var amounts []float64
+			for _, match := range matches {
+				if val, err := parseDollarAmount(match); err == nil && val > 0 {
+					amounts = append(amounts, val)
+				}
+			}
+			if len(amounts) > 0 {
+				sort.Float64s(amounts)
+				totalCost = amounts[len(amounts)-1]
+				if len(amounts) > 1 {
+					deposit = amounts[0] // Smallest might be deposit
+				}
+			}
+		}
+	}
+	
+	// Calculate payouts (45% of total, 10% of payout to self)
+	payoutAmount := totalCost * 0.45
+	selfPayoutAmount := payoutAmount * 0.10
+	
+	return PricingData{
+		TotalCost:        totalCost,
+		Rate:             rate,
+		Deposit:          deposit,
+		PayoutAmount:     payoutAmount,
+		SelfPayoutAmount: selfPayoutAmount,
+	}
 }
 
 func parseDollarAmount(str string) (float64, error) {
@@ -1201,16 +1489,180 @@ func parseDollarAmount(str string) (float64, error) {
 	return strconv.ParseFloat(cleaned, 64)
 }
 
-func classifyEmailType(subject, body, from string) string {
-	stlphKeywords := []string{"party", "event", "helpers", "booking", "quote", "stl party"}
-	combined := strings.ToLower(subject + " " + body)
+// EmailClassificationResult contains classification and confidence
+type EmailClassificationResult struct {
+	Type       string
+	Confidence float64
+}
 
+func classifyEmailType(subject, body, from string) (string, float64) {
+	combined := strings.ToLower(subject + " " + body)
+	fromLower := strings.ToLower(from)
+	
+	// STLPH keywords (business-related)
+	stlphKeywords := []string{
+		"party helpers", "stl party", "party helpers stl", "stlpartyhelpers",
+		"booking", "quote", "estimate", "deposit", "event helpers",
+		"party planning", "event staff", "helpers needed",
+	}
+	
+	// Marketing keywords
+	marketingKeywords := []string{
+		"newsletter", "promotion", "sale", "discount", "offer",
+		"unsubscribe", "marketing", "advertisement", "sponsor",
+	}
+	
+	// School keywords
+	schoolKeywords := []string{
+		"school", "pta", "pta meeting", "parent teacher",
+		"school event", "fundraiser", "school fundraiser",
+		"grade", "teacher", "principal", "school board",
+	}
+	
+	// Score each category
+	stlphScore := 0.0
+	marketingScore := 0.0
+	schoolScore := 0.0
+	
+	// Check STLPH
 	for _, kw := range stlphKeywords {
 		if strings.Contains(combined, kw) {
-			return "STLPH"
+			stlphScore += 1.0
 		}
 	}
-	return "Other"
+	// Bonus for STLPH domain
+	if strings.Contains(fromLower, "stlpartyhelpers") || strings.Contains(fromLower, "team@stlpartyhelpers") {
+		stlphScore += 2.0
+	}
+	
+	// Check Marketing
+	for _, kw := range marketingKeywords {
+		if strings.Contains(combined, kw) {
+			marketingScore += 1.0
+		}
+	}
+	
+	// Check School
+	for _, kw := range schoolKeywords {
+		if strings.Contains(combined, kw) {
+			schoolScore += 1.0
+		}
+	}
+	
+	// Determine winner
+	maxScore := stlphScore
+	resultType := "STLPH"
+	if marketingScore > maxScore {
+		maxScore = marketingScore
+		resultType = "Marketing"
+	}
+	if schoolScore > maxScore {
+		maxScore = schoolScore
+		resultType = "School"
+	}
+	
+	// Calculate confidence (normalize to 0.0-1.0)
+	totalScore := stlphScore + marketingScore + schoolScore
+	confidence := 0.5 // Default
+	if totalScore > 0 {
+		confidence = maxScore / totalScore
+		if confidence > 1.0 {
+			confidence = 1.0
+		}
+	}
+	
+	// If no strong match, default to "Other"
+	if maxScore < 1.0 {
+		resultType = "Other"
+		confidence = 0.3
+	}
+	
+	return resultType, confidence
+}
+
+func detectFormSubmission(from, subject, body string) (bool, string, string) {
+	fromLower := strings.ToLower(from)
+	subjectLower := strings.ToLower(subject)
+	bodyLower := strings.ToLower(body)
+	combined := subjectLower + " " + bodyLower
+	
+	// Zapier indicators
+	if strings.Contains(fromLower, "zapier") || strings.Contains(combined, "zapier") {
+		// Try to extract form/page name from subject
+		page := extractPageFromSubject(subject)
+		return true, "Zapier", page
+	}
+	
+	// Google Forms indicators
+	if strings.Contains(fromLower, "forms.gle") || strings.Contains(combined, "google forms") {
+		return true, "Google Forms", extractPageFromSubject(subject)
+	}
+	
+	// Form submission keywords
+	formKeywords := []string{"form submission", "new lead", "new inquiry", "contact form"}
+	for _, kw := range formKeywords {
+		if strings.Contains(combined, kw) {
+			return true, "Website", extractPageFromSubject(subject)
+		}
+	}
+	
+	return false, "Unknown", ""
+}
+
+func extractPageFromSubject(subject string) string {
+	// Try to extract page/form name from subject
+	// Common patterns: "New Lead from [Page]", "Form: [Page]", "[Page] - Contact Form"
+	patterns := []string{
+		`(?i)from\s+([^-:\n]+)`,
+		`(?i)form[:\s]+([^-:\n]+)`,
+		`(?i)^([^-:\n]+)\s*[-:]`,
+	}
+	
+	for _, pattern := range patterns {
+		re := regexp.MustCompile(pattern)
+		if matches := re.FindStringSubmatch(subject); len(matches) > 1 {
+			page := strings.TrimSpace(matches[1])
+			if len(page) > 0 && len(page) < 100 {
+				return page
+			}
+		}
+	}
+	
+	return "Unknown"
+}
+
+func detectReply(subject string) bool {
+	subjectLower := strings.ToLower(subject)
+	return strings.HasPrefix(subjectLower, "re:") || strings.HasPrefix(subjectLower, "fwd:") || strings.HasPrefix(subjectLower, "fw:")
+}
+
+func extractClientName(from, body string) string {
+	// Try to extract name from "Name <email>" format
+	namePattern := regexp.MustCompile(`^([^<]+)\s*<`)
+	if matches := namePattern.FindStringSubmatch(from); len(matches) > 1 {
+		name := strings.TrimSpace(matches[1])
+		// Remove quotes
+		name = strings.Trim(name, `"'`)
+		if len(name) > 0 && len(name) < 100 {
+			return name
+		}
+	}
+	
+	// Try to extract from body (e.g., "Hi, [Name]")
+	greetingPattern := regexp.MustCompile(`(?i)(?:hi|hello|dear)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)`)
+	if matches := greetingPattern.FindStringSubmatch(body); len(matches) > 1 {
+		return strings.TrimSpace(matches[1])
+	}
+	
+	return ""
+}
+
+func extractDomain(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) == 2 {
+		return strings.ToLower(parts[1])
+	}
+	return ""
 }
 
 func getStatus(isConfirmation, isTest bool) string {
@@ -1224,7 +1676,13 @@ func getStatus(isConfirmation, isTest bool) string {
 }
 
 func (e *EmailData) ToRow() []interface{} {
+	eventDateParsed := ""
+	if !e.EventDateParsed.IsZero() {
+		eventDateParsed = e.EventDateParsed.Format(time.RFC3339)
+	}
+	
 	return []interface{}{
+		// Core email metadata
 		e.EmailID,
 		e.ThreadID,
 		e.Date.Format(time.RFC3339),
@@ -1232,26 +1690,54 @@ func (e *EmailData) ToRow() []interface{} {
 		e.ToEmail,
 		e.Subject,
 		e.BodyPreview,
+		e.BodyFull, // Full body for later analysis
+		
+		// Classification & Detection
 		strconv.FormatBool(e.IsTest),
 		strconv.FormatBool(e.IsConfirmation),
+		strconv.FormatBool(e.IsFormSubmission),
+		strconv.FormatBool(e.IsReply),
+		e.EmailType,
+		fmt.Sprintf("%.2f", e.EmailTypeConfidence),
+		e.Source,
+		e.SourcePage,
+		
+		// Client Information
 		e.ClientEmail,
 		e.NormalizedClientEmail,
+		e.ClientDomain,
+		e.ClientName,
+		
+		// Event Details
 		e.EventDate,
-		e.TotalCost,
-		e.Rate,
+		eventDateParsed,
+		e.EventStartTime,
+		e.EventEndTime,
+		e.EventType,
 		e.Hours,
 		e.Helpers,
+		fmt.Sprintf("%.2f", e.HelperAmount),
 		e.Occasion,
-		e.Status,
 		e.Guests,
-		e.Deposit,
-		e.EmailType,
+		e.EventNotes,
+		
+		// Pricing Information
+		fmt.Sprintf("%.2f", e.TotalCost),
+		fmt.Sprintf("%.2f", e.Rate),
+		fmt.Sprintf("%.2f", e.Deposit),
+		fmt.Sprintf("%.2f", e.PayoutAmount),
+		fmt.Sprintf("%.2f", e.SelfPayoutAmount),
+		
+		// Status & Tracking
+		e.Status,
 		e.ConversationID,
 		e.MessageNumber,
 		e.ForwardedFrom,
 		strconv.FormatBool(e.MigrationDetected),
-		e.JobID,   // Job ID that processed this
-		e.JobName, // Job name/description
+		
+		// Job Tracking
+		e.JobID,
+		e.JobName,
 	}
 }
 
