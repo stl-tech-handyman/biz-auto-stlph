@@ -293,6 +293,8 @@ func acquireLock(ctx context.Context, service *sheets.Service, spreadsheetID, ag
 	if idempotent {
 		fmt.Printf("🔄 Idempotent mode: Clearing existing locks and recreating sheets\n")
 		clearAllLocks(ctx, service, spreadsheetID)
+		// After clearing, treat as no active locks (idempotent override)
+		locks = nil
 		// Will recreate sheets in initializeSheets
 	}
 	
