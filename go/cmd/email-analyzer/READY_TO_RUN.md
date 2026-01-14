@@ -21,13 +21,13 @@ The analyzer now uses **Gmail's native identifiers** for perfect resume and conv
 ### Process All Emails
 ```bash
 cd go/cmd/email-analyzer
-go run main.go -all -v
+go run main.go -all -workers 5 -v
 ```
 
 ### Resume After Interruption
 ```bash
 # If process stops, just resume with spreadsheet ID
-go run main.go -all -resume -spreadsheet YOUR_SPREADSHEET_ID -v
+go run main.go -all -workers 5 -resume -spreadsheet YOUR_SPREADSHEET_ID -v
 ```
 
 ## 🔄 Resume Features
@@ -85,7 +85,7 @@ Resume:
 ### Always Use Resume Flag
 ```bash
 # Even for first run, use -resume
-go run main.go -all -resume -v
+go run main.go -all -workers 5 -resume -v
 # If spreadsheet exists → resumes
 # If new → starts fresh
 ```
@@ -98,8 +98,13 @@ After first run, save the spreadsheet ID from output:
 
 Use it for all subsequent runs:
 ```bash
-go run main.go -all -resume -spreadsheet abc123... -v
+go run main.go -all -workers 5 -resume -spreadsheet abc123... -v
 ```
+
+## Recommended Worker Count
+
+- **3 workers**: safest default for long runs
+- **5 workers**: faster (recommended)
 
 ### Monitor Progress
 - Check **State sheet** for progress

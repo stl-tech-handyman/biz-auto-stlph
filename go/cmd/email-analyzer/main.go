@@ -647,7 +647,6 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 				processedCount++
 				currentProcessed := processedCount
 				currentSkipped := skippedCount
-				currentBatch := batch
 				shouldWriteBatch := len(batch) >= 25
 				mu.Unlock()
 
@@ -659,22 +658,22 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 				if shouldWriteBatch {
 					mu.Lock()
 					// Double-check batch size (another worker might have written)
-					if len(batch) >= 25 {
-						writeBatch := make([][]interface{}, len(batch))
-						copy(writeBatch, batch)
+						if len(batch) >= 25 {
+						batchToWrite := make([][]interface{}, len(batch))
+						copy(batchToWrite, batch)
 						batch = [][]interface{}{} // Clear batch
 						mu.Unlock()
 
-						if err := writeBatch(ctx, sheetsService, spreadsheetID, writeBatch); err != nil {
+						if err := writeBatch(ctx, sheetsService, spreadsheetID, batchToWrite); err != nil {
 							fmt.Printf("  ⚠️  Error writing batch: %v\n", err)
 							mu.Lock()
-							batch = writeBatch // Restore batch on error
+							batch = batchToWrite // Restore batch on error
 							mu.Unlock()
 							continue
 						}
 
 						if verbose {
-							fmt.Printf("  💾 Wrote batch of %d emails\n", len(writeBatch))
+							fmt.Printf("  💾 Wrote batch of %d emails\n", len(batchToWrite))
 						}
 
 						// Save state after batch write
@@ -868,199 +867,6 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 	writeEmailMapping(ctx, sheetsService, spreadsheetID, emailMapping)
 
 	return finalProcessed, finalSkipped, nil
-
-	for batchNum := 0; ; batchNum++ {
-		// Check if we've hit the limit
-		if maxEmails > 0 && processed >= maxEmails {
-			fmt.Printf("\n✅ Reached max emails limit (%d)\n", maxEmails)
-			break
-		}
-
-		if verbose {
-			fmt.Printf("📦 Processing batch %d...\n", batchNum+1)
-		} else if batchNum%10 == 0 {
-			fmt.Printf("📦 Batch %d | Processed: %d | Skipped: %d | Elapsed: %s\n",
-				batchNum+1, processed, skipped, time.Since(startTime).Round(time.Second))
-		}
-
-		// Search Gmail with pagination
-		// For domain-wide delegation, use the actual email address (not "me")
-		call := gmailService.Users.Messages.List(userEmail).
-			Q(query).
-			MaxResults(int64(batchSize))
-
-		if pageToken != "" {
-			call = call.PageToken(pageToken)
-		}
-
-		resp, err := call.Context(ctx).Do()
-		if err != nil {
-			return processed, skipped, fmt.Errorf("failed to search emails: %w", err)
-		}
-
-		if len(resp.Messages) == 0 {
-			fmt.Printf("\n✅ No more emails found\n")
-			break
-		}
-
-		// Process each message in this batch
-		for i, msg := range resp.Messages {
-			// Skip if already processed (using message ID - Gmail's unique identifier)
-			if processedIDsSet[msg.Id] {
-				if verbose {
-					fmt.Printf("  ⏭️  Skipping already processed message ID: %s (thread: %s)\n", msg.Id, msg.ThreadId)
-				}
-				skipped++
-				continue
-			}
-
-			emailData, err := processMessage(ctx, gmailService, userEmail, msg.Id, emailMapping, verbose && i < 3)
-			if err != nil {
-				if verbose {
-					fmt.Printf("  ⚠️  Error processing %s: %v\n", msg.Id, err)
-				}
-				skipped++
-				continue
-			}
-
-			if emailData == nil || emailData.IsTest {
-				skipped++
-				continue
-			}
-			
-			// Stamp with job ID
-			emailData.JobID = jobID
-			emailData.JobName = jobName
-
-			batch = append(batch, emailData.ToRow())
-			
-			// Track by message ID (Gmail's unique identifier) - this is the key for resume
-			*processedIDsList = append(*processedIDsList, msg.Id)
-			processedIDsSet[msg.Id] = true
-			processed++
-			
-			if verbose && i < 3 {
-				fmt.Printf("  ✅ Processing message ID: %s | Thread: %s\n", msg.Id, msg.ThreadId)
-			}
-
-			// Write batch when it reaches size
-			if len(batch) >= 25 {
-				if err := writeBatch(ctx, sheetsService, spreadsheetID, batch); err != nil {
-					return processed, skipped, fmt.Errorf("failed to write batch: %w", err)
-				}
-				if verbose {
-					fmt.Printf("  💾 Wrote batch of %d emails\n", len(batch))
-				}
-				batch = [][]interface{}{}
-				
-				// Save state after each batch write (critical for resume)
-				state := &State{
-					LastIndex:      startIndex + processed + skipped,
-					TotalProcessed: processed,
-					LastRun:        time.Now(),
-					ProcessedIDs:   *processedIDsList,
-					CurrentJobID:   jobID,
-					CurrentJobName: jobName,
-				}
-				if err := saveState(ctx, sheetsService, spreadsheetID, state); err == nil {
-					lastStateSave = time.Now()
-					if verbose {
-						fmt.Printf("  💾 State saved (%d message IDs tracked, Job: %s)\n", len(*processedIDsList), jobID)
-					}
-				} else if verbose {
-					fmt.Printf("  ⚠️  Warning: Failed to save state: %v\n", err)
-				}
-				
-				// Update job stats incrementally
-				updateJobStats(ctx, sheetsService, spreadsheetID, jobID, jobName, agentID, processed, skipped, false)
-			}
-
-			// Progress update
-			if processed%100 == 0 {
-				elapsed := time.Since(startTime)
-				rate := float64(processed) / elapsed.Seconds()
-				remaining := ""
-				if maxEmails > 0 {
-					remaining = fmt.Sprintf(" | Remaining: %d", maxEmails-processed)
-				}
-				fmt.Printf("  📊 Progress: %d processed | %d skipped | %.1f emails/sec%s\n",
-					processed, skipped, rate, remaining)
-			}
-		}
-
-		// Check if there are more pages
-		pageToken = resp.NextPageToken
-		if pageToken == "" {
-			fmt.Printf("\n✅ Reached end of results\n")
-			break
-		}
-
-		// Refresh lock every 30 seconds (extend expiration)
-		if time.Since(lastLockRefresh) > 30*time.Second {
-			// Extend lock expiration
-			if err := refreshLock(ctx, sheetsService, spreadsheetID, agentID); err != nil {
-				if verbose {
-					fmt.Printf("  ⚠️  Warning: Failed to refresh lock: %v\n", err)
-				}
-			} else if verbose {
-				fmt.Printf("  🔒 Lock refreshed (agent: %s)\n", agentID)
-			}
-			lastLockRefresh = time.Now()
-		}
-		
-		// Auto-save state every 2 minutes (more frequent for safety)
-		// Uses message IDs to track what's been processed
-		if time.Since(lastStateSave) > 2*time.Minute {
-			state := &State{
-				LastIndex:      startIndex + processed + skipped,
-				TotalProcessed: processed,
-				LastRun:        time.Now(),
-				ProcessedIDs:   *processedIDsList, // All message IDs processed so far
-				CurrentJobID:   jobID,
-				CurrentJobName: jobName,
-			}
-			if err := saveState(ctx, sheetsService, spreadsheetID, state); err == nil {
-				lastStateSave = time.Now()
-				if verbose {
-					fmt.Printf("  💾 Auto-saved state (%d message IDs tracked, Job: %s)\n", len(*processedIDsList), jobID)
-				} else {
-					fmt.Printf("  💾 State saved (%d message IDs, Job: %s)\n", len(*processedIDsList), jobID)
-				}
-			}
-			
-			// Update job stats
-			updateJobStats(ctx, sheetsService, spreadsheetID, jobID, jobName, agentID, processed, skipped, false)
-		}
-
-		// Rate limiting delay
-		if delayMs > 0 {
-			time.Sleep(time.Duration(delayMs) * time.Millisecond)
-		}
-	}
-
-	// Write remaining batch
-	if len(batch) > 0 {
-		if err := writeBatch(ctx, sheetsService, spreadsheetID, batch); err != nil {
-			return processed, skipped, fmt.Errorf("failed to write final batch: %w", err)
-		}
-		if verbose {
-			fmt.Printf("  💾 Wrote final batch of %d emails\n", len(batch))
-		}
-		
-		// Save state after final batch
-		state := &State{
-			LastIndex:      startIndex + processed + skipped,
-			TotalProcessed: processed,
-			LastRun:        time.Now(),
-			ProcessedIDs:   *processedIDsList,
-		}
-		saveState(ctx, sheetsService, spreadsheetID, state)
-	}
-
-	// Write email mapping
-	writeEmailMapping(ctx, sheetsService, spreadsheetID, emailMapping)
-
-	return processed, skipped, nil
 }
 
 type EmailData struct {

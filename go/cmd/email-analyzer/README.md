@@ -2,6 +2,10 @@
 
 This is a **local, AI-assisted email analyzer** that runs directly in Cursor. Unlike the Cloud Run version, this can adapt and reason as it processes emails.
 
+## Docs index
+
+See `DOCS_INDEX.md` for the full set of supporting docs/checklists.
+
 ## Features
 
 ✅ **Email Migration Handling**
@@ -17,6 +21,10 @@ This is a **local, AI-assisted email analyzer** that runs directly in Cursor. Un
 - Can be enhanced with reasoning logic
 - Verbose logging for debugging
 - Adapts patterns as it learns
+
+✅ **Fast Processing (Goroutine Workers)**
+- Uses a **worker pool** (`-workers N`) to process emails concurrently inside a single run
+- Recommended: **3–5 workers** (higher may hit Gmail API rate limits)
 
 ## Quick Start
 
@@ -48,14 +56,14 @@ chmod +x run-email-analyzer.sh
 **Or directly:**
 ```bash
 cd go/cmd/email-analyzer
-go run main.go -max 50 -v
+go run main.go -max 50 -workers 3 -v
 ```
 
 ## Command Line Options
 
 ```
 -max int
-    Maximum emails to process (default: 100)
+    Maximum emails to process (0 = process all available)
 
 -query string
     Gmail search query (default: searches for form submissions)
@@ -66,6 +74,9 @@ go run main.go -max 50 -v
 -resume
     Resume from last position
 
+-workers int
+    Number of concurrent workers (recommended: 3-5)
+
 -v
     Verbose logging
 ```
@@ -74,17 +85,17 @@ go run main.go -max 50 -v
 
 ### Process 50 emails (test)
 ```bash
-go run main.go -max 50 -v
+go run main.go -max 50 -workers 3 -v
 ```
 
 ### Process 500 emails with custom query
 ```bash
-go run main.go -max 500 -query "from:zapier.com" -v
+go run main.go -max 500 -workers 5 -query "from:zapier.com" -v
 ```
 
 ### Resume processing
 ```bash
-go run main.go -max 1000 -resume -spreadsheet YOUR_SPREADSHEET_ID -v
+go run main.go -max 1000 -workers 5 -resume -spreadsheet YOUR_SPREADSHEET_ID -v
 ```
 
 ## Output
@@ -103,6 +114,10 @@ Creates a Google Sheet with:
 3. **State** - Processing state for resume
 
 4. **Processing Log** - Processing history
+
+5. **Locks** - Lock rows to prevent multiple processes writing the same spreadsheet at once
+
+6. **Job Stats** - Per-job stats shown on the dashboard
 
 ## Email Migration Logic
 

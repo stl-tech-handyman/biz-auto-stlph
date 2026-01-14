@@ -30,13 +30,13 @@ run-email-analyzer.bat
 **Or directly:**
 ```cmd
 cd go\cmd\email-analyzer
-email-analyzer.exe -max 50 -v
+email-analyzer.exe -max 50 -workers 3 -v
 ```
 
 **Linux/Mac:**
 ```bash
 cd go/cmd/email-analyzer
-go run main.go -max 50 -v
+go run main.go -max 50 -workers 3 -v
 ```
 
 ## What It Does
@@ -50,10 +50,11 @@ go run main.go -max 50 -v
 ## Command Options
 
 ```
--max int          Maximum emails to process (default: 100)
+-max int          Maximum emails to process (0 = process all available)
 -query string     Gmail search query
 -spreadsheet string  Existing spreadsheet ID
 -resume           Resume from last position
+-workers int      Number of concurrent workers (recommended: 3-5)
 -v                Verbose logging (see what's happening)
 ```
 
@@ -61,23 +62,29 @@ go run main.go -max 50 -v
 
 ### Test Run (50 emails)
 ```bash
-go run main.go -max 50 -v
+go run main.go -max 50 -workers 3 -v
 ```
 
 ### Process 500 emails
 ```bash
-go run main.go -max 500 -v
+go run main.go -max 500 -workers 5 -v
 ```
 
 ### Custom query
 ```bash
-go run main.go -max 100 -query "from:zapier.com" -v
+go run main.go -max 100 -workers 5 -query "from:zapier.com" -v
 ```
 
 ### Resume processing
 ```bash
-go run main.go -max 1000 -resume -spreadsheet YOUR_ID -v
+go run main.go -max 1000 -workers 5 -resume -spreadsheet YOUR_ID -v
 ```
+
+## Recommended Worker Counts
+
+- **3 workers**: safe default for long runs
+- **5 workers**: faster, still usually safe
+- **> 5**: may hit Gmail API rate limits depending on your quota / traffic
 
 ## Output
 

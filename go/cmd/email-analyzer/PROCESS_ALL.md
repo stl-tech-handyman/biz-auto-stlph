@@ -9,7 +9,7 @@ The local analyzer can process all your emails efficiently. Here's how:
 ### Process All Emails (Recommended)
 ```bash
 cd go/cmd/email-analyzer
-go run main.go -all -v
+go run main.go -all -workers 5 -v
 ```
 
 ### Process with Custom Settings
@@ -25,20 +25,20 @@ go run main.go -max 10000 -v
 
 ### Option 1: Process All at Once
 ```bash
-go run main.go -all -v
+go run main.go -all -workers 5 -v
 ```
 - Processes ALL available emails
-- Auto-saves state every 5 minutes
+- Auto-saves state every 2 minutes
 - Can be interrupted and resumed
 - Best for: Let it run overnight
 
 ### Option 2: Process in Chunks
 ```bash
 # First run: 10,000 emails
-go run main.go -max 10000 -v
+go run main.go -max 10000 -workers 5 -v
 
 # Second run: Resume and process next 10,000
-go run main.go -max 10000 -resume -spreadsheet YOUR_ID -v
+go run main.go -max 10000 -workers 5 -resume -spreadsheet YOUR_ID -v
 
 # Continue until done...
 ```
@@ -49,7 +49,7 @@ go run main.go -max 10000 -resume -spreadsheet YOUR_ID -v
 ### Option 3: Process with Rate Limiting
 ```bash
 # Slower but safer (respects quota)
-go run main.go -all -batch 50 -delay 500 -v
+go run main.go -all -workers 3 -batch 50 -delay 500 -v
 ```
 - Larger delays between batches
 - Safer for quota limits
@@ -60,7 +60,7 @@ go run main.go -all -batch 50 -delay 500 -v
 The analyzer shows:
 - **Real-time progress**: Emails processed per second
 - **Batch updates**: Every 10 batches
-- **Auto-saves**: State saved every 5 minutes
+- **Auto-saves**: State saved every 2 minutes
 - **Final summary**: Complete stats when done
 
 ### Example Output
@@ -80,7 +80,7 @@ The analyzer shows:
 
 If interrupted, resume with:
 ```bash
-go run main.go -all -resume -spreadsheet YOUR_SPREADSHEET_ID -v
+go run main.go -all -workers 5 -resume -spreadsheet YOUR_SPREADSHEET_ID -v
 ```
 
 The analyzer will:
@@ -123,7 +123,8 @@ If processing at 3 emails/sec:
 2. **Monitor First Run**: Watch for errors
 3. **Use Resume**: Process in chunks if needed
 4. **Check Quota**: Monitor GCP Console for quota usage
-5. **Save State**: Auto-saves every 5 minutes
+5. **Save State**: Auto-saves every 2 minutes (and after batch writes)
+6. **Workers**: Prefer 3–5 workers for long runs
 
 ## Troubleshooting
 

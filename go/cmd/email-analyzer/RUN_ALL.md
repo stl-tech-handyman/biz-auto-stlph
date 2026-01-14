@@ -4,32 +4,33 @@
 
 The analyzer is now enhanced to handle **all your emails** efficiently with:
 - ✅ Progress tracking
-- ✅ Auto-save every 5 minutes
+- ✅ Auto-save every 2 minutes
 - ✅ Resume functionality
 - ✅ Rate limiting
 - ✅ Detailed statistics
+- ✅ Concurrent processing via `-workers N` goroutines
 
 ## Quick Start - Process Everything
 
 ### Option 1: Process All at Once (Recommended)
 ```bash
 cd go/cmd/email-analyzer
-go run main.go -all -v
+go run main.go -all -workers 5 -v
 ```
 
 This will:
 - Process ALL available emails
 - Show real-time progress
-- Auto-save state every 5 minutes
+- Auto-save state every 2 minutes
 - Give you complete stats when done
 
 ### Option 2: Process in Chunks (Safer)
 ```bash
 # First: 10,000 emails
-go run main.go -max 10000 -v
+go run main.go -max 10000 -workers 5 -v
 
 # Then resume and continue
-go run main.go -max 10000 -resume -spreadsheet YOUR_ID -v
+go run main.go -max 10000 -workers 5 -resume -spreadsheet YOUR_ID -v
 
 # Repeat until all processed
 ```
@@ -44,6 +45,7 @@ go run main.go -max 10000 -resume -spreadsheet YOUR_ID -v
 -resume           Resume from last position
 -spreadsheet ID   Use existing spreadsheet
 -query "..."      Custom Gmail search query
+-workers N        Number of concurrent workers (recommended: 3-5)
 -v                Verbose logging
 ```
 
@@ -51,26 +53,26 @@ go run main.go -max 10000 -resume -spreadsheet YOUR_ID -v
 
 ### Process All (Fast)
 ```bash
-go run main.go -all -batch 100 -delay 100 -v
+go run main.go -all -workers 5 -batch 100 -delay 100 -v
 ```
 - Larger batches, shorter delays
 - ~6-8 hours for 86K emails
 
 ### Process All (Safe)
 ```bash
-go run main.go -all -batch 50 -delay 500 -v
+go run main.go -all -workers 3 -batch 50 -delay 500 -v
 ```
 - Smaller batches, longer delays
 - ~12-15 hours, respects quota better
 
 ### Process 20,000 at a Time
 ```bash
-go run main.go -max 20000 -v
+go run main.go -max 20000 -workers 5 -v
 ```
 
 ### Resume Processing
 ```bash
-go run main.go -all -resume -spreadsheet YOUR_SPREADSHEET_ID -v
+go run main.go -all -workers 5 -resume -spreadsheet YOUR_SPREADSHEET_ID -v
 ```
 
 ## What You'll See
@@ -109,18 +111,19 @@ go run main.go -all -resume -spreadsheet YOUR_SPREADSHEET_ID -v
 go run main.go -max 1000 -v
 
 # Review results, then process all
-go run main.go -all -v
+go run main.go -all -workers 5 -v
 ```
 
 **Time Estimates:**
 - **Fast mode**: ~6-8 hours (batch 100, delay 100ms)
 - **Safe mode**: ~12-15 hours (batch 50, delay 500ms)
 - **Chunked**: Process 10K-20K at a time, resume between runs
+- **Workers**: 3–5 recommended. Higher may hit Gmail API throttling/quota.
 
 ## Features
 
 ### ✅ Auto-Save
-- State saved every 5 minutes
+- State saved every 2 minutes (and after batch writes)
 - Can interrupt and resume anytime
 - Progress never lost
 

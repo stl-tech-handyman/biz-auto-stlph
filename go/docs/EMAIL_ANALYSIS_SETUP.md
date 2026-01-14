@@ -4,6 +4,17 @@
 
 The Email Analysis Service processes Gmail emails and extracts business data into Google Sheets. It runs on Cloud Run and can process thousands of emails efficiently.
 
+## Two Ways to Run Email Analysis
+
+1. **Cloud Run API (service endpoints)** — `POST /api/email-analysis/analyze`
+2. **Local Analyzer CLI (recommended for big one-time backfills)** — `go/cmd/email-analyzer`
+
+The local analyzer includes:
+- fast processing using **goroutine workers** (`-workers N`)
+- robust **resume** using Gmail Message IDs
+- spreadsheet **lock** to avoid multi-process conflicts
+- a live dashboard at `/email-analysis-dashboard.html`
+
 ## Prerequisites
 
 1. **Gmail API Credentials** - Same credentials used for sending emails
@@ -258,6 +269,24 @@ done
 
 ### Error: "quota exceeded"
 - Wait for quota reset (daily)
+
+## Local Analyzer (CLI) — Quick Start
+
+See full docs in `go/cmd/email-analyzer/README.md`.
+
+```bash
+cd go/cmd/email-analyzer
+export GMAIL_CREDENTIALS_JSON="/path/to/credentials.json"
+export GMAIL_FROM="team@stlpartyhelpers.com"
+
+# Full run, 5 concurrent goroutine workers
+go run main.go -all -workers 5 -job "JOB-1-INITIAL-INDEXING" -job-name "Initial Indexing" -v
+```
+
+Notes:
+- Prefer **3–5** workers for long runs.
+- Use `-resume -spreadsheet <id>` to restart without losing progress.
+- The analyzer prints a dashboard URL: `/email-analysis-dashboard.html?spreadsheet_id=...`
 - Reduce batch size
 - Add delays between requests
 

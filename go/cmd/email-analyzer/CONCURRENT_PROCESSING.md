@@ -3,28 +3,24 @@
 ## ✅ Features
 
 The analyzer now supports **safe concurrent processing** with:
-- ✅ **Lock mechanism** - Prevents multiple agents from conflicting
+- ✅ **Lock mechanism** - Prevents multiple *processes* from conflicting when writing to the same spreadsheet
 - ✅ **Auto-expiration** - Locks expire after 1 minute (auto-cleanup)
 - ✅ **Idempotent mode** - Can recreate sheets/clear data
-- ✅ **Agent IDs** - Each process has unique identifier
+- ✅ **Agent IDs** - Each process has unique identifier (used in the Locks sheet + Job Stats)
 - ✅ **Lock refresh** - Extends lock while processing
+- ✅ **Worker pool (goroutines)** - Use `-workers N` to process emails concurrently inside a single run
 
-## 🚀 Running Multiple Agents
+## 🚀 How Concurrency Works (Important)
 
-### Agent 1
-```bash
-go run main.go -all -agent "agent-1" -v
-```
+There are **two different kinds of “concurrency”**:
 
-### Agent 2 (Different Query/Spreadsheet)
-```bash
-go run main.go -all -agent "agent-2" -query "from:zapier.com" -v
-```
+- **Workers (goroutines)**: concurrency *inside a single process* (recommended)
+  - Use `-workers 3` or `-workers 5`
+  - This is the normal way to speed up processing
 
-### Agent 3 (Different Spreadsheet)
-```bash
-go run main.go -all -agent "agent-3" -spreadsheet DIFFERENT_SPREADSHEET_ID -v
-```
+- **Agents (separate processes)**: concurrency across *multiple terminals/processes*
+  - The lock system prevents two processes from writing the same spreadsheet simultaneously
+  - If you try to run another process on the same spreadsheet, it will fail fast: “lock already held”
 
 ## 🔒 Lock System
 
@@ -51,6 +47,14 @@ go run main.go -all -agent "agent-3" -spreadsheet DIFFERENT_SPREADSHEET_ID -v
 |----------|------------|------------|--------|
 | agent-1 | 2025-01-15T10:00:00Z | 2025-01-15T10:01:00Z | ACTIVE |
 | agent-2 | 2025-01-15T10:05:00Z | 2025-01-15T10:06:00Z | EXPIRED |
+
+## ✅ Recommended: One Process + Multiple Workers
+
+Use one run with workers (goroutines):
+
+```bash
+go run main.go -all -workers 5 -v
+```
 
 ## 🧹 Auto-Cleanup
 
@@ -93,33 +97,33 @@ go run main.go -all -idempotent -v
 
 ## 📊 Concurrent Processing Strategies
 
-### Strategy 1: Different Spreadsheets
+### Strategy 1: Different Spreadsheets (multiple processes)
 ```bash
 # Agent 1: Process to spreadsheet 1
-go run main.go -all -agent "agent-1" -spreadsheet SPREADSHEET_1 -v
+go run main.go -all -workers 5 -agent "agent-1" -spreadsheet SPREADSHEET_1 -v
 
 # Agent 2: Process to spreadsheet 2
-go run main.go -all -agent "agent-2" -spreadsheet SPREADSHEET_2 -v
+go run main.go -all -workers 5 -agent "agent-2" -spreadsheet SPREADSHEET_2 -v
 ```
 ✅ **No conflicts** - Different spreadsheets
 
-### Strategy 2: Different Queries (Same Spreadsheet)
+### Strategy 2: Different Queries (Same Spreadsheet) – sequential due to lock
 ```bash
 # Agent 1: Process zapier emails
-go run main.go -max 10000 -agent "agent-1" -query "from:zapier.com" -spreadsheet ID -v
+go run main.go -max 10000 -workers 5 -agent "agent-1" -query "from:zapier.com" -spreadsheet ID -v
 
 # Agent 2: Process form submissions (waits for lock)
-go run main.go -max 10000 -agent "agent-2" -query "subject:\"Form Submission\"" -spreadsheet ID -v
+go run main.go -max 10000 -workers 5 -agent "agent-2" -query "subject:\"Form Submission\"" -spreadsheet ID -v
 ```
 ⚠️ **Sequential** - Second agent waits for first to finish
 
-### Strategy 3: Chunked Processing
+### Strategy 3: Chunked Processing (same spreadsheet, sequential runs)
 ```bash
 # Agent 1: Process first 20K
-go run main.go -max 20000 -agent "agent-1" -spreadsheet ID -v
+go run main.go -max 20000 -workers 5 -agent "agent-1" -spreadsheet ID -v
 
 # Agent 2: Process next 20K (after agent 1 finishes)
-go run main.go -max 20000 -agent "agent-2" -resume -spreadsheet ID -v
+go run main.go -max 20000 -workers 5 -agent "agent-2" -resume -spreadsheet ID -v
 ```
 ✅ **Sequential chunks** - Each agent processes different range
 
@@ -148,6 +152,9 @@ Open spreadsheet → Locks sheet:
 ```
 -agent string
     Agent ID for concurrent processing (auto-generated if empty)
+
+-workers int
+    Number of concurrent workers (goroutines) inside a single run
 
 -idempotent
     Recreate sheets if they exist (idempotent mode)
@@ -190,23 +197,23 @@ setupLockCleanup();
 ### Run Multiple Agents
 ```bash
 # Terminal 1
-go run main.go -all -agent "agent-1" -v
+go run main.go -all -workers 5 -agent "agent-1" -v
 
-# Terminal 2 (waits for lock)
-go run main.go -all -agent "agent-2" -v
+# Terminal 2 (will fail fast if same spreadsheet is locked)
+go run main.go -all -workers 5 -agent "agent-2" -v
 # Will show: ❌ Lock already held by another agent
 ```
 
 ### Resume After Lock Release
 ```bash
 # After agent-1 finishes, agent-2 can run
-go run main.go -all -agent "agent-2" -resume -spreadsheet ID -v
+go run main.go -all -workers 5 -agent "agent-2" -resume -spreadsheet ID -v
 ```
 
 ## 🎯 Best Practices
 
-1. **Use Different Spreadsheets** for true parallelism
-2. **Use Different Queries** for sequential processing
+1. **Prefer one process + `-workers 3..5`** (simple + fast)
+2. **Use different spreadsheets** if you truly need multiple processes in parallel
 3. **Monitor Locks** - Check Locks sheet regularly
 4. **Setup Cleanup** - Run Apps Script cleanup service
 5. **Use Agent IDs** - Identify which process is running
@@ -235,4 +242,4 @@ You can now safely run multiple agents:
 - ✅ Auto-cleanup = no stuck locks
 - ✅ Idempotent mode = fresh start anytime
 
-**Just use `-agent` flag to identify each process!** 🚀
+**Use `-workers` for goroutine concurrency, and `-agent` for process identity.**

@@ -27,7 +27,7 @@ The analyzer now has **robust resume functionality** that ensures you never lose
 
 **Just run with `-resume` flag:**
 ```bash
-go run main.go -all -resume -spreadsheet YOUR_SPREADSHEET_ID -v
+go run main.go -all -workers 5 -resume -spreadsheet YOUR_SPREADSHEET_ID -v
 ```
 
 The analyzer will:
@@ -40,11 +40,11 @@ The analyzer will:
 
 ```bash
 # First run - processes 5,000 emails, then stops
-go run main.go -max 10000 -v
+go run main.go -max 10000 -workers 5 -v
 # ... Ctrl+C or crash ...
 
 # Resume - continues from email 5,001
-go run main.go -max 10000 -resume -spreadsheet abc123... -v
+go run main.go -max 10000 -workers 5 -resume -spreadsheet abc123... -v
 # Will skip first 5,000, continue with remaining
 ```
 
@@ -150,7 +150,7 @@ go run main.go -max 10000 -resume -spreadsheet YOUR_ID -v
 ### ✅ Always Use Resume
 ```bash
 # Even for first run, use resume flag
-go run main.go -all -resume -v
+go run main.go -all -workers 5 -resume -v
 # If spreadsheet exists, it will resume
 # If new, it will start fresh
 ```
@@ -159,7 +159,7 @@ go run main.go -all -resume -v
 ```bash
 # After first run, save the spreadsheet ID
 # Use it for all subsequent resumes
-go run main.go -all -resume -spreadsheet YOUR_ID -v
+go run main.go -all -workers 5 -resume -spreadsheet YOUR_ID -v
 ```
 
 ### ✅ Check State Before Resume
