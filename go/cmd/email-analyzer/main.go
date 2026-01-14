@@ -86,7 +86,9 @@ func main() {
 			log.Fatalf("Failed to create spreadsheet: %v", err)
 		}
 		*spreadsheetID = spreadsheet.SpreadsheetId
-		fmt.Printf("Created spreadsheet: %s\n", spreadsheet.SpreadsheetUrl)
+		fmt.Printf("\n✅ Created spreadsheet: %s\n", spreadsheet.SpreadsheetUrl)
+		fmt.Printf("📊 Spreadsheet ID: %s\n", *spreadsheetID)
+		fmt.Printf("🌐 Dashboard URL: http://localhost:8080/email-analysis-dashboard.html?spreadsheet_id=%s\n\n", *spreadsheetID)
 	}
 
 	// Acquire lock before processing

@@ -174,100 +174,51 @@
     <script>
         let autoRefreshInterval = null;
         let currentSpreadsheetID = '';
-        let availableSpreadsheets = [];
 
-        // Load available spreadsheets on page load
-        async function loadAvailableSpreadsheets() {
+        // Auto-detect spreadsheet on page load
+        async function autoDetectSpreadsheet() {
             try {
-                // Try to get from localStorage first
-                const saved = localStorage.getItem('emailAnalysisSpreadsheets');
+                // Try to get from localStorage (set when analysis starts)
+                const saved = localStorage.getItem('emailAnalysisSpreadsheetID');
                 if (saved) {
-                    availableSpreadsheets = JSON.parse(saved);
-                    renderSpreadsheetList();
+                    currentSpreadsheetID = saved;
+                    loadStats();
+                    return;
                 }
                 
-                // Also try to fetch from API if available
-                // For now, we'll use a default or prompt user
-                if (availableSpreadsheets.length === 0) {
-                    // Show prompt to add spreadsheet
-                    showAddSpreadsheetPrompt();
-                } else {
-                    // Auto-load first spreadsheet
-                    if (availableSpreadsheets.length > 0) {
-                        loadStats(availableSpreadsheets[0].id);
-                    }
-                }
+                // Try to fetch default spreadsheet from API
+                // For now, show "no analysis" message
+                showNoAnalysisMessage();
             } catch (error) {
-                console.error('Failed to load spreadsheets:', error);
-                showAddSpreadsheetPrompt();
+                console.error('Failed to detect spreadsheet:', error);
+                showNoAnalysisMessage();
             }
         }
 
-        function showAddSpreadsheetPrompt() {
+        function showNoAnalysisMessage() {
             document.getElementById('stats-container').innerHTML = `
                 <div class="text-center py-5">
                     <i class="bi bi-file-earmark-spreadsheet" style="font-size: 4rem; color: #6c757d;"></i>
-                    <h3 class="mt-3">No Spreadsheets Found</h3>
-                    <p class="text-muted">Start an email analysis job to create a spreadsheet, or add an existing one.</p>
-                    <button class="btn btn-primary btn-lg mt-3" onclick="promptAddSpreadsheet()">
-                        <i class="bi bi-plus-circle"></i> Add Spreadsheet ID
-                    </button>
+                    <h3 class="mt-3">No Active Analysis</h3>
+                    <p class="text-muted">Start an email analysis job to begin processing. The spreadsheet will be created automatically.</p>
+                    <div class="mt-4">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            <strong>To start:</strong> Run the email analyzer from the command line. 
+                            It will create a spreadsheet automatically and this dashboard will show the stats.
+                        </div>
+                    </div>
                 </div>
             `;
         }
 
-        function promptAddSpreadsheet() {
-            const id = prompt('Enter Google Spreadsheet ID:');
-            if (id && id.trim()) {
-                const name = prompt('Enter a name for this spreadsheet (optional):') || `Spreadsheet ${availableSpreadsheets.length + 1}`;
-                addSpreadsheet(id.trim(), name);
-            }
-        }
-
-        function addSpreadsheet(id, name) {
-            if (!availableSpreadsheets.find(s => s.id === id)) {
-                availableSpreadsheets.push({ id, name, addedAt: new Date().toISOString() });
-                localStorage.setItem('emailAnalysisSpreadsheets', JSON.stringify(availableSpreadsheets));
-                renderSpreadsheetList();
-                loadStats(id);
-            }
-        }
-
-        function renderSpreadsheetList() {
-            const list = document.getElementById('spreadsheet-list');
-            if (!list) return;
-            
-            if (availableSpreadsheets.length === 0) {
-                document.getElementById('spreadsheet-selection').style.display = 'none';
+        function loadStats() {
+            if (!currentSpreadsheetID) {
+                showNoAnalysisMessage();
                 return;
             }
             
-            document.getElementById('spreadsheet-selection').style.display = 'block';
-            list.innerHTML = availableSpreadsheets.map((sheet, index) => `
-                <a href="#" class="list-group-item list-group-item-action ${sheet.id === currentSpreadsheetID ? 'active' : ''}" 
-                   onclick="loadStats('${sheet.id}'); return false;">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">
-                            <i class="bi bi-file-earmark-spreadsheet"></i> ${sheet.name}
-                        </h6>
-                        <small>${new Date(sheet.addedAt).toLocaleDateString()}</small>
-                    </div>
-                    <p class="mb-1"><small class="text-muted">ID: ${sheet.id}</small></p>
-                </a>
-            `).join('');
-        }
-
-        function loadStats(spreadsheetID) {
-            if (!spreadsheetID) {
-                showAddSpreadsheetPrompt();
-                return;
-            }
-            
-            currentSpreadsheetID = spreadsheetID;
             fetchStats();
-            
-            // Update UI
-            renderSpreadsheetList();
             
             // Auto-refresh every 5 seconds
             if (autoRefreshInterval) {
@@ -532,16 +483,17 @@
             return `${days}d ago`;
         }
 
-        // Auto-load on page load
+        // Auto-detect on page load
         window.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             const spreadsheetID = params.get('spreadsheet_id');
             if (spreadsheetID) {
-                const name = params.get('name') || 'Email Analysis';
-                addSpreadsheet(spreadsheetID, name);
-                loadStats(spreadsheetID);
+                // Save to localStorage and load
+                localStorage.setItem('emailAnalysisSpreadsheetID', spreadsheetID);
+                currentSpreadsheetID = spreadsheetID;
+                loadStats();
             } else {
-                loadAvailableSpreadsheets();
+                autoDetectSpreadsheet();
             }
         });
     </script>
