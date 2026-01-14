@@ -253,6 +253,9 @@ func initSheetsService(ctx context.Context) (*sheets.Service, error) {
 	// Without Subject, reads can silently return empty/permission issues -> dashboard shows zeros.
 	if subj := os.Getenv("GMAIL_FROM"); subj != "" {
 		config.Subject = subj
+	} else {
+		// Reasonable default for this repo's primary use case.
+		config.Subject = "team@stlpartyhelpers.com"
 	}
 
 	client := config.Client(ctx)
