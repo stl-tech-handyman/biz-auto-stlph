@@ -708,38 +708,6 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 						if verbose {
 							fmt.Printf("  💾 Wrote batch of %d emails\n", len(batchToWrite))
 						}
-
-						// Save state after batch write
-						mu.Lock()
-						state := &State{
-							LastIndex:      startIndex + processedCount + skippedCount,
-							TotalProcessed: processedCount,
-							LastRun:        time.Now(),
-							ProcessedIDs:   *processedIDsList,
-							CurrentJobID:   jobID,
-							CurrentJobName: jobName,
-						}
-						// Snapshot mapping agg for writing without holding the lock
-						mappingSnapshot := make([]*mappingAggregate, 0, len(mappingAgg))
-						for _, v := range mappingAgg {
-							c := *v
-							mappingSnapshot = append(mappingSnapshot, &c)
-						}
-						processedIDsCopy := make([]string, len(*processedIDsList))
-						copy(processedIDsCopy, *processedIDsList)
-						mu.Unlock()
-
-						if err := saveState(ctx, sheetsService, spreadsheetID, state); err == nil {
-							lastStateSave = time.Now()
-							if verbose {
-								fmt.Printf("  💾 State saved (%d message IDs tracked, Job: %s)\n", len(processedIDsCopy), jobID)
-							}
-						}
-
-						// Update job stats
-						updateJobStats(ctx, sheetsService, spreadsheetID, jobID, jobName, agentID, currentProcessed, currentSkipped, false)
-						// Update mapping snapshot (small table, safe to overwrite)
-						writeEmailMappingSnapshot(ctx, sheetsService, spreadsheetID, mappingSnapshot)
 					} else {
 						mu.Unlock()
 					}
@@ -844,11 +812,6 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 					CurrentJobID:   jobID,
 					CurrentJobName: jobName,
 				}
-				mappingSnapshot := make([]*mappingAggregate, 0, len(mappingAgg))
-				for _, v := range mappingAgg {
-					c := *v
-					mappingSnapshot = append(mappingSnapshot, &c)
-				}
 				processedIDsCopy := make([]string, len(*processedIDsList))
 				copy(processedIDsCopy, *processedIDsList)
 				p := processedCount
@@ -866,7 +829,6 @@ func processEmails(ctx context.Context, gmailService *gmail.Service, sheetsServi
 
 				// Update job stats
 				updateJobStats(ctx, sheetsService, spreadsheetID, jobID, jobName, agentID, p, s, false)
-				writeEmailMappingSnapshot(ctx, sheetsService, spreadsheetID, mappingSnapshot)
 			}
 
 			// Rate limiting delay
